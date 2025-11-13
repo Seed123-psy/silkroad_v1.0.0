@@ -1,0 +1,236 @@
+{
+  "version": "1.0",
+  "description": "3D文物展示预设配置文件，定义不同类型文物的最佳展示参数",
+  "presets": {
+    "pottery": {
+      "name": "陶器展示",
+      "nameEn": "Pottery Display",
+      "description": "适合陶罐、陶瓶等器皿类文物",
+      "config": {
+        "cameraDistance": 2.5,
+        "cameraAngle": {
+          "azimuth": 45,
+          "elevation": 20
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0.3,
+          "z": 0
+        },
+        "lightIntensity": 1.2,
+        "autoRotateSpeed": 0.5
+      }
+    },
+    "sculpture": {
+      "name": "雕塑展示",
+      "nameEn": "Sculpture Display",
+      "description": "适合佛像、人物雕塑等立体文物",
+      "config": {
+        "cameraDistance": 3.0,
+        "cameraAngle": {
+          "azimuth": 30,
+          "elevation": 15
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0.5,
+          "z": 0
+        },
+        "lightIntensity": 1.5,
+        "autoRotateSpeed": 0.3
+      }
+    },
+    "textile": {
+      "name": "织物展示",
+      "nameEn": "Textile Display",
+      "description": "适合丝绸、刺绣等平面织物",
+      "config": {
+        "cameraDistance": 2.0,
+        "cameraAngle": {
+          "azimuth": 0,
+          "elevation": 0
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "lightIntensity": 1.0,
+        "autoRotateSpeed": 0
+      }
+    },
+    "metalware": {
+      "name": "金属器展示",
+      "nameEn": "Metalware Display",
+      "description": "适合铜器、金银器等金属文物",
+      "config": {
+        "cameraDistance": 2.2,
+        "cameraAngle": {
+          "azimuth": 60,
+          "elevation": 25
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0.2,
+          "z": 0
+        },
+        "lightIntensity": 1.8,
+        "autoRotateSpeed": 0.4
+      }
+    },
+    "jade": {
+      "name": "玉器展示",
+      "nameEn": "Jade Display",
+      "description": "适合玉佩、玉璧等玉石文物",
+      "config": {
+        "cameraDistance": 1.8,
+        "cameraAngle": {
+          "azimuth": 45,
+          "elevation": 30
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "lightIntensity": 1.3,
+        "autoRotateSpeed": 0.6
+      }
+    },
+    "painting": {
+      "name": "绘画展示",
+      "nameEn": "Painting Display",
+      "description": "适合壁画、卷轴画等平面艺术品",
+      "config": {
+        "cameraDistance": 2.5,
+        "cameraAngle": {
+          "azimuth": 0,
+          "elevation": 0
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "lightIntensity": 1.1,
+        "autoRotateSpeed": 0
+      }
+    },
+    "ceramic": {
+      "name": "瓷器展示",
+      "nameEn": "Ceramic Display",
+      "description": "适合瓷器、瓷瓶等陶瓷文物",
+      "config": {
+        "cameraDistance": 2.3,
+        "cameraAngle": {
+          "azimuth": 50,
+          "elevation": 22
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0.25,
+          "z": 0
+        },
+        "lightIntensity": 1.4,
+        "autoRotateSpeed": 0.45
+      }
+    },
+    "other": {
+      "name": "通用展示",
+      "nameEn": "General Display",
+      "description": "默认展示配置，适用于未分类的文物",
+      "config": {
+        "cameraDistance": 2.5,
+        "cameraAngle": {
+          "azimuth": 45,
+          "elevation": 20
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "lightIntensity": 1.2,
+        "autoRotateSpeed": 0.5
+      }
+    }
+  },
+  "customPresets": {
+    "terracotta_warrior": {
+      "name": "兵马俑专用",
+      "nameEn": "Terracotta Warrior Specific",
+      "description": "专门为兵马俑优化的展示配置",
+      "config": {
+        "cameraDistance": 3.5,
+        "cameraAngle": {
+          "azimuth": 25,
+          "elevation": 10
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0.8,
+          "z": 0
+        },
+        "lightIntensity": 1.6,
+        "autoRotateSpeed": 0.2
+      }
+    },
+    "buddha_statue": {
+      "name": "佛像专用",
+      "nameEn": "Buddha Statue Specific",
+      "description": "专门为佛像优化的展示配置",
+      "config": {
+        "cameraDistance": 3.2,
+        "cameraAngle": {
+          "azimuth": 35,
+          "elevation": 12
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0.6,
+          "z": 0
+        },
+        "lightIntensity": 1.7,
+        "autoRotateSpeed": 0.25
+      }
+    },
+    "silk_fabric": {
+      "name": "丝绸专用",
+      "nameEn": "Silk Fabric Specific",
+      "description": "专门为丝绸织物优化的展示配置",
+      "config": {
+        "cameraDistance": 1.8,
+        "cameraAngle": {
+          "azimuth": 0,
+          "elevation": 5
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "lightIntensity": 0.9,
+        "autoRotateSpeed": 0
+      }
+    },
+    "bronze_vessel": {
+      "name": "青铜器专用",
+      "nameEn": "Bronze Vessel Specific",
+      "description": "专门为青铜器优化的展示配置",
+      "config": {
+        "cameraDistance": 2.4,
+        "cameraAngle": {
+          "azimuth": 55,
+          "elevation": 28
+        },
+        "targetOffset": {
+          "x": 0,
+          "y": 0.3,
+          "z": 0
+        },
+        "lightIntensity": 2.0,
+        "autoRotateSpeed": 0.35
+      }
+    }
+  }
+}

@@ -1,0 +1,534 @@
+{
+  "sites": [
+    {
+      "id": "site_001",
+      "name": "莫高窟",
+      "nameEn": "Mogao Caves",
+      "type": "temple",
+      "lat": 40.0403,
+      "lng": 94.8023,
+      "period": ["han", "tang", "song", "yuan"],
+      "dynasty": ["北魏", "隋", "唐", "宋", "元"],
+      "description": "世界文化遗产，中国四大石窟之一，保存了大量精美的佛教壁画和雕塑。",
+      "history": "始建于前秦建元二年（366年），历经千年营造，现存洞窟735个，壁画4.5万平方米，彩塑2415尊。",
+      "discovery": "1900年道士王圆箓发现藏经洞，内藏5万余件古代文物。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_001",
+          "name": "飞天壁画",
+          "type": "painting",
+          "period": "tang",
+          "material": "矿物颜料",
+          "description": "唐代飞天壁画，展现了佛教艺术与中国传统艺术的完美结合。",
+          "images": ["/images/placeholder.jpg"],
+          "model3D": "/models/artifacts/feitian.glb",
+          "dimensions": { "height": 2.5, "width": 1.8, "depth": 0.1 }
+        }
+      ]
+    },
+    {
+      "id": "site_002",
+      "name": "秦始皇兵马俑",
+      "nameEn": "Terracotta Army",
+      "type": "tomb",
+      "lat": 34.3848,
+      "lng": 109.2734,
+      "period": ["han"],
+      "dynasty": ["秦"],
+      "description": "世界第八大奇迹，秦始皇陵的陪葬坑，展现了秦代军队的宏大规模。",
+      "history": "建于公元前246年至公元前208年，是秦始皇陵的一部分，用于守卫秦始皇的陵墓。",
+      "discovery": "1974年3月，当地农民打井时偶然发现，震惊世界。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_002",
+          "name": "兵马俑武士",
+          "type": "sculpture",
+          "period": "han",
+          "material": "陶土",
+          "description": "秦代陶俑，每个俑的面部特征都不相同，展现了高超的制作工艺。",
+          "images": ["/images/placeholder.jpg"],
+          "model3D": "/models/artifacts/terracotta_warrior.glb",
+          "dimensions": { "height": 1.8, "width": 0.5, "depth": 0.4 },
+          "displayConfig": {
+            "cameraDistance": 3.5,
+            "cameraAngle": { "azimuth": 25, "elevation": 10 },
+            "targetOffset": { "x": 0, "y": 0.8, "z": 0 },
+            "lightIntensity": 1.6,
+            "autoRotateSpeed": 0.2
+          }
+        }
+      ]
+    },
+    {
+      "id": "site_003",
+      "name": "大雁塔",
+      "nameEn": "Giant Wild Goose Pagoda",
+      "type": "temple",
+      "lat": 34.2186,
+      "lng": 108.9647,
+      "period": ["tang"],
+      "dynasty": ["唐"],
+      "description": "唐代佛教建筑，玄奘法师为保存从印度带回的佛经而建。",
+      "history": "建于公元652年，原名慈恩寺塔，是西安的标志性建筑。",
+      "discovery": "历史上一直保存完好，是研究唐代建筑的重要实物。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_003",
+          "name": "唐三彩骆驼",
+          "type": "pottery",
+          "period": "tang",
+          "material": "陶瓷",
+          "description": "唐代三彩陶器，骆驼造型生动，反映了丝绸之路的繁荣。",
+          "images": ["/images/placeholder.jpg"],
+          "model3D": "/models/artifacts/tang_camel.glb",
+          "dimensions": { "height": 0.6, "width": 0.5, "depth": 0.3 }
+        }
+      ]
+    },
+    {
+      "id": "site_004",
+      "name": "楼兰古城",
+      "nameEn": "Loulan Ancient City",
+      "type": "city",
+      "lat": 40.5,
+      "lng": 89.8,
+      "period": ["han"],
+      "dynasty": ["汉"],
+      "description": "丝绸之路上的重要古城遗址，曾是西域三十六国之一。",
+      "history": "建于公元前176年，公元4世纪后神秘消失，可能因罗布泊干涸而废弃。",
+      "discovery": "1900年瑞典探险家斯文·赫定发现，出土大量珍贵文物。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_004",
+          "name": "楼兰美女",
+          "type": "other",
+          "period": "han",
+          "material": "木乃伊",
+          "description": "距今约3800年的女性干尸，保存完好，具有重要的考古价值。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 1.55, "width": 0.4, "depth": 0.3 }
+        }
+      ]
+    },
+    {
+      "id": "site_005",
+      "name": "交河故城",
+      "nameEn": "Jiaohe Ruins",
+      "type": "city",
+      "lat": 42.9547,
+      "lng": 89.0723,
+      "period": ["han", "tang"],
+      "dynasty": ["汉", "唐"],
+      "description": "世界上最大最古老、保存最完好的生土建筑城市。",
+      "history": "建于公元前2世纪，是车师前国的都城，唐代设安西都护府。",
+      "discovery": "遗址保存完整，是研究古代城市规划的重要实物。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_005",
+          "name": "唐代文书",
+          "type": "other",
+          "period": "tang",
+          "material": "纸张",
+          "description": "唐代官方文书，记录了当时的行政管理和社会生活。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 0.3, "width": 0.2, "depth": 0.01 }
+        }
+      ]
+    },
+    {
+      "id": "site_006",
+      "name": "高昌故城",
+      "nameEn": "Gaochang Ruins",
+      "type": "city",
+      "lat": 42.8519,
+      "lng": 89.5322,
+      "period": ["han", "tang"],
+      "dynasty": ["汉", "唐", "回鹘"],
+      "description": "丝绸之路北道的重要城市，曾是高昌王国的都城。",
+      "history": "建于公元前1世纪，公元14世纪废弃，历经汉、唐、回鹘等多个时期。",
+      "discovery": "19世纪末被西方探险家发现，出土大量文物。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_006",
+          "name": "高昌壁画",
+          "type": "painting",
+          "period": "tang",
+          "material": "矿物颜料",
+          "description": "反映了佛教艺术和多元文化的融合。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 2.0, "width": 1.5, "depth": 0.1 }
+        }
+      ]
+    },
+    {
+      "id": "site_007",
+      "name": "龙门石窟",
+      "nameEn": "Longmen Grottoes",
+      "type": "temple",
+      "lat": 34.5553,
+      "lng": 112.4747,
+      "period": ["han", "tang"],
+      "dynasty": ["北魏", "唐"],
+      "description": "中国四大石窟之一，以卢舍那大佛最为著名。",
+      "history": "开凿于北魏孝文帝年间（493年），历经400余年营造。",
+      "discovery": "历史上一直为人所知，是佛教艺术的宝库。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_007",
+          "name": "卢舍那大佛",
+          "type": "sculpture",
+          "period": "tang",
+          "material": "石雕",
+          "description": "唐代石雕艺术的巅峰之作，高17.14米。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 17.14, "width": 8.0, "depth": 5.0 }
+        }
+      ]
+    },
+    {
+      "id": "site_008",
+      "name": "云冈石窟",
+      "nameEn": "Yungang Grottoes",
+      "type": "temple",
+      "lat": 40.1092,
+      "lng": 113.1336,
+      "period": ["han"],
+      "dynasty": ["北魏"],
+      "description": "中国四大石窟之一，代表了5世纪世界雕刻艺术的最高水平。",
+      "history": "开凿于北魏和平年间（460年），现存主要洞窟45个。",
+      "discovery": "历史上一直保存，是研究北魏佛教艺术的重要遗址。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_008",
+          "name": "北魏佛像",
+          "type": "sculpture",
+          "period": "han",
+          "material": "石雕",
+          "description": "北魏时期的佛像雕刻，具有鲜明的时代特征。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 3.0, "width": 1.5, "depth": 1.0 }
+        }
+      ]
+    },
+    {
+      "id": "site_009",
+      "name": "麦积山石窟",
+      "nameEn": "Maijishan Grottoes",
+      "type": "temple",
+      "lat": 34.3514,
+      "lng": 106.0089,
+      "period": ["han", "tang"],
+      "dynasty": ["后秦", "北魏", "隋", "唐"],
+      "description": "中国四大石窟之一，以精美的泥塑艺术著称。",
+      "history": "始建于后秦（384-417年），现存洞窟194个。",
+      "discovery": "历史上一直保存，是研究中国泥塑艺术的重要遗址。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_009",
+          "name": "北魏泥塑",
+          "type": "sculpture",
+          "period": "han",
+          "material": "泥塑",
+          "description": "北魏时期的泥塑佛像，造型优美，保存完好。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 2.0, "width": 0.8, "depth": 0.6 }
+        }
+      ]
+    },
+    {
+      "id": "site_010",
+      "name": "开元寺",
+      "nameEn": "Kaiyuan Temple",
+      "type": "temple",
+      "lat": 24.9139,
+      "lng": 118.5858,
+      "period": ["tang", "song"],
+      "dynasty": ["唐", "宋"],
+      "description": "泉州最大的佛教寺院，见证了海上丝绸之路的繁荣。",
+      "history": "建于唐垂拱二年（686年），是福建省内规模最大的佛教寺院。",
+      "discovery": "历史上一直保存，是研究海上丝绸之路的重要遗址。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_010",
+          "name": "宋代石经幢",
+          "type": "sculpture",
+          "period": "song",
+          "material": "石雕",
+          "description": "宋代石刻经幢，雕刻精美，具有重要的艺术价值。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 5.0, "width": 1.0, "depth": 1.0 }
+        }
+      ]
+    },
+    {
+      "id": "site_011",
+      "name": "清净寺",
+      "nameEn": "Qingjing Mosque",
+      "type": "temple",
+      "lat": 24.9074,
+      "lng": 118.5936,
+      "period": ["song", "yuan"],
+      "dynasty": ["宋", "元"],
+      "description": "中国现存最早的伊斯兰教寺院之一，见证了阿拉伯商人在泉州的活动。",
+      "history": "建于北宋大中祥符二年（1009年），是阿拉伯穆斯林在中国建立的清真寺。",
+      "discovery": "历史上一直保存，是研究中外文化交流的重要遗址。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_011",
+          "name": "阿拉伯文石刻",
+          "type": "other",
+          "period": "song",
+          "material": "石刻",
+          "description": "宋代阿拉伯文石刻，记录了当时的宗教活动。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 1.0, "width": 0.8, "depth": 0.2 }
+        }
+      ]
+    },
+    {
+      "id": "site_012",
+      "name": "草庵",
+      "nameEn": "Cao'an Temple",
+      "type": "temple",
+      "lat": 24.8547,
+      "lng": 118.5436,
+      "period": ["song", "yuan"],
+      "dynasty": ["宋", "元"],
+      "description": "世界仅存的摩尼教遗址，见证了多元宗教文化在泉州的交流。",
+      "history": "建于宋代，是摩尼教在中国的唯一遗存。",
+      "discovery": "1923年被发现，震惊学术界。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_012",
+          "name": "摩尼光佛石雕",
+          "type": "sculpture",
+          "period": "song",
+          "material": "石雕",
+          "description": "宋代摩尼教石雕，是研究摩尼教的珍贵实物。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 1.5, "width": 1.0, "depth": 0.5 }
+        }
+      ]
+    },
+    {
+      "id": "site_013",
+      "name": "南海神庙",
+      "nameEn": "Nanhai Temple",
+      "type": "temple",
+      "lat": 23.1897,
+      "lng": 113.4936,
+      "period": ["tang", "song"],
+      "dynasty": ["隋", "唐", "宋"],
+      "description": "中国古代四大海神庙之一，见证了海上丝绸之路的繁荣。",
+      "history": "建于隋开皇十四年（594年），是历代皇帝祭祀南海神的场所。",
+      "discovery": "历史上一直保存，是研究海上丝绸之路的重要遗址。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_013",
+          "name": "唐代石碑",
+          "type": "other",
+          "period": "tang",
+          "material": "石刻",
+          "description": "唐代石碑，记录了当时的海上贸易情况。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 2.5, "width": 1.2, "depth": 0.3 }
+        }
+      ]
+    },
+    {
+      "id": "site_014",
+      "name": "怀圣寺",
+      "nameEn": "Huaisheng Mosque",
+      "type": "temple",
+      "lat": 23.1291,
+      "lng": 113.2558,
+      "period": ["tang"],
+      "dynasty": ["唐"],
+      "description": "中国最早的清真寺之一，见证了伊斯兰教在中国的传播。",
+      "history": "建于唐贞观元年（627年），相传为穆罕默德的叔父所建。",
+      "discovery": "历史上一直保存，是研究中外文化交流的重要遗址。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_014",
+          "name": "光塔",
+          "type": "other",
+          "period": "tang",
+          "material": "砖石",
+          "description": "唐代建筑，是广州的标志性建筑之一。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 36.0, "width": 8.0, "depth": 8.0 }
+        }
+      ]
+    },
+    {
+      "id": "site_015",
+      "name": "西汉南越王墓",
+      "nameEn": "Western Han Nanyue King Tomb",
+      "type": "tomb",
+      "lat": 23.1458,
+      "lng": 113.2597,
+      "period": ["han"],
+      "dynasty": ["西汉"],
+      "description": "岭南地区规模最大的汉代彩绘石室墓。",
+      "history": "建于公元前2世纪，是南越国第二代王赵眜的陵墓。",
+      "discovery": "1983年被发现，出土文物1000多件。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_015",
+          "name": "丝缕玉衣",
+          "type": "textile",
+          "period": "han",
+          "material": "玉片、丝线",
+          "description": "西汉时期的玉衣，由2291片玉片用丝线编缀而成。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 1.73, "width": 0.68, "depth": 0.3 }
+        }
+      ]
+    },
+    {
+      "id": "site_016",
+      "name": "雷吉斯坦广场",
+      "nameEn": "Registan Square",
+      "type": "other",
+      "lat": 39.6542,
+      "lng": 66.9753,
+      "period": ["yuan", "ming"],
+      "dynasty": ["帖木儿帝国"],
+      "description": "撒马尔罕的中心广场，周围环绕着三座宏伟的伊斯兰学院。",
+      "history": "建于15-17世纪，是帖木儿帝国建筑艺术的杰作。",
+      "discovery": "历史上一直保存，是世界文化遗产。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_016",
+          "name": "伊斯兰瓷砖",
+          "type": "ceramic",
+          "period": "ming",
+          "material": "陶瓷",
+          "description": "帖木儿时期的装饰瓷砖，色彩鲜艳，图案精美。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 0.3, "width": 0.3, "depth": 0.05 }
+        }
+      ]
+    },
+    {
+      "id": "site_017",
+      "name": "古尔埃米尔陵墓",
+      "nameEn": "Gur-e-Amir Mausoleum",
+      "type": "tomb",
+      "lat": 39.6478,
+      "lng": 66.9731,
+      "period": ["yuan", "ming"],
+      "dynasty": ["帖木儿帝国"],
+      "description": "帖木儿及其后裔的陵墓，是伊斯兰建筑的杰作。",
+      "history": "建于15世纪初，是帖木儿帝国建筑的代表作。",
+      "discovery": "历史上一直保存，是世界文化遗产。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_017",
+          "name": "帖木儿玉棺",
+          "type": "jade",
+          "period": "ming",
+          "material": "玉石",
+          "description": "帖木儿的玉石棺椁，雕刻精美。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 1.0, "width": 2.5, "depth": 1.2 }
+        }
+      ]
+    },
+    {
+      "id": "site_018",
+      "name": "圣索菲亚大教堂",
+      "nameEn": "Hagia Sophia",
+      "type": "temple",
+      "lat": 41.0086,
+      "lng": 28.9802,
+      "period": ["tang", "song", "yuan"],
+      "dynasty": ["拜占庭帝国", "奥斯曼帝国"],
+      "description": "拜占庭建筑的杰作，见证了东西方文明的交汇。",
+      "history": "建于公元537年，曾是世界上最大的教堂。",
+      "discovery": "历史上一直保存，是世界文化遗产。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_018",
+          "name": "拜占庭马赛克",
+          "type": "other",
+          "period": "tang",
+          "material": "玻璃、石料",
+          "description": "拜占庭时期的马赛克壁画，色彩绚丽。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 3.0, "width": 4.0, "depth": 0.1 }
+        }
+      ]
+    },
+    {
+      "id": "site_019",
+      "name": "托普卡匹宫",
+      "nameEn": "Topkapi Palace",
+      "type": "other",
+      "lat": 41.0115,
+      "lng": 28.9833,
+      "period": ["ming", "qing"],
+      "dynasty": ["奥斯曼帝国"],
+      "description": "奥斯曼帝国的皇宫，收藏了大量来自丝绸之路的珍宝。",
+      "history": "建于15世纪，是奥斯曼帝国苏丹的居所。",
+      "discovery": "历史上一直保存，现为博物馆。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_019",
+          "name": "中国瓷器",
+          "type": "pottery",
+          "period": "ming",
+          "material": "陶瓷",
+          "description": "明代青花瓷，通过丝绸之路传入奥斯曼帝国。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 0.4, "width": 0.3, "depth": 0.3 }
+        }
+      ]
+    },
+    {
+      "id": "site_020",
+      "name": "亚历山大图书馆遗址",
+      "nameEn": "Library of Alexandria Site",
+      "type": "other",
+      "lat": 31.2084,
+      "lng": 29.9094,
+      "period": ["han"],
+      "dynasty": ["托勒密王朝"],
+      "description": "古代世界最大的图书馆遗址，曾是知识和学术的中心。",
+      "history": "建于公元前3世纪，毁于多次火灾和战争。",
+      "discovery": "遗址在20世纪被发现，现已重建新图书馆。",
+      "images": ["/images/placeholder.jpg", "/images/placeholder.jpg", "/images/placeholder.jpg"],
+      "artifacts": [
+        {
+          "id": "artifact_020",
+          "name": "古代纸莎草文献",
+          "type": "other",
+          "period": "han",
+          "material": "纸莎草",
+          "description": "古代埃及的纸莎草文献，记录了当时的知识。",
+          "images": ["/images/placeholder.jpg"],
+          "dimensions": { "height": 0.3, "width": 0.2, "depth": 0.01 }
+        }
+      ]
+    }
+  ]
+}

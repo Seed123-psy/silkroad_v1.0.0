@@ -1,0 +1,868 @@
+// 丝绸之路数据可视化项目 - 全局样式
+
+// ============================================
+// 导入样式模块
+// ============================================
+
+@use 'sass:color';
+@use './variables.scss' as *;
+@use './mixins.scss' as *;
+@use './transitions.scss' as *;
+
+// ============================================
+// 全局重置
+// ============================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: $font-family-base, $font-family-chinese;
+  font-size: $font-size-base;
+  font-weight: $font-weight-normal;
+  line-height: $line-height-base;
+  color: $text-primary;
+  background-color: $bg-primary;
+  overflow-x: hidden;
+}
+
+// ============================================
+// 标题样式
+// ============================================
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: $font-weight-semibold;
+  line-height: $line-height-tight;
+  color: $text-primary;
+  margin-bottom: $spacing-md;
+}
+
+h1 {
+  font-size: $font-size-xxxl;
+}
+
+h2 {
+  font-size: $font-size-xxl;
+}
+
+h3 {
+  font-size: $font-size-xl;
+}
+
+h4 {
+  font-size: $font-size-lg;
+}
+
+h5 {
+  font-size: $font-size-base;
+}
+
+h6 {
+  font-size: $font-size-sm;
+}
+
+// ============================================
+// 段落和文本
+// ============================================
+
+p {
+  margin-bottom: $spacing-md;
+  line-height: $line-height-loose;
+}
+
+a {
+  color: $primary-color;
+  text-decoration: none;
+  @include transition(color);
+
+  &:hover {
+    color: color.adjust($primary-color, $lightness: -10%);
+  }
+
+  &:active {
+    color: color.adjust($primary-color, $lightness: -15%);
+  }
+}
+
+strong,
+b {
+  font-weight: $font-weight-bold;
+}
+
+em,
+i {
+  font-style: italic;
+}
+
+small {
+  font-size: $font-size-sm;
+}
+
+code {
+  font-family: $font-family-code;
+  font-size: 0.9em;
+  padding: 2px 6px;
+  background-color: $bg-secondary;
+  border-radius: $border-radius-sm;
+}
+
+pre {
+  font-family: $font-family-code;
+  padding: $spacing-md;
+  background-color: $bg-secondary;
+  border-radius: $border-radius-base;
+  overflow-x: auto;
+  margin-bottom: $spacing-md;
+
+  code {
+    padding: 0;
+    background-color: transparent;
+  }
+}
+
+// ============================================
+// 列表
+// ============================================
+
+ul,
+ol {
+  margin-bottom: $spacing-md;
+  padding-left: $spacing-lg;
+}
+
+li {
+  margin-bottom: $spacing-xs;
+}
+
+// ============================================
+// 图片和媒体
+// ============================================
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+figure {
+  margin: 0;
+  margin-bottom: $spacing-md;
+}
+
+figcaption {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  margin-top: $spacing-xs;
+  text-align: center;
+}
+
+// ============================================
+// 表格
+// ============================================
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: $spacing-md;
+}
+
+th,
+td {
+  padding: $spacing-sm $spacing-md;
+  text-align: left;
+  border-bottom: 1px solid $border-color;
+}
+
+th {
+  font-weight: $font-weight-semibold;
+  background-color: $bg-secondary;
+}
+
+// ============================================
+// 表单元素
+// ============================================
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+// ============================================
+// 滚动条样式
+// ============================================
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: $bg-secondary;
+}
+
+::-webkit-scrollbar-thumb {
+  background: $border-color;
+  border-radius: $border-radius-base;
+
+  &:hover {
+    background: color.adjust($border-color, $lightness: -10%);
+  }
+}
+
+// ============================================
+// 选择文本样式
+// ============================================
+
+::selection {
+  background-color: rgba($primary-color, 0.3);
+  color: $text-primary;
+}
+
+::-moz-selection {
+  background-color: rgba($primary-color, 0.3);
+  color: $text-primary;
+}
+
+// ============================================
+// 工具类
+// ============================================
+
+// 文本对齐
+.text-left {
+  text-align: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+// 文本颜色
+.text-primary {
+  color: $text-primary;
+}
+
+.text-secondary {
+  color: $text-secondary;
+}
+
+.text-tertiary {
+  color: $text-tertiary;
+}
+
+.text-inverse {
+  color: $text-inverse;
+}
+
+// 背景颜色
+.bg-primary {
+  background-color: $bg-primary;
+}
+
+.bg-secondary {
+  background-color: $bg-secondary;
+}
+
+.bg-dark {
+  background-color: $bg-dark;
+}
+
+// 间距工具类
+.m-0 {
+  margin: 0;
+}
+.mt-0 {
+  margin-top: 0;
+}
+.mr-0 {
+  margin-right: 0;
+}
+.mb-0 {
+  margin-bottom: 0;
+}
+.ml-0 {
+  margin-left: 0;
+}
+
+.m-xs {
+  margin: $spacing-xs;
+}
+.mt-xs {
+  margin-top: $spacing-xs;
+}
+.mr-xs {
+  margin-right: $spacing-xs;
+}
+.mb-xs {
+  margin-bottom: $spacing-xs;
+}
+.ml-xs {
+  margin-left: $spacing-xs;
+}
+
+.m-sm {
+  margin: $spacing-sm;
+}
+.mt-sm {
+  margin-top: $spacing-sm;
+}
+.mr-sm {
+  margin-right: $spacing-sm;
+}
+.mb-sm {
+  margin-bottom: $spacing-sm;
+}
+.ml-sm {
+  margin-left: $spacing-sm;
+}
+
+.m-md {
+  margin: $spacing-md;
+}
+.mt-md {
+  margin-top: $spacing-md;
+}
+.mr-md {
+  margin-right: $spacing-md;
+}
+.mb-md {
+  margin-bottom: $spacing-md;
+}
+.ml-md {
+  margin-left: $spacing-md;
+}
+
+.m-lg {
+  margin: $spacing-lg;
+}
+.mt-lg {
+  margin-top: $spacing-lg;
+}
+.mr-lg {
+  margin-right: $spacing-lg;
+}
+.mb-lg {
+  margin-bottom: $spacing-lg;
+}
+.ml-lg {
+  margin-left: $spacing-lg;
+}
+
+.p-0 {
+  padding: 0;
+}
+.pt-0 {
+  padding-top: 0;
+}
+.pr-0 {
+  padding-right: 0;
+}
+.pb-0 {
+  padding-bottom: 0;
+}
+.pl-0 {
+  padding-left: 0;
+}
+
+.p-xs {
+  padding: $spacing-xs;
+}
+.pt-xs {
+  padding-top: $spacing-xs;
+}
+.pr-xs {
+  padding-right: $spacing-xs;
+}
+.pb-xs {
+  padding-bottom: $spacing-xs;
+}
+.pl-xs {
+  padding-left: $spacing-xs;
+}
+
+.p-sm {
+  padding: $spacing-sm;
+}
+.pt-sm {
+  padding-top: $spacing-sm;
+}
+.pr-sm {
+  padding-right: $spacing-sm;
+}
+.pb-sm {
+  padding-bottom: $spacing-sm;
+}
+.pl-sm {
+  padding-left: $spacing-sm;
+}
+
+.p-md {
+  padding: $spacing-md;
+}
+.pt-md {
+  padding-top: $spacing-md;
+}
+.pr-md {
+  padding-right: $spacing-md;
+}
+.pb-md {
+  padding-bottom: $spacing-md;
+}
+.pl-md {
+  padding-left: $spacing-md;
+}
+
+.p-lg {
+  padding: $spacing-lg;
+}
+.pt-lg {
+  padding-top: $spacing-lg;
+}
+.pr-lg {
+  padding-right: $spacing-lg;
+}
+.pb-lg {
+  padding-bottom: $spacing-lg;
+}
+.pl-lg {
+  padding-left: $spacing-lg;
+}
+
+// 显示工具类
+.d-none {
+  display: none;
+}
+
+.d-block {
+  display: block;
+}
+
+.d-inline {
+  display: inline;
+}
+
+.d-inline-block {
+  display: inline-block;
+}
+
+.d-flex {
+  display: flex;
+}
+
+.d-inline-flex {
+  display: inline-flex;
+}
+
+// Flex工具类
+.flex-row {
+  flex-direction: row;
+}
+
+.flex-column {
+  flex-direction: column;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+.flex-nowrap {
+  flex-wrap: nowrap;
+}
+
+.justify-start {
+  justify-content: flex-start;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-around {
+  justify-content: space-around;
+}
+
+.align-start {
+  align-items: flex-start;
+}
+
+.align-center {
+  align-items: center;
+}
+
+.align-end {
+  align-items: flex-end;
+}
+
+.align-stretch {
+  align-items: stretch;
+}
+
+// 定位工具类
+.position-relative {
+  position: relative;
+}
+
+.position-absolute {
+  position: absolute;
+}
+
+.position-fixed {
+  position: fixed;
+}
+
+.position-sticky {
+  position: sticky;
+}
+
+// 溢出工具类
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.overflow-auto {
+  overflow: auto;
+}
+
+.overflow-scroll {
+  overflow: scroll;
+}
+
+// 圆角工具类
+.rounded-sm {
+  border-radius: $border-radius-sm;
+}
+
+.rounded {
+  border-radius: $border-radius-base;
+}
+
+.rounded-lg {
+  border-radius: $border-radius-lg;
+}
+
+.rounded-xl {
+  border-radius: $border-radius-xl;
+}
+
+.rounded-circle {
+  border-radius: $border-radius-circle;
+}
+
+// 阴影工具类
+.shadow-sm {
+  @include box-shadow('sm');
+}
+
+.shadow {
+  @include box-shadow('base');
+}
+
+.shadow-lg {
+  @include box-shadow('lg');
+}
+
+.shadow-xl {
+  @include box-shadow('xl');
+}
+
+// 响应式工具类
+.mobile-only {
+  @include tablet-and-up {
+    display: none !important;
+  }
+}
+
+.tablet-and-up {
+  @include mobile {
+    display: none !important;
+  }
+}
+
+.desktop-only {
+  @include mobile {
+    display: none !important;
+  }
+  @include tablet {
+    display: none !important;
+  }
+}
+
+// ============================================
+// 容器
+// ============================================
+
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: $spacing-md;
+  padding-right: $spacing-md;
+
+  @include tablet {
+    max-width: $container-max-width-md;
+  }
+
+  @include desktop {
+    max-width: $container-max-width-lg;
+  }
+
+  @include wide {
+    max-width: $container-max-width-xl;
+  }
+
+  @include ultra {
+    max-width: $container-max-width-xxl;
+  }
+}
+
+.container-fluid {
+  width: 100%;
+  padding-left: $spacing-md;
+  padding-right: $spacing-md;
+}
+
+// ============================================
+// 卡片组件
+// ============================================
+
+.card {
+  @include card;
+  @include transition(box-shadow);
+
+  &:hover {
+    @include box-shadow('lg');
+  }
+}
+
+.card-header {
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1px solid $border-color;
+  font-weight: $font-weight-semibold;
+}
+
+.card-body {
+  padding: $spacing-lg;
+}
+
+.card-footer {
+  padding: $spacing-md $spacing-lg;
+  border-top: 1px solid $border-color;
+  background-color: $bg-secondary;
+}
+
+// ============================================
+// 按钮组件
+// ============================================
+
+.btn {
+  @include button-base;
+
+  &-primary {
+    @include button-variant($primary-color);
+  }
+
+  &-secondary {
+    @include button-variant($secondary-color);
+  }
+
+  &-accent {
+    @include button-variant($accent-color);
+  }
+
+  &-success {
+    @include button-variant($success-color);
+  }
+
+  &-warning {
+    @include button-variant($warning-color);
+  }
+
+  &-error {
+    @include button-variant($error-color);
+  }
+
+  &-outline {
+    background-color: transparent;
+    border: 1px solid $primary-color;
+    color: $primary-color;
+
+    &:hover:not(:disabled) {
+      background-color: $primary-color;
+      color: $text-inverse;
+    }
+  }
+
+  &-sm {
+    padding: $spacing-xs $spacing-md;
+    font-size: $font-size-sm;
+  }
+
+  &-lg {
+    padding: $spacing-md $spacing-xl;
+    font-size: $font-size-lg;
+  }
+}
+
+// ============================================
+// 输入框组件
+// ============================================
+
+.input {
+  @include input-base;
+}
+
+.textarea {
+  @include input-base;
+  min-height: 100px;
+  resize: vertical;
+}
+
+// ============================================
+// 加载状态
+// ============================================
+
+.loading {
+  @include flex-center;
+  min-height: 200px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid $border-color;
+  border-top-color: $primary-color;
+  border-radius: $border-radius-circle;
+  @include animation(spin, 1s, linear, infinite);
+}
+
+// ============================================
+// 覆盖层
+// ============================================
+
+.overlay {
+  @include fixed-full;
+  background-color: $bg-overlay;
+  z-index: $z-index-modal-backdrop;
+  @include flex-center;
+}
+
+// ============================================
+// 3D场景容器
+// ============================================
+
+.canvas-container {
+  @include canvas-container;
+}
+
+.scene-loading {
+  @include loading-overlay;
+}
+
+// ============================================
+// 响应式辅助
+// ============================================
+
+@include mobile {
+  body {
+    font-size: $font-size-sm;
+  }
+
+  h1 {
+    font-size: $font-size-xxl;
+  }
+
+  h2 {
+    font-size: $font-size-xl;
+  }
+
+  h3 {
+    font-size: $font-size-lg;
+  }
+
+  .container {
+    padding-left: $spacing-sm;
+    padding-right: $spacing-sm;
+  }
+}
+
+// ============================================
+// 打印样式
+// ============================================
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  a[href]::after {
+    content: ' (' attr(href) ')';
+  }
+
+  img {
+    page-break-inside: avoid;
+  }
+
+  h2,
+  h3,
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}

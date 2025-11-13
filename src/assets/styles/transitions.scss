@@ -1,0 +1,480 @@
+@use './variables.scss' as *;
+@use './mixins.scss' as *;
+
+// 丝绸之路数据可视化项目 - 过渡动画
+
+// ============================================
+// 淡入淡出动画
+// ============================================
+
+@include keyframes(fadeIn) {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@include keyframes(fadeOut) {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@include keyframes(fadeInUp) {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@include keyframes(fadeInDown) {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@include keyframes(fadeInLeft) {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@include keyframes(fadeInRight) {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// ============================================
+// 滑动动画
+// ============================================
+
+@include keyframes(slideUp) {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@include keyframes(slideDown) {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@include keyframes(slideLeft) {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@include keyframes(slideRight) {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+// ============================================
+// 缩放动画
+// ============================================
+
+@include keyframes(zoomIn) {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@include keyframes(zoomOut) {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+// ============================================
+// 旋转动画
+// ============================================
+
+@include keyframes(rotate) {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@include keyframes(rotateIn) {
+  from {
+    opacity: 0;
+    transform: rotate(-180deg);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+}
+
+// ============================================
+// 弹跳动画
+// ============================================
+
+@include keyframes(bounce) {
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+}
+
+@include keyframes(bounceIn) {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+// ============================================
+// 脉冲动画
+// ============================================
+
+@include keyframes(pulse) {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@include keyframes(heartbeat) {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  10%,
+  30% {
+    transform: scale(0.9);
+  }
+  20%,
+  40% {
+    transform: scale(1.1);
+  }
+}
+
+// ============================================
+// 摇晃动画
+// ============================================
+
+@include keyframes(shake) {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-10px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+// ============================================
+// 闪烁动画
+// ============================================
+
+@include keyframes(flash) {
+  0%,
+  50%,
+  100% {
+    opacity: 1;
+  }
+  25%,
+  75% {
+    opacity: 0;
+  }
+}
+
+@include keyframes(blink) {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// ============================================
+// 加载动画
+// ============================================
+
+@include keyframes(spin) {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@include keyframes(loading) {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@include keyframes(dots) {
+  0%,
+  20% {
+    color: rgba(0, 0, 0, 0);
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0), 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  40% {
+    color: $text-primary;
+    text-shadow: 0.25em 0 0 rgba(0, 0, 0, 0), 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  60% {
+    text-shadow: 0.25em 0 0 $text-primary, 0.5em 0 0 rgba(0, 0, 0, 0);
+  }
+  80%,
+  100% {
+    text-shadow: 0.25em 0 0 $text-primary, 0.5em 0 0 $text-primary;
+  }
+}
+
+// ============================================
+// 3D场景相关动画
+// ============================================
+
+@include keyframes(globeRotate) {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+@include keyframes(starTwinkle) {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@include keyframes(routeFlow) {
+  0% {
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@include keyframes(markerPulse) {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+// ============================================
+// 工具类
+// ============================================
+
+.fade-in {
+  @include animation(fadeIn);
+}
+
+.fade-out {
+  @include animation(fadeOut);
+}
+
+.fade-in-up {
+  @include animation(fadeInUp);
+}
+
+.fade-in-down {
+  @include animation(fadeInDown);
+}
+
+.fade-in-left {
+  @include animation(fadeInLeft);
+}
+
+.fade-in-right {
+  @include animation(fadeInRight);
+}
+
+.slide-up {
+  @include animation(slideUp);
+}
+
+.slide-down {
+  @include animation(slideDown);
+}
+
+.slide-left {
+  @include animation(slideLeft);
+}
+
+.slide-right {
+  @include animation(slideRight);
+}
+
+.zoom-in {
+  @include animation(zoomIn);
+}
+
+.zoom-out {
+  @include animation(zoomOut);
+}
+
+.rotate {
+  @include animation(rotate, 2s, linear, infinite);
+}
+
+.bounce {
+  @include animation(bounce, 1s, ease, infinite);
+}
+
+.pulse {
+  @include animation(pulse, 1s, ease, infinite);
+}
+
+.shake {
+  @include animation(shake, 0.5s);
+}
+
+.flash {
+  @include animation(flash, 1s, ease, infinite);
+}
+
+.spin {
+  @include animation(spin, 1s, linear, infinite);
+}
+
+// ============================================
+// Vue 过渡类
+// ============================================
+
+// 淡入淡出过渡
+.fade-enter-active,
+.fade-leave-active {
+  @include transition(opacity);
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// 滑动过渡
+.slide-enter-active,
+.slide-leave-active {
+  @include transition(transform);
+}
+
+.slide-enter-from {
+  transform: translateX(-100%);
+}
+
+.slide-leave-to {
+  transform: translateX(100%);
+}
+
+// 缩放过渡
+.scale-enter-active,
+.scale-leave-active {
+  @include transition(transform, opacity);
+}
+
+.scale-enter-from,
+.scale-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
+}

@@ -1,0 +1,70 @@
+{
+  "dynasties": [
+    {
+      "id": "han",
+      "name": "汉朝",
+      "nameEn": "Han Dynasty",
+      "startYear": -206,
+      "endYear": 220,
+      "color": "#c9a063",
+      "description": "张骞出使西域，开辟丝绸之路，促进了东西方贸易和文化交流。",
+      "capital": "长安（今西安）",
+      "majorEvents": ["张骞出使西域", "班超经营西域", "丝绸之路开辟"]
+    },
+    {
+      "id": "tang",
+      "name": "唐朝",
+      "nameEn": "Tang Dynasty",
+      "startYear": 618,
+      "endYear": 907,
+      "color": "#d4af37",
+      "description": "丝绸之路的黄金时代，长安成为国际大都市，东西方文化交流达到顶峰。",
+      "capital": "长安（今西安）",
+      "majorEvents": ["玄奘西行取经", "鉴真东渡", "安史之乱"]
+    },
+    {
+      "id": "song",
+      "name": "宋朝",
+      "nameEn": "Song Dynasty",
+      "startYear": 960,
+      "endYear": 1279,
+      "color": "#8b7355",
+      "description": "海上丝绸之路繁荣发展，泉州、广州成为重要国际贸易港口。",
+      "capital": "开封、临安（今杭州）",
+      "majorEvents": ["海上贸易繁荣", "指南针应用于航海", "瓷器大量出口"]
+    },
+    {
+      "id": "yuan",
+      "name": "元朝",
+      "nameEn": "Yuan Dynasty",
+      "startYear": 1271,
+      "endYear": 1368,
+      "color": "#4a90e2",
+      "description": "蒙古帝国统治时期，东西方交通空前畅通，马可·波罗游历中国。",
+      "capital": "大都（今北京）",
+      "majorEvents": ["马可·波罗游历", "伊本·巴图塔访问", "东西方交通畅通"]
+    },
+    {
+      "id": "ming",
+      "name": "明朝",
+      "nameEn": "Ming Dynasty",
+      "startYear": 1368,
+      "endYear": 1644,
+      "color": "#e74c3c",
+      "description": "郑和七下西洋，展示了中国强大的航海能力和对外交流的意愿。",
+      "capital": "南京、北京",
+      "majorEvents": ["郑和下西洋", "海禁政策", "瓷器贸易鼎盛"]
+    },
+    {
+      "id": "qing",
+      "name": "清朝",
+      "nameEn": "Qing Dynasty",
+      "startYear": 1644,
+      "endYear": 1912,
+      "color": "#2c3e50",
+      "description": "实行闭关锁国政策，传统丝绸之路逐渐衰落，但茶叶和瓷器贸易仍然繁荣。",
+      "capital": "北京",
+      "majorEvents": ["闭关锁国", "鸦片战争", "茶叶贸易"]
+    }
+  ]
+}
