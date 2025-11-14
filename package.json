@@ -11,16 +11,20 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@amap/amap-jsapi-loader": "^1.0.1",
     "@types/three": "^0.181.0",
     "echarts": "^6.0.0",
     "gsap": "^3.13.0",
     "pinia": "^3.0.4",
+    "shpjs": "^6.1.0",
     "three": "^0.181.1",
     "vue": "^3.5.24",
     "vue-echarts": "^8.0.1",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
+    "@amap/amap-jsapi-types": "^0.0.15",
+    "@types/geojson": "^7946.0.13",
     "@types/node": "^24.10.0",
     "@typescript-eslint/eslint-plugin": "^8.46.4",
     "@typescript-eslint/parser": "^8.46.4",

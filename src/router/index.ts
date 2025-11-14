@@ -11,6 +11,11 @@ const routes: RouteRecordRaw[] = [
     name: 'Trade',
     component: () => import('@/views/Trade.vue'),
   },
+  {
+    path: '/transport',
+    name: 'Transport',
+    component: () => import('@/views/Transport.vue'),
+  },
 ]
 
 const router = createRouter({
