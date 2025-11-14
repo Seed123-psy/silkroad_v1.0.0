@@ -4,12 +4,21 @@
 
     <!-- 地图模式和样式切换控件 -->
     <div class="map-style-selector" v-if="MAP_STYLES && MAP_STYLES.length">
-      <select v-model="selectedMode" aria-label="地图显示模式" style="margin-right:8px;">
-        <option v-for="m in MAP_MODES" :key="m.id" :value="m.id">{{ m.name }}</option>
-      </select>
-      <select v-model="selectedStyle" aria-label="地图样式">
-        <option v-for="s in MAP_STYLES" :key="s.id" :value="s.id">{{ s.name }}</option>
-      </select>
+      <div class="select-wrapper">
+        <label class="visually-hidden">地图显示模式</label>
+        <select v-model="selectedMode" aria-label="地图显示模式" class="glass-select">
+          <option v-for="m in MAP_MODES" :key="m.id" :value="m.id">{{ m.name }}</option>
+        </select>
+        <span class="select-arrow" aria-hidden="true"></span>
+      </div>
+
+      <div class="select-wrapper">
+        <label class="visually-hidden">地图样式</label>
+        <select v-model="selectedStyle" aria-label="地图样式" class="glass-select">
+          <option v-for="s in MAP_STYLES" :key="s.id" :value="s.id">{{ s.name }}</option>
+        </select>
+        <span class="select-arrow" aria-hidden="true"></span>
+      </div>
     </div>
 
     <!-- 时间轴组件：居中底部，毛玻璃半透明效果 -->
@@ -85,14 +94,16 @@ const MAP_MODES = [
   { id: 'flat', name: '平面' },
   { id: 'globe', name: '球形' },
 ]
+// 将暗色样式放在首位，便于将唐代交通默认初始化为暗色主题
 const MAP_STYLES: { id: string; name: string }[] = [
+  { id: 'mapbox://styles/mapbox/dark-v10', name: '暗色' },
   { id: 'mapbox://styles/mapbox/streets-v11', name: '街道' },
   { id: 'mapbox://styles/mapbox/light-v10', name: '明亮' },
-  { id: 'mapbox://styles/mapbox/dark-v10', name: '暗色' },
   { id: 'mapbox://styles/mapbox/satellite-v9', name: '卫星' },
 ]
 const selectedMode = ref<string>('flat')
-const selectedStyle = ref<string>(MAP_STYLES[0]?.id || 'mapbox://styles/mapbox/streets-v11')
+// 默认使用数组第一项（已将暗色置为第一项），保证初始化为暗色地图
+const selectedStyle = ref<string>(MAP_STYLES[0]?.id || 'mapbox://styles/mapbox/dark-v10')
 
 // 交通点和交通线数据
 const points = ref<TangPointFeature[]>([])
@@ -175,13 +186,21 @@ function applyMapProjection(mode: string) {
 }
 
 function setChineseLabels() {
-  const MAP_LANG = 'zh'
+  // 支持多种可能的中文字段名，优先级从左到右
+  const CANDIDATE_KEYS = ['name_zh', 'name_zh_cn', 'name_zh-Hans', 'name_zh_hans', 'name_zh_CN', 'name_zh-Hant', 'name_zh_tw', 'name']
   try {
-    const layers = map.getStyle().layers || []
+    const style = map.getStyle()
+    const layers = (style && style.layers) || []
     layers.forEach((layer: any) => {
       if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
-        const localized = ['coalesce', ['get', `name_${MAP_LANG}`], ['get', 'name']]
-        map.setLayoutProperty(layer.id, 'text-field', localized)
+        // 构造 coalesce 表达式，依次尝试候选字段，最后回退到原始 name
+        const expr: any[] = ['coalesce']
+        CANDIDATE_KEYS.forEach((k) => expr.push(['get', k]))
+        try {
+          map.setLayoutProperty(layer.id, 'text-field', expr)
+        } catch (innerErr) {
+          // 某些内置符号图层可能不允许修改，忽略单个错误
+        }
       }
     })
   } catch (e) {
@@ -441,6 +460,15 @@ onMounted(() => {
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right') // 移动导航控件到右下角
     map.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }))
 
+    // 确保在样式数据更新时也尝试设置中文标签（应对部分样式异步添加 label 层的情况）
+    map.on('styledata', () => {
+      try { setChineseLabels() } catch (e) {}
+    })
+    // 也监听 style.load（有时 styledata 不足以覆盖首次加载）
+    map.on('style.load', () => {
+      try { setChineseLabels() } catch (e) {}
+    })
+
     // 鼠标按下/松开控制抓手显示：按下显示 grabbing，松开恢复到 hover 状态（或默认）
     map.on('mousedown', () => {
       isMouseDown = true
@@ -529,11 +557,61 @@ onUnmounted(() => {
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(255, 255, 255, 0.8);
+  /* 毛玻璃样式，适配暗色地图 */
+  background: rgba(12, 16, 24, 0.48);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
   padding: 10px;
-  border-radius: 5px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  z-index: 1;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.36);
+  color: #e8eef8;
+  z-index: 1200;
+}
+
+.select-wrapper {
+  position: relative;
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.glass-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 8px 34px 8px 12px;
+  min-width: 120px;
+  background: rgba(255,255,255,0.03);
+  color: inherit;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  transition: box-shadow 0.15s, transform 0.08s;
+}
+.glass-select:focus {
+  box-shadow: 0 6px 18px rgba(20, 40, 80, 0.2);
+  transform: translateY(-1px);
+}
+
+.select-arrow {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid rgba(255,255,255,0.78);
+  pointer-events: none;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+  white-space: nowrap; border: 0;
 }
 
 /* 时间轴样式 */
