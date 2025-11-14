@@ -11,7 +11,6 @@
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import * as THREE from 'three'
@@ -82,7 +81,6 @@ let cameraAnimation: gsap.core.Tween | null = null
 let isAutoRotating = false
 let isCameraLocked = false // 相机是否锁定在某个城市
 
-// 加载状态
 const isLoading = ref(true)
 
 // 性能优化相关
@@ -150,44 +148,49 @@ function createGlobe() {
   // 创建地球几何体
   const geometry = new THREE.SphereGeometry(GLOBE_RADIUS, GLOBE_SEGMENTS, GLOBE_SEGMENTS)
 
-  // 创建地球材质（先不加载纹理）
-  const material = new THREE.MeshPhongMaterial({
-    color: 0x2233ff, // 蓝色作为基础颜色
-    shininess: 10,
-    specular: new THREE.Color(0x333333),
-  })
-
-  // 异步加载地球纹理
+  // 使用 TextureLoader 异步加载纹理，只有在纹理准备好后再创建并添加地球网格，避免在未加载完成时显示蓝色占位
   const textureLoader = new THREE.TextureLoader()
-  textureLoader.load(
-    '/textures/earth.jpg',
-    // 加载成功回调
-    texture => {
-      console.log('地球纹理加载成功，应用到材质')
-      // 优化纹理设置
+
+  const applyTextureAndCreateGlobe = (texture?: THREE.Texture) => {
+    // 创建材质（如果有纹理则使用纹理，否则使用中性灰）
+    const material = new THREE.MeshPhongMaterial({
+      color: texture ? 0xffffff : 0x666666,
+      shininess: 10,
+      specular: new THREE.Color(0x333333),
+      map: texture || null,
+    })
+
+    if (texture) {
       texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
       texture.generateMipmaps = true
       texture.minFilter = THREE.LinearMipMapLinearFilter
+    }
 
-      material.map = texture
-      material.color.setHex(0xffffff) // 移除蓝色tint
-      material.needsUpdate = true
+    // 创建并添加地球网格
+    globe = new THREE.Mesh(geometry, material)
+    globe.visible = true
+    scene.add(globe)
 
-      console.log('纹理已应用，材质已更新')
+    // 隐藏加载动画（延迟少许以确保一帧渲染）
+    setTimeout(() => {
+      isLoading.value = false
+      markNeedsRender()
+    }, 200)
+  }
 
-      // 纹理加载完成，隐藏加载动画
-      setTimeout(() => {
-        isLoading.value = false
-      }, 500) // 延迟500ms以确保渲染完成
+  // 开始加载主纹理
+  textureLoader.load(
+    '/textures/earth.jpg',
+    texture => {
+      console.log('地球纹理加载成功，应用到材质')
+      applyTextureAndCreateGlobe(texture)
     },
-    // 加载进度回调
     progress => {
-      if (progress.total > 0) {
+      if (progress && progress.total && progress.total > 0) {
         const percent = ((progress.loaded / progress.total) * 100).toFixed(2)
         console.log('纹理加载进度:', percent + '%')
       }
     },
-    // 加载失败回调
     error => {
       console.error('地球纹理加载失败:', error)
       // 尝试备用纹理
@@ -195,29 +198,17 @@ function createGlobe() {
         '/textures/earth-day.jpg',
         texture => {
           console.log('备用纹理加载成功，应用到材质')
-          texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
-          material.map = texture
-          material.color.setHex(0xffffff)
-          material.needsUpdate = true
-
-          // 备用纹理加载完成，隐藏加载动画
-          setTimeout(() => {
-            isLoading.value = false
-          }, 500)
+          applyTextureAndCreateGlobe(texture)
         },
         undefined,
         () => {
-          console.error('备用纹理也加载失败')
-          // 即使纹理加载失败，也要隐藏加载动画
-          isLoading.value = false
+          console.error('备用纹理也加载失败，创建无纹理的地球')
+          // 即使纹理加载失败，也创建一个中性材质的地球，随后隐藏加载动画
+          applyTextureAndCreateGlobe(undefined)
         }
       )
     }
   )
-
-  // 创建地球网格
-  globe = new THREE.Mesh(geometry, material)
-  scene.add(globe)
 }
 
 /**
