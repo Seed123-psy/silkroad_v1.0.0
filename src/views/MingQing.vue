@@ -58,28 +58,34 @@
     <button v-if="!showLegend" class="legend-toggle" @mouseenter="showLegend = true" @focus="showLegend = true" aria-label="展开图例">准确度</button>
 
     <transition name="slide">
-      <div class="hover-panel" v-if="hoverPanel.show">
-      <div class="hover-header">
-        <div>
-          <h3>{{ hoverPanel.props?.name }}</h3>
-          <p v-if="hoverPanel.props?.otherName" class="info-sub">别称：{{ hoverPanel.props?.otherName }}</p>
+      <div class="hover-panel compact" v-if="hoverPanel.show">
+        <div class="hover-top">
+          <div class="icon-wrap" :style="{ borderColor: hoverPanel.props?.color || '#e67e22' }">
+            <div class="icon-core" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }" />
+          </div>
+          <div class="hover-title">
+            <h4 class="title">{{ hoverPanel.props?.name }}</h4>
+            <div v-if="hoverPanel.props?.otherName" class="subtitle">别称：{{ hoverPanel.props?.otherName }}</div>
+          </div>
+          <div class="meta">
+            <span class="badge small" :style="{ backgroundColor: hoverPanel.props?.color }">{{ hoverPanel.props?.accuracyLabel }}</span>
+          </div>
         </div>
-        <span class="badge" :style="{ backgroundColor: hoverPanel.props?.color }">{{ hoverPanel.props?.accuracyLabel }}</span>
-      </div>
-      <ul class="info-list">
-        <li>
-          <span>存续</span>
-          <strong>{{ formatYear(hoverPanel.props?.beginYear) }} - {{ formatYear(hoverPanel.props?.endYear) }}</strong>
-        </li>
-        <li v-if="hoverPanel.props?.landmark">
-          <span>地标依据</span>
-          <strong>{{ hoverPanel.props?.landmark }}</strong>
-        </li>
-        <li v-if="hoverPanel.props?.references">
-          <span>参考文献</span>
-          <strong>{{ hoverPanel.props?.references }}</strong>
-        </li>
-      </ul>
+
+        <div class="hover-body">
+          <div class="row">
+            <div class="label">存续</div>
+            <div class="value">{{ formatYear(hoverPanel.props?.beginYear) }} - {{ formatYear(hoverPanel.props?.endYear) }}</div>
+          </div>
+          <div class="row" v-if="hoverPanel.props?.landmark">
+            <div class="label">地标</div>
+            <div class="value">{{ hoverPanel.props?.landmark }}</div>
+          </div>
+          <div class="row" v-if="hoverPanel.props?.references">
+            <div class="label">资料</div>
+            <div class="value">{{ hoverPanel.props?.references }}</div>
+          </div>
+        </div>
       </div>
     </transition>
 
@@ -112,11 +118,12 @@ type MingQingRegionFeature = GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPoly
   id: number
 }
 
+// accuracy: 1 = most certain (green), 4 = least certain (red)
 const ACCURACY_LEVELS = [
-  { level: 1, color: '#f94144', title: '档位 1', description: '城墙痕迹清晰，复原结果最准确' },
-  { level: 2, color: '#f3722c', title: '档位 2', description: '部分城墙/遗迹保留，可较准确复原' },
+  { level: 1, color: '#2ecc71', title: '档位 1', description: '城墙痕迹清晰，复原结果最准确' },
+  { level: 2, color: '#90be6d', title: '档位 2', description: '部分城墙/遗迹保留，可较准确复原' },
   { level: 3, color: '#f9c74f', title: '档位 3', description: '遗迹稀少，辅助地标推断' },
-  { level: 4, color: '#90be6d', title: '档位 4', description: '资料缺乏或以规则方格替代' },
+  { level: 4, color: '#ef476f', title: '档位 4', description: '资料缺乏或以规则方格替代' },
 ]
 
 const ACCURACY_COLOR_MAP = ACCURACY_LEVELS.reduce<Record<number, string>>((acc, level) => {
@@ -140,6 +147,10 @@ const MAP_STYLES = [
   { id: 'mapbox://styles/mapbox/navigation-day-v1', name: '导航（日）' },
   { id: 'mapbox://styles/mapbox/navigation-night-v1', name: '导航（夜）' },
 ]
+
+// detail zoom used when flying to a marker (set between 14-16 per request)
+// increased for closer-to-ground view
+const DETAIL_ZOOM = 16
 
 const MINGQING_ZIP_URL = new URL('../assets/data/mingqing/mingqing_regions.zip', import.meta.url).href
 
@@ -237,17 +248,26 @@ function mapReady(): boolean {
 
 function renderRegions(features: MingQingRegionFeature[]) {
   latestRegionGeoJSON = { type: 'FeatureCollection', features }
+  // debug log
+  // eslint-disable-next-line no-console
+  console.log('[MingQing] renderRegions called, features:', Array.isArray(features) ? features.length : 0)
   if (!mapReady() || !latestRegionGeoJSON) return
 
-  if (!map!.getSource('mq-regions')) {
-    map!.addSource('mq-regions', {
-      type: 'geojson',
-      data: latestRegionGeoJSON,
-      promoteId: 'uid'
-    })
-  } else {
-    const source = map!.getSource('mq-regions') as any
-    source?.setData(latestRegionGeoJSON)
+  // Prefer updating existing sources to avoid removing/adding layers which causes flicker
+  try {
+    if (map!.getSource('mq-regions')) {
+      try { (map!.getSource('mq-regions') as any).setData(latestRegionGeoJSON) } catch (e) { /* ignore */ }
+    } else {
+      map!.addSource('mq-regions', { type: 'geojson', data: latestRegionGeoJSON, promoteId: 'uid' })
+    }
+  } catch (err) {
+    // if something unexpected happens, attempt a safe recreate after removing old resources
+    try {
+      if (map!.getLayer('mq-regions-fill')) { map!.removeLayer('mq-regions-fill') }
+      if (map!.getLayer('mq-regions-outline')) { map!.removeLayer('mq-regions-outline') }
+      if (map!.getSource('mq-regions')) { map!.removeSource('mq-regions') }
+      map!.addSource('mq-regions', { type: 'geojson', data: latestRegionGeoJSON, promoteId: 'uid' })
+    } catch (e) { /* ignore */ }
   }
 
   if (!map!.getLayer('mq-regions-fill')) {
@@ -273,6 +293,106 @@ function renderRegions(features: MingQingRegionFeature[]) {
         'line-color': '#f5f8fb',
         'line-width': 0.6,
         'line-opacity': 0.65
+      }
+    })
+  }
+
+  // Create/update centroid labels for regions (visible when zoomed out)
+    const labelFeatures = features.map((f) => {
+    const geom = f.geometry as any
+    let coords: [number, number] | null = null
+    if (geom && geom.type === 'Polygon') {
+      const ring = (geom.coordinates && geom.coordinates[0]) || []
+      if (ring.length) {
+        // typescript-safe reduce: ensure values exist
+        let sx = 0, sy = 0
+        for (let i = 0; i < ring.length; i++) {
+          const c = ring[i]
+          if (c && typeof c[0] === 'number' && typeof c[1] === 'number') {
+            sx += c[0]
+            sy += c[1]
+          }
+        }
+        coords = [sx / ring.length, sy / ring.length]
+      }
+    } else if (geom && geom.type === 'MultiPolygon') {
+      // take centroid of first polygon's first ring as approximation
+      const ring = ((geom.coordinates && geom.coordinates[0]) ? geom.coordinates[0][0] : []) || []
+      if (ring.length) {
+        let sx = 0, sy = 0
+        for (let i = 0; i < ring.length; i++) {
+          const c = ring[i]
+          if (c && typeof c[0] === 'number' && typeof c[1] === 'number') {
+            sx += c[0]
+            sy += c[1]
+          }
+        }
+        coords = [sx / ring.length, sy / ring.length]
+      }
+    }
+    return {
+      type: 'Feature',
+      geometry: coords ? { type: 'Point', coordinates: coords } : null,
+      properties: { uid: f.properties.uid, color: f.properties.color, accuracy: f.properties.accuracy }
+    }
+  }).filter((d) => d.geometry)
+
+  const labelsGeoJSON = { type: 'FeatureCollection', features: labelFeatures }
+  try {
+    if (map!.getSource('mq-labels')) {
+      try { (map!.getSource('mq-labels') as any).setData(labelsGeoJSON) } catch (e) { /* ignore */ }
+    } else {
+      map!.addSource('mq-labels', { type: 'geojson', data: labelsGeoJSON })
+    }
+  } catch (err) {
+    // fallback: attempt safe recreate
+    try {
+      if (map!.getLayer('mq-labels-halo')) { map!.removeLayer('mq-labels-halo') }
+      if (map!.getLayer('mq-labels-dot')) { map!.removeLayer('mq-labels-dot') }
+      if (map!.getSource('mq-labels')) { map!.removeSource('mq-labels') }
+      map!.addSource('mq-labels', { type: 'geojson', data: labelsGeoJSON })
+    } catch (e) { /* ignore */ }
+  }
+
+  // refined marker: outer halo + colored core (no text labels)
+  if (!map!.getLayer('mq-labels-halo')) {
+    map!.addLayer({
+      id: 'mq-labels-halo',
+      type: 'circle',
+      source: 'mq-labels',
+      minzoom: 0,
+      maxzoom: 8,
+      paint: {
+        // halo grows slightly with zoom to remain visible at low zooms
+        'circle-radius': [
+          'interpolate', ['exponential', 1.2], ['zoom'],
+          0, 6,
+          8, 14
+        ],
+        'circle-color': 'rgba(8,12,18,0.65)',
+        'circle-blur': 0.6,
+        'circle-opacity': 0.9
+      }
+    })
+  }
+
+  if (!map!.getLayer('mq-labels-dot')) {
+    map!.addLayer({
+      id: 'mq-labels-dot',
+      type: 'circle',
+      source: 'mq-labels',
+      minzoom: 0,
+      maxzoom: 8,
+      paint: {
+        'circle-radius': [
+          'interpolate', ['exponential', 1.2], ['zoom'],
+          0, 3,
+          8, 8
+        ],
+        // use feature color if provided, fallback to accuracy mapping
+        'circle-color': ['coalesce', ['get', 'color'], '#e67e22'],
+        'circle-stroke-color': 'rgba(255,255,255,0.85)',
+        'circle-stroke-width': 0.8
       }
     })
   }
@@ -335,10 +455,119 @@ function attachRegionInteractions() {
 
   map.on('mousemove', 'mq-regions-fill', moveHandler)
   map.on('mouseleave', 'mq-regions-fill', leaveHandler)
+  // also react to hovering the refined marker (dot) so users can hover the point
+  const labelMoveHandler = (e: any) => {
+    if (!e.features || !e.features.length) return
+    const labelFeature = e.features[0] as any
+    const newId = labelFeature.properties.uid
+    // highlight corresponding region
+    if (hoveredRegionId !== null && hoveredRegionId !== newId) {
+      map!.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: false })
+    }
+    hoveredRegionId = newId
+    try { map!.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: true }) } catch (e) {}
+
+    isOverRegion = true
+    try { map.getCanvas().style.cursor = 'pointer' } catch (e) {}
+
+    const uid = newId
+    const coordArr = (labelFeature.geometry && labelFeature.geometry.type === 'Point' && labelFeature.geometry.coordinates) ? labelFeature.geometry.coordinates : null
+    const coord = coordArr ? coordArr.join(',') : ''
+    const featureKey = `${uid}|${coord}`
+
+    if (featureKey === lastFeatureKey) return
+
+    pendingFeatureKey = featureKey
+    if (popupTimer) clearTimeout(popupTimer)
+    popupTimer = setTimeout(() => {
+      if (!isOverRegion || pendingFeatureKey !== featureKey) return
+      lastFeatureKey = featureKey
+      // find the full region properties by uid
+      const region = (latestRegionGeoJSON && latestRegionGeoJSON.features) ? latestRegionGeoJSON.features.find((f: any) => f.properties && f.properties.uid === uid) : null
+      const props = region ? (region.properties as MingQingRegionProperties) : undefined
+      hoverPanel.value = { show: true, props }
+    }, 120)
+  }
+
+  const labelLeaveHandler = () => {
+    if (hoveredRegionId !== null) {
+      try { map!.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: false }) } catch (e) {}
+      hoveredRegionId = null
+    }
+    isOverRegion = false
+    pendingFeatureKey = ''
+    lastFeatureKey = ''
+    if (popupTimer) { clearTimeout(popupTimer); popupTimer = null }
+    hoverPanel.value = { show: false }
+    try { map.getCanvas().style.cursor = '' } catch (e) {}
+  }
+
+  const labelDblClickHandler = (e: any) => {
+    if (!e.features || !e.features.length) return
+    const labelFeature = e.features[0] as any
+    const coords = (labelFeature.geometry && labelFeature.geometry.type === 'Point' && labelFeature.geometry.coordinates) ? labelFeature.geometry.coordinates : null
+    if (!coords) return
+    const uid = labelFeature.properties && (labelFeature.properties.uid ?? labelFeature.properties.id)
+    // fly to the marker and zoom in for a close-to-ground, oblique view
+    try {
+      // prevent default double-click zoom interfering
+      try {
+        e.originalEvent && e.originalEvent.preventDefault && e.originalEvent.preventDefault()
+        e.originalEvent && e.originalEvent.stopPropagation && e.originalEvent.stopPropagation()
+      } catch (err) {}
+
+      // disable map's default doubleClickZoom behavior while we control the flight
+      try { map.doubleClickZoom && map.doubleClickZoom.disable && map.doubleClickZoom.disable() } catch (err) {}
+
+      map.flyTo({
+        center: coords,
+        zoom: DETAIL_ZOOM,
+        pitch: 60,
+        bearing: 0,
+        speed: 0.9,
+        curve: 1.6,
+        essential: true
+      })
+      // after flying, open the hover panel and highlight the region; then restore doubleClickZoom
+      map.once && map.once('moveend', () => {
+        try {
+          const region = (latestRegionGeoJSON && latestRegionGeoJSON.features) ? latestRegionGeoJSON.features.find((f: any) => f.properties && (f.properties.uid === uid || f.id === uid)) : null
+          const props = region ? (region.properties as MingQingRegionProperties) : undefined
+          hoverPanel.value = { show: true, props }
+          if (hoveredRegionId !== null && hoveredRegionId !== uid) {
+            try { map.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: false }) } catch (e) {}
+          }
+          if (uid !== undefined && uid !== null) {
+            try { map.setFeatureState({ source: 'mq-regions', id: uid }, { hover: true }) } catch (e) {}
+            hoveredRegionId = uid
+          }
+        } catch (err) {
+          // ignore
+        } finally {
+          try { map.doubleClickZoom && map.doubleClickZoom.enable && map.doubleClickZoom.enable() } catch (err) {}
+        }
+      })
+    } catch (err) {
+      // fallback to easeTo if flyTo fails
+      try {
+        // also temporarily disable doubleClickZoom to avoid conflicts
+        try { map.doubleClickZoom && map.doubleClickZoom.disable && map.doubleClickZoom.disable() } catch (err) {}
+        map.easeTo({ center: coords, zoom: DETAIL_ZOOM, pitch: 60 })
+        try { map.doubleClickZoom && map.doubleClickZoom.enable && map.doubleClickZoom.enable() } catch (err) {}
+      } catch (e) {}
+    }
+  }
+
+  map.on('mousemove', 'mq-labels-dot', labelMoveHandler)
+  map.on('mouseleave', 'mq-labels-dot', labelLeaveHandler)
+  map.on('dblclick', 'mq-labels-dot', labelDblClickHandler)
 
   regionInteractionDisposer = () => {
     map?.off('mousemove', 'mq-regions-fill', moveHandler)
     map?.off('mouseleave', 'mq-regions-fill', leaveHandler)
+    map?.off('mousemove', 'mq-labels-dot', labelMoveHandler)
+    map?.off('mouseleave', 'mq-labels-dot', labelLeaveHandler)
+    map?.off('dblclick', 'mq-labels-dot', labelDblClickHandler)
   }
 }
 
@@ -375,14 +604,41 @@ async function loadMingQingRegions() {
     console.error('加载明清城区数据失败', error)
     alert('明清城区数据加载失败，请确认数据文件是否完整。')
   }
+  // ensure map renders once data is loaded: if map ready render now, otherwise wait for next style load
+  if (map) {
+    try {
+      if (map.isStyleLoaded && map.isStyleLoaded()) {
+        const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : regions.value
+        renderRegions(toRender as MingQingRegionFeature[])
+      } else {
+        map.once && map.once('style.load', () => {
+          const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : regions.value
+          try { renderRegions(toRender as MingQingRegionFeature[]) } catch (e) {}
+        })
+      }
+    } catch (e) {}
+  }
 }
 
 function normalizeRegionFeature(feature: any, idx: number): MingQingRegionFeature | null {
   if (!feature || !feature.geometry) return null
   const raw = feature.properties || {}
-  const beginYear = parseYear(raw.begin_yr ?? raw.begin ?? raw.Begin_yr ?? raw.beginYear)
-  const endYear = parseYear(raw.end_yr ?? raw.end ?? raw.End_yr ?? raw.endYear)
-  const accuracy = parseAccuracy(raw.accuracy ?? raw.Accuracy ?? raw.ACCURACY)
+  // support multiple possible DBF field names (english and chinese)
+  const nameKeys = ['name', 'Name', 'NAME', 'name_zh', 'name_zh_cn', '名称', '城名', '名']
+  const beginKeys = ['begin_yr', 'begin', 'Begin_yr', 'beginYear', 'start', 'start_year', '年代始', '始年', '起始年']
+  const endKeys = ['end_yr', 'end', 'End_yr', 'endYear', 'stop', 'end_year', '年代止', '止年', '结束年']
+  const accuracyKeys = ['accuracy', 'Accuracy', 'ACC', '准确度', '置信度']
+
+  function firstOf(keys: string[]) {
+    for (const k of keys) {
+      if (raw[k] !== undefined && raw[k] !== null && String(raw[k]).trim() !== '') return raw[k]
+    }
+    return undefined
+  }
+
+  const beginYear = parseYear(firstOf(beginKeys))
+  const endYear = parseYear(firstOf(endKeys))
+  const accuracy = parseAccuracy(firstOf(accuracyKeys))
 
   const normalized: MingQingRegionFeature = {
     type: 'Feature',
@@ -390,12 +646,12 @@ function normalizeRegionFeature(feature: any, idx: number): MingQingRegionFeatur
     geometry: feature.geometry,
     properties: {
       uid: idx,
-      name: String(raw.name ?? raw.Name ?? raw.NAME ?? `未命名城池 ${idx + 1}`),
-      otherName: raw.other_name ?? raw.otherName ?? raw.alias ?? undefined,
+      name: String(firstOf(nameKeys) ?? `未命名城池 ${idx + 1}`),
+      otherName: raw.other_name ?? raw.otherName ?? raw.alias ?? raw['别名'] ?? undefined,
       beginYear,
       endYear,
-      references: raw.references ?? raw.reference ?? raw.source ?? undefined,
-      landmark: raw.landmark ?? raw.landmarks ?? undefined,
+      references: raw.references ?? raw.reference ?? raw.source ?? raw['参考文献'] ?? undefined,
+      landmark: raw.landmark ?? raw.landmarks ?? raw['地标'] ?? undefined,
       accuracy,
       accuracyLabel: getAccuracyLabel(accuracy),
       color: getAccuracyColor(accuracy)
@@ -441,7 +697,10 @@ function applyMapStyle(styleId: string) {
   map.once('style.load', () => {
     setChineseLabels()
     applyMapProjection(selectedMode.value)
-    if (latestRegionGeoJSON) renderRegions(filteredRegions.value)
+    if (latestRegionGeoJSON) {
+      const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : latestRegionGeoJSON.features
+      renderRegions(toRender as MingQingRegionFeature[])
+    }
   })
 }
 
@@ -592,16 +851,31 @@ onMounted(() => {
   map.on('load', () => {
     setChineseLabels()
     applyMapProjection(selectedMode.value)
-    if (latestRegionGeoJSON && filteredRegions.value.length) {
-      renderRegions(filteredRegions.value)
+    if (latestRegionGeoJSON) {
+      const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : latestRegionGeoJSON.features
+      renderRegions(toRender as MingQingRegionFeature[])
     }
   })
 
   map.on('styledata', () => {
     setChineseLabels()
+    // ensure labels/regions are re-rendered when style assets update
+    if (latestRegionGeoJSON) {
+      const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : (latestRegionGeoJSON.features as MingQingRegionFeature[])
+      // use a short timeout to allow style layers to settle
+      setTimeout(() => {
+        try { renderRegions(toRender as MingQingRegionFeature[]) } catch (e) {}
+      }, 60)
+    }
   })
   map.on('style.load', () => {
     setChineseLabels()
+    if (latestRegionGeoJSON) {
+      const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : (latestRegionGeoJSON.features as MingQingRegionFeature[])
+      setTimeout(() => {
+        try { renderRegions(toRender as MingQingRegionFeature[]) } catch (e) {}
+      }, 60)
+    }
   })
 
   map.on('movestart', reduceTerrainForInteraction)
@@ -830,6 +1104,70 @@ onUnmounted(() => {
   box-shadow: 0 12px 36px rgba(0,0,0,0.45);
   z-index: 3000;
 }
+
+.hover-panel.compact {
+  width: 300px; /* narrower */
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(8,12,18,0.92), rgba(6,9,16,0.86));
+  backdrop-filter: blur(6px) saturate(120%);
+}
+
+.hover-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 6px 18px rgba(2,6,12,0.5);
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.08));
+}
+
+.icon-core {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.hover-title .title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  max-width: 170px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.hover-title .subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta { margin-left: auto }
+.badge.small { padding: 6px 8px; font-size: 12px; border-radius: 999px; color: #06101d; font-weight: 700 }
+
+.hover-body { margin-top: 10px; display: flex; flex-direction: column; gap: 8px }
+.row { display:flex; justify-content:space-between; gap:12px; align-items:flex-start }
+.label { color: rgba(255,255,255,0.62); font-size: 12px }
+.value { color: rgba(255,255,255,0.92); font-size: 13px; text-align: right; max-width: 180px; overflow: hidden; text-overflow: ellipsis }
+
 
 .hover-header {
   display: flex;

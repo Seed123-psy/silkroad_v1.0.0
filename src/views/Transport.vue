@@ -251,6 +251,8 @@ function applyMapStyle(styleId: string) {
     setChineseLabels()
     // 样式切换后重新应用当前投影/地形设置，确保 3（模式）×8（样式） 组合生效
     try { applyMapProjection(selectedMode.value) } catch (e) {}
+    // After style change, re-render current data so points/lines and hitboxes are restored
+    try { filterByYear(selectedYear.value) } catch (e) {}
   })
 }
 
