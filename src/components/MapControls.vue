@@ -93,7 +93,10 @@ const styleLabel = computed(() => {
 </script>
 
 <style scoped lang="scss">
-@import '@/assets/styles/_controls.scss';
+@use '@/assets/styles/_controls' as controls;
+
+/* 说明：使用 `@use` 替代已弃用的 `@import`，Dart Sass 推荐模块化加载。
+	直接引入样式文件会保留其全局样式输出，组件中仍然可以通过类名引用。 */
 
 /* small wrappers mapping headless markup to our global classes */
 .map-style-selector { position: absolute; top: 10px; left: 10px; display: flex; gap: 8px }
