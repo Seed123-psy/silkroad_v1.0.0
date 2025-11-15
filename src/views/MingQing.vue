@@ -25,6 +25,7 @@ let map: any = null
 const MAP_MODES = [
   { id: 'flat', name: '平面' },
   { id: 'globe', name: '球形' },
+  { id: 'terrain', name: '立体' },
 ]
 
 const MAP_STYLES = [
@@ -49,11 +50,46 @@ const sampleCities = ref([
 
 // sampleCities 用于地图上的示例点；无额外加载逻辑
 
+// 交互优化：在交互期间降低 hillshade 表现
+let mq_savedHillEx: number | null = null
+let mq_interactionTimer: any = null
+
+function mq_reduceTerrainForInteraction() {
+  if (!map) return
+  try {
+    if (map.getLayer && map.getLayer('hillshade-layer')) {
+      try {
+        if (mq_savedHillEx === null) mq_savedHillEx = map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number || 0.8
+        map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', 0.18)
+      } catch (e) {}
+    }
+  } catch (e) {}
+  if (mq_interactionTimer) clearTimeout(mq_interactionTimer)
+}
+
+function mq_restoreTerrainAfterInteraction() {
+  if (!map) return
+  if (mq_interactionTimer) clearTimeout(mq_interactionTimer)
+    mq_interactionTimer = setTimeout(() => {
+    try {
+      if (map.getLayer && map.getLayer('hillshade-layer')) {
+        try {
+          map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', 0.8)
+        } catch (e) {}
+      }
+    } catch (e) {}
+    mq_savedHillEx = null
+    mq_interactionTimer = null
+  }, 220)
+}
+
 function applyMapStyle(styleId: string) {
   if (!map) return
   map.setStyle(styleId)
   map.once('style.load', () => {
     try { setChineseLabels() } catch (e) {}
+    // 切换样式后重新应用当前投影/地形，确保每个样式都能反映当前模式
+    try { applyMapProjection(selectedMode.value) } catch (e) {}
   })
 }
 
@@ -62,8 +98,39 @@ function applyMapProjection(mode: string) {
   try {
     if (mode === 'globe') {
       map.setProjection && map.setProjection('globe')
+      // 球形投影不启用平面立体（terrain），仅使用 sky 层增强视觉
+      map.once('style.load', () => {
+        try {
+          if (!map.getLayer('sky')) {
+            map.addLayer({ id: 'sky', type: 'sky', paint: { 'sky-type': 'atmosphere', 'sky-atmosphere-sun': [0.0,0.0], 'sky-atmosphere-sun-intensity': 15, 'sky-atmosphere-color': '#101020', 'sky-atmosphere-halo-color': '#222244', 'sky-opacity': 1 } })
+          }
+        } catch (e) {}
+      })
+    } else if (mode === 'terrain') {
+      map.setProjection && map.setProjection('mercator')
+      try {
+        if (!map.getSource('mapbox-dem')) {
+          map.addSource('mapbox-dem', {
+            type: 'raster-dem',
+            url: 'mapbox://mapbox.terrain-rgb',
+            tileSize: 512,
+            maxzoom: 14
+          })
+        }
+        // 使用更明显但受控的夸张值 2.5
+        map.setTerrain && map.setTerrain({ source: 'mapbox-dem', exaggeration: 2.5 })
+        map.once('style.load', () => {
+          try {
+                if (!map.getLayer('hillshade-layer')) {
+                  map.addLayer({ id: 'hillshade-layer', type: 'hillshade', source: 'mapbox-dem', paint: { 'hillshade-exaggeration': 0.8 } })
+                }
+          } catch (ee) {}
+        })
+      } catch (e) {}
     } else {
       map.setProjection && map.setProjection('mercator')
+      try { map.setTerrain && map.setTerrain(null) } catch (e) {}
+      try { if (map.getLayer && map.getLayer('hillshade-layer')) map.removeLayer('hillshade-layer') } catch (e) {}
     }
   } catch (e) {
     // ignore if not supported
@@ -105,9 +172,6 @@ onMounted(() => {
           'circle-radius': 6,
           'circle-color': '#e67e22',
           'circle-stroke-width': 1,
-          'circle-stroke-color': '#fff',
-        },
-      })
     }
     // ensure Chinese labels after style has loaded
     try { setChineseLabels() } catch (e) {}
@@ -124,6 +188,16 @@ onMounted(() => {
   map.on('style.load', () => {
     try { setChineseLabels() } catch (e) {}
   })
+
+  // 交互优化事件
+  map.on('movestart', mq_reduceTerrainForInteraction)
+  map.on('zoomstart', mq_reduceTerrainForInteraction)
+  map.on('rotatestart', mq_reduceTerrainForInteraction)
+  map.on('pitchstart', mq_reduceTerrainForInteraction)
+  map.on('moveend', mq_restoreTerrainAfterInteraction)
+  map.on('zoomend', mq_restoreTerrainAfterInteraction)
+  map.on('rotateend', mq_restoreTerrainAfterInteraction)
+  map.on('pitchend', mq_restoreTerrainAfterInteraction)
 })
 
 onUnmounted(() => {
@@ -131,6 +205,22 @@ onUnmounted(() => {
     try { map.remove() } catch (e) {}
     map = null
   }
+})
+
+// 清理交互事件监听
+onUnmounted(() => {
+  try {
+    if (map) {
+      map.off('movestart', mq_reduceTerrainForInteraction)
+      map.off('zoomstart', mq_reduceTerrainForInteraction)
+      map.off('rotatestart', mq_reduceTerrainForInteraction)
+      map.off('pitchstart', mq_reduceTerrainForInteraction)
+      map.off('moveend', mq_restoreTerrainAfterInteraction)
+      map.off('zoomend', mq_restoreTerrainAfterInteraction)
+      map.off('rotateend', mq_restoreTerrainAfterInteraction)
+      map.off('pitchend', mq_restoreTerrainAfterInteraction)
+    }
+  } catch (e) {}
 })
 
 // 把 Transport.vue 中用于替换 label 字段以显示中文的逻辑复制到此处

@@ -96,6 +96,7 @@ let pendingFeatureKey = ''
 const MAP_MODES = [
   { id: 'flat', name: '平面' },
   { id: 'globe', name: '球形' },
+  { id: 'terrain', name: '立体' },
 ]
 // 将暗色样式放在首位，便于将唐代交通默认初始化为暗色主题
 const MAP_STYLES: { id: string; name: string }[] = [
@@ -137,6 +138,57 @@ const isPlaying = ref(false)
 const playbackSpeed = ref<number>(1) // 年/秒，可根据需求暴露为 UI
 let rafId: number | null = null
 let lastFrameTime = 0
+// 地形夸张值（设为 2.5，用于增强立体感；globe 模式将不启用地形）
+const terrainExaggeration = ref<number>(2.5)
+
+// 当用户调整夸张值时，实时更新 map 的 terrain 与 hillshade 表现
+watch(terrainExaggeration, (val) => {
+  try {
+    if (map && map.setTerrain) {
+      map.setTerrain({ source: 'mapbox-dem', exaggeration: val })
+    }
+    if (map && map.getLayer && map.getLayer('hillshade-layer')) {
+      try { map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, val * 0.8)) } catch (e) {}
+    }
+ 
+  } catch (e) {}
+})
+
+// 交互优化：在用户交互（拖动/缩放/旋转/倾斜）期间降低 hillshade 强度，交互结束后恢复
+let savedHillEx: number | null = null
+let interactionTimer: any = null
+
+function reduceTerrainForInteraction() {
+  if (!map) return
+  try {
+    if (map.getLayer && map.getLayer('hillshade-layer')) {
+      try {
+        if (savedHillEx === null) savedHillEx = map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number || 0.8
+        map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', 0.18)
+      } catch (e) {}
+    }
+  } catch (e) {}
+  // 如果用户持续交互，延迟恢复会被重置
+  if (interactionTimer) clearTimeout(interactionTimer)
+}
+
+function restoreTerrainAfterInteraction() {
+  if (!map) return
+  // 延迟一点再恢复，避免短促拖动导致频繁切换
+  if (interactionTimer) clearTimeout(interactionTimer)
+  interactionTimer = setTimeout(() => {
+    try {
+      if (map.getLayer && map.getLayer('hillshade-layer')) {
+        try {
+          const ex = (typeof terrainExaggeration !== 'undefined') ? terrainExaggeration.value : 0.8
+          map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, ex * 0.8))
+        } catch (e) {}
+      }
+    } catch (e) {}
+    savedHillEx = null
+    interactionTimer = null
+  }, 220)
+}
 
 function step(timestamp: number) {
   if (!lastFrameTime) lastFrameTime = timestamp
@@ -197,33 +249,22 @@ function applyMapStyle(styleId: string) {
   map.setStyle(styleId)
   map.once('style.load', () => {
     setChineseLabels()
+    // 样式切换后重新应用当前投影/地形设置，确保 3（模式）×8（样式） 组合生效
+    try { applyMapProjection(selectedMode.value) } catch (e) {}
   })
 }
 
 function applyMapProjection(mode: string) {
   if (!map) return
   if (mode === 'globe') {
+    // 球形投影：不启用地形放大效果，仅设置 globe 投影并添加天空层
     map.setProjection('globe')
     setTimeout(() => {
       if (map.getProjection().name !== 'globe') {
         map.setProjection('globe')
       }
     }, 100)
-    try {
-      if (!map.getSource('mapbox-dem')) {
-        map.addSource('mapbox-dem', {
-          type: 'raster-dem',
-          url: 'mapbox://mapbox.terrain-rgb',
-          tileSize: 512,
-          maxzoom: 14
-        })
-      }
-      map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.2 })
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.warn('地形设置失败:', e)
-    }
-    // 添加星空背景层
+    // 仅添加 sky 层以增强球形视觉，但不添加 raster-dem / setTerrain
     map.once('style.load', () => {
       if (!map.getLayer('sky')) {
         map.addLayer({
@@ -241,18 +282,67 @@ function applyMapProjection(mode: string) {
       }
     })
   } else {
+    // 默认平面（mercator）或立体（terrain）都使用 mercator 投影
     map.setProjection('mercator')
     setTimeout(() => {
       if (map.getProjection().name !== 'mercator') {
         map.setProjection('mercator')
       }
     }, 100)
-    try {
-      map.setTerrain(null)
-    } catch (e) {}
-    // 移除星空层
-    if (map.getLayer && map.getLayer('sky')) {
-      try { map.removeLayer('sky') } catch (e) {}
+    // 如果是 terrain 模式，则启用地形 DEM 与阴影图层
+    if (mode === 'terrain') {
+      try {
+        if (!map.getSource('mapbox-dem')) {
+          map.addSource('mapbox-dem', {
+            type: 'raster-dem',
+            url: 'mapbox://mapbox.terrain-rgb',
+            tileSize: 512,
+            maxzoom: 14
+          })
+        }
+        // 使用 terrainExaggeration 的当前值以增强立体感
+        const ex = (typeof terrainExaggeration !== 'undefined') ? terrainExaggeration.value : 1.2
+        map.setTerrain({ source: 'mapbox-dem', exaggeration: ex })
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn('地形设置失败:', e)
+      }
+
+      // 在样式加载完成时添加 hillshade 图层
+      map.once('style.load', () => {
+        try {
+          // hillshade 层（需要 raster-dem）
+          if (!map.getLayer('hillshade-layer')) {
+            map.addLayer({
+              id: 'hillshade-layer',
+              type: 'hillshade',
+              source: 'mapbox-dem',
+              paint: {
+                'hillshade-exaggeration': (typeof terrainExaggeration !== 'undefined') ? Math.max(0.2, terrainExaggeration.value * 0.8) : 0.8,
+                'hillshade-illumination-direction': 335
+              }
+            })
+          }
+
+          
+        } catch (innerE) {
+          // eslint-disable-next-line no-console
+          console.warn('添加地形图层时出错：', innerE)
+        }
+      })
+    } else {
+      // 非 terrain 模式：移除地形与相关图层
+      try {
+        map.setTerrain(null)
+      } catch (e) {}
+      if (map.getLayer && map.getLayer('hillshade-layer')) {
+        try { map.removeLayer('hillshade-layer') } catch (e) {}
+      }
+      
+      // 移除星空层（globe 专用）
+      if (map.getLayer && map.getLayer('sky')) {
+        try { map.removeLayer('sky') } catch (e) {}
+      }
     }
   }
 }
@@ -532,6 +622,17 @@ onMounted(() => {
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right') // 移动导航控件到右下角
     map.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }))
 
+    // 交互优化事件：在交互开始降低地形效果，交互结束恢复
+    map.on('movestart', reduceTerrainForInteraction)
+    map.on('zoomstart', reduceTerrainForInteraction)
+    map.on('rotatestart', reduceTerrainForInteraction)
+    map.on('pitchstart', reduceTerrainForInteraction)
+
+    map.on('moveend', restoreTerrainAfterInteraction)
+    map.on('zoomend', restoreTerrainAfterInteraction)
+    map.on('rotateend', restoreTerrainAfterInteraction)
+    map.on('pitchend', restoreTerrainAfterInteraction)
+
     // 确保在样式数据更新时也尝试设置中文标签（应对部分样式异步添加 label 层的情况）
     map.on('styledata', () => {
       try { setChineseLabels() } catch (e) {}
@@ -609,12 +710,38 @@ onUnmounted(() => {
   }
 })
 
+// 移除交互事件监听，确保卸载时清理
+onUnmounted(() => {
+  try {
+    if (map) {
+      map.off('movestart', reduceTerrainForInteraction)
+      map.off('zoomstart', reduceTerrainForInteraction)
+      map.off('rotatestart', reduceTerrainForInteraction)
+      map.off('pitchstart', reduceTerrainForInteraction)
+      map.off('moveend', restoreTerrainAfterInteraction)
+      map.off('zoomend', restoreTerrainAfterInteraction)
+      map.off('rotateend', restoreTerrainAfterInteraction)
+      map.off('pitchend', restoreTerrainAfterInteraction)
+    }
+  } catch (e) {}
+})
+
 // 组件卸载时确保停止播放并释放 RAF
 onUnmounted(() => {
   if (rafId) {
     cancelAnimationFrame(rafId)
     rafId = null
   }
+})
+
+// 组件卸载时移除可能残留的地形相关源/图层
+onUnmounted(() => {
+  try {
+    if (map) {
+      if (map.getLayer && map.getLayer('hillshade-layer')) map.removeLayer('hillshade-layer')
+      if (map.getSource && map.getSource('mapbox-dem')) map.removeSource('mapbox-dem')
+    }
+  } catch (e) {}
 })
 </script>
 
