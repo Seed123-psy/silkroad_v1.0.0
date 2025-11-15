@@ -2,24 +2,15 @@
   <div class="transport-view">
     <div ref="mapContainer" class="map-container" />
 
-    <!-- 地图模式和样式切换控件 -->
-    <div class="map-style-selector" v-if="MAP_STYLES && MAP_STYLES.length">
-      <div class="select-wrapper">
-        <label class="visually-hidden">地图显示模式</label>
-        <select v-model="selectedMode" aria-label="地图显示模式" class="glass-select">
-          <option v-for="m in MAP_MODES" :key="m.id" :value="m.id">{{ m.name }}</option>
-        </select>
-        <span class="select-arrow" aria-hidden="true"></span>
-      </div>
-
-      <div class="select-wrapper">
-        <label class="visually-hidden">地图样式</label>
-        <select v-model="selectedStyle" aria-label="地图样式" class="glass-select">
-          <option v-for="s in MAP_STYLES" :key="s.id" :value="s.id">{{ s.name }}</option>
-        </select>
-        <span class="select-arrow" aria-hidden="true"></span>
-      </div>
-    </div>
+    <!-- 地图模式和样式切换控件（复用组件） -->
+    <MapControls
+      v-model:modelMode="selectedMode"
+      v-model:modelStyle="selectedStyle"
+      :modes="MAP_MODES"
+      :styles="MAP_STYLES"
+      modePlaceholder="选择显示模式"
+      stylePlaceholder="选择地图样式"
+    />
 
     <!-- 时间轴组件：居中底部，毛玻璃半透明效果 -->
     <div class="timeline-glass">
@@ -27,6 +18,17 @@
         <span class="timeline-mark active" @click="setYear(startYear)">{{ startYear }}</span>
         <input type="range" :min="startYear" :max="endYear" v-model.number="selectedYear" class="timeline-slider" />
         <span class="timeline-mark active" @click="setYear(endYear)">{{ endYear }}</span>
+        <button
+          type="button"
+          class="timeline-play"
+          :class="{ playing: isPlaying }"
+          @click="togglePlay"
+          :aria-pressed="isPlaying"
+          aria-label="播放/暂停时间轴"
+        >
+          <span v-if="!isPlaying">▶ 播放</span>
+          <span v-else>❚❚ 暂停</span>
+        </button>
       </div>
       <div class="timeline-selected">当前年份：<span class="highlight">{{ selectedYear }}</span></div>
     </div>
@@ -73,6 +75,7 @@ type TangLineFeature = {
 // 导入 Mapbox GL（需先安装 `mapbox-gl`）
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
+import MapControls from '@/components/MapControls.vue'
 
 // 从环境变量读取 token（Vite 要求以 VITE_ 前缀暴露给客户端）
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string) || ''
@@ -100,6 +103,10 @@ const MAP_STYLES: { id: string; name: string }[] = [
   { id: 'mapbox://styles/mapbox/streets-v11', name: '街道' },
   { id: 'mapbox://styles/mapbox/light-v10', name: '明亮' },
   { id: 'mapbox://styles/mapbox/satellite-v9', name: '卫星' },
+  { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: '卫星街道' },
+  { id: 'mapbox://styles/mapbox/outdoors-v11', name: '户外' },
+  { id: 'mapbox://styles/mapbox/navigation-day-v1', name: '导航（日）' },
+  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: '导航（夜）' },
 ]
 const selectedMode = ref<string>('flat')
 // 默认使用数组第一项（已将暗色置为第一项），保证初始化为暗色地图
@@ -115,9 +122,74 @@ const selectedYear = ref(startYear)
 const setYear = (year: number) => {
   selectedYear.value = year
 }
+
+// 内部用于播放的浮点年份（用于平滑播放），与 `selectedYear`（用于 UI）分离
+const playYear = ref<number>(selectedYear.value)
+
+// 当用户手动通过滑块设置年份时，同步 playYear 并渲染
 watch(selectedYear, (year) => {
+  playYear.value = year
   filterByYear(year)
 })
+
+// 时间轴播放控制（平滑过渡）
+const isPlaying = ref(false)
+const playbackSpeed = ref<number>(1) // 年/秒，可根据需求暴露为 UI
+let rafId: number | null = null
+let lastFrameTime = 0
+
+function step(timestamp: number) {
+  if (!lastFrameTime) lastFrameTime = timestamp
+  const delta = timestamp - lastFrameTime
+  lastFrameTime = timestamp
+  const yearsToAdvance = (delta / 1000) * playbackSpeed.value
+
+  // 使用 playYear 做浮点累加以获得平滑过渡
+  playYear.value += yearsToAdvance
+
+  // 到达末端时停止并确保到达 endYear
+  if (playYear.value >= endYear) {
+    playYear.value = endYear
+    // 用浮点值渲染（filterByYear 支持数值比较）
+    filterByYear(playYear.value)
+    selectedYear.value = Math.round(playYear.value)
+    stopPlayback()
+    return
+  }
+
+  // 使用 playYear 驱动渲染，UI 仍显示为四舍五入的整数
+  filterByYear(playYear.value)
+  selectedYear.value = Math.round(playYear.value)
+  rafId = requestAnimationFrame(step)
+}
+
+function startPlayback() {
+  if (isPlaying.value) return
+  isPlaying.value = true
+  lastFrameTime = 0
+  // 确保 playYear 从当前 selectedYear 开始
+  playYear.value = selectedYear.value
+  rafId = requestAnimationFrame(step)
+}
+
+function stopPlayback() {
+  isPlaying.value = false
+  if (rafId) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+  lastFrameTime = 0
+}
+
+function togglePlay() {
+  if (isPlaying.value) {
+    stopPlayback()
+  } else {
+    // 如果已到结尾，则从起点重新播放
+    if (selectedYear.value >= endYear) selectedYear.value = startYear
+    startPlayback()
+  }
+}
 
 // 地图样式和投影
 function applyMapStyle(styleId: string) {
@@ -536,6 +608,14 @@ onUnmounted(() => {
     map = null
   }
 })
+
+// 组件卸载时确保停止播放并释放 RAF
+onUnmounted(() => {
+  if (rafId) {
+    cancelAnimationFrame(rafId)
+    rafId = null
+  }
+})
 </script>
 
 <style scoped>
@@ -553,66 +633,7 @@ onUnmounted(() => {
   left: 0;
 }
 
-.map-style-selector {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  /* 毛玻璃样式，适配暗色地图 */
-  background: rgba(12, 16, 24, 0.48);
-  backdrop-filter: blur(10px) saturate(140%);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.04);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.36);
-  color: #e8eef8;
-  z-index: 1200;
-}
-
-.select-wrapper {
-  position: relative;
-  display: inline-block;
-  margin-right: 8px;
-}
-
-.glass-select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  padding: 8px 34px 8px 12px;
-  min-width: 120px;
-  background: rgba(255,255,255,0.03);
-  color: inherit;
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 10px;
-  font-size: 14px;
-  outline: none;
-  transition: box-shadow 0.15s, transform 0.08s;
-}
-.glass-select:focus {
-  box-shadow: 0 6px 18px rgba(20, 40, 80, 0.2);
-  transform: translateY(-1px);
-}
-
-.select-arrow {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid rgba(255,255,255,0.78);
-  pointer-events: none;
-}
-
-.visually-hidden {
-  position: absolute !important;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
-  white-space: nowrap; border: 0;
-}
+/* MapControls.vue 提供统一的选择器样式，不在此文件重复定义 */
 
 /* 时间轴样式 */
 .timeline-glass {

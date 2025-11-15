@@ -1,0 +1,84 @@
+// Global shared controls styles for dropdowns / listboxes
+// Variables
+$control-bg: rgba(12,16,24,0.72);
+$control-contrast: #e8eef8;
+$control-border: rgba(255,255,255,0.06);
+$control-shadow: 0 8px 30px rgba(2,8,20,0.6);
+$accent: #2980b9;
+
+// Button / trigger
+.map-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 10px 14px;
+  min-width: 140px;
+  border-radius: 10px;
+  background: $control-bg;
+  color: $control-contrast;
+  font-weight: 600;
+  border: 1px solid $control-border;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(2,8,20,0.45);
+  transition: transform 140ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+.map-control:hover { transform: translateY(-2px) }
+.map-control:focus { outline: none; box-shadow: 0 8px 28px rgba(2,8,20,0.6), 0 0 0 4px rgba($accent, 0.08); border-color: rgba($accent,0.9) }
+
+// Caret
+.map-control .chev { margin-left: auto; opacity: 0.9; font-size: 12px }
+
+// Options panel
+.map-options {
+  position: absolute;
+  margin-top: 8px;
+  left: 0;
+  background: rgba(6,10,18,0.96);
+  border-radius: 10px;
+  padding: 6px;
+  box-shadow: $control-shadow;
+  border: 1px solid rgba(255,255,255,0.04);
+  z-index: 1300;
+  min-width: 160px;
+  transform-origin: top left;
+  overflow: hidden;
+}
+.map-options.wide { min-width: 220px }
+
+.map-option {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: $control-contrast;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+.map-option[aria-selected="true"], .map-option:hover {
+  background: rgba($accent, 0.12);
+  color: lighten($control-contrast, 2%);
+}
+
+// Smooth show/hide animations using scale + fade
+.map-anim-enter {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+}
+.map-anim-enter-active {
+  transition: transform 180ms cubic-bezier(.2,.8,.2,1), opacity 180ms ease;
+  transform: translateY(0) scale(1);
+  opacity: 1;
+}
+.map-anim-leave {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+.map-anim-leave-active {
+  transition: transform 120ms cubic-bezier(.2,.8,.2,1), opacity 120ms ease;
+  transform: translateY(-8px) scale(0.98);
+  opacity: 0;
+}
+
+// small responsive adjustments
+@media (max-width: 768px) {
+  .map-control { min-width: 120px; padding: 8px 10px }
+  .map-options { min-width: 140px }
+}

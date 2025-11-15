@@ -16,6 +16,11 @@ const routes: RouteRecordRaw[] = [
     name: 'Transport',
     component: () => import('@/views/Transport.vue'),
   },
+  {
+    path: '/mingqing',
+    name: 'MingQing',
+    component: () => import('@/views/MingQing.vue'),
+  },
 ]
 
 const router = createRouter({

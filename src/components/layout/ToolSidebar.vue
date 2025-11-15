@@ -44,6 +44,11 @@ const navItems: NavItem[] = [
     path: '/transport',
     icon: '🧭',
   },
+    {
+      label: '明清城区',
+      path: '/mingqing',
+      icon: '🏙️',
+    },
 ]
 
 const route = useRoute()
