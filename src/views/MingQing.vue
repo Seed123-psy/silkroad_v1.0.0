@@ -39,23 +39,45 @@
       </div>
     </div>
 
-    <transition name="legend">
-      <div class="legend-panel" :class="{ collapsed: !showLegend }" v-if="showLegend" @mouseleave="showLegend = false">
-        <h4>准确度档位</h4>
-      <ul>
-        <li v-for="level in ACCURACY_LEVELS" :key="level.level">
-          <span class="swatch" :style="{ backgroundColor: level.color }" />
-          <div class="legend-text">
-            <strong>{{ level.title }}</strong>
-            <span>{{ level.description }}</span>
+        <transition name="legend">
+          <div class="legend-panel" :class="{ collapsed: !showLegend }" v-if="showLegend" @mouseleave="showLegend = false">
+            <h4>精准度</h4>
+            <div class="legend-select-all">
+              <label class="legend-item">
+                <input
+                  type="checkbox"
+                  class="legend-checkbox"
+                  :checked="allAccuracySelected"
+                  @change="onAccuracySelectAll($event)"
+                />
+                <div class="legend-text">
+                  <strong>全选</strong>
+                  <span>切换全部准确度等级</span>
+                </div>
+              </label>
+            </div>
+            <ul>
+              <li v-for="level in ACCURACY_LEVELS" :key="level.level">
+                <label class="legend-item">
+                  <input
+                    type="checkbox"
+                    class="legend-checkbox"
+                    :checked="Boolean(accuracyFilters[level.level])"
+                    @change="onAccuracyToggle(level.level, $event)"
+                  />
+                  <span class="swatch" :style="{ backgroundColor: level.color }" />
+                  <div class="legend-text">
+                    <strong>{{ level.title }}</strong>
+                    <span>{{ level.description }}</span>
+                  </div>
+                </label>
+              </li>
+            </ul>
+            <p class="legend-note">数据来源：丝绸之路城市数据库（明清城区复原）。</p>
           </div>
-        </li>
-      </ul>
-      <p class="legend-note">数据来源：丝绸之路城市数据库（明清城区复原）。</p>
-      </div>
-    </transition>
+        </transition>
 
-    <button v-if="!showLegend" class="legend-toggle" @mouseenter="showLegend = true" @focus="showLegend = true" aria-label="展开图例">准确度</button>
+        <button v-if="!showLegend" class="legend-toggle" @mouseenter="showLegend = true" @focus="showLegend = true" aria-label="展开图例">准确度</button>
 
     <transition name="slide">
       <div class="hover-panel compact" v-if="hoverPanel.show">
@@ -94,6 +116,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { reactive, computed } from 'vue'
 import shp from 'shpjs'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
@@ -119,11 +142,12 @@ type MingQingRegionFeature = GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPoly
 }
 
 // accuracy: 1 = most certain (green), 4 = least certain (red)
+// Titles adjusted per design: 档位 1：精准, 档位 2：较准, 档位 3：推知, 档位 4：替代
 const ACCURACY_LEVELS = [
-  { level: 1, color: '#2ecc71', title: '档位 1', description: '城墙痕迹清晰，复原结果最准确' },
-  { level: 2, color: '#90be6d', title: '档位 2', description: '部分城墙/遗迹保留，可较准确复原' },
-  { level: 3, color: '#f9c74f', title: '档位 3', description: '遗迹稀少，辅助地标推断' },
-  { level: 4, color: '#ef476f', title: '档位 4', description: '资料缺乏或以规则方格替代' },
+  { level: 1, color: '#2ecc71', title: '精准', description: '城墙痕迹清晰，复原结果最准确' },
+  { level: 2, color: '#90be6d', title: '较准', description: '部分城墙/遗迹保留，可较准确复原' },
+  { level: 3, color: '#f9c74f', title: '推知', description: '遗迹稀少，辅助地标推断' },
+  { level: 4, color: '#ef476f', title: '替代', description: '资料缺乏或以规则方格替代' },
 ]
 
 const ACCURACY_COLOR_MAP = ACCURACY_LEVELS.reduce<Record<number, string>>((acc, level) => {
@@ -152,7 +176,9 @@ const MAP_STYLES = [
 // increased for closer-to-ground view
 const DETAIL_ZOOM = 16
 
-const MINGQING_ZIP_URL = new URL('../assets/data/mingqing/mingqing_regions.zip', import.meta.url).href
+import mingqingRegionsZipUrl from '@/assets/data/mingqing/mingqing_regions.zip?url'
+
+const MINGQING_ZIP_URL = mingqingRegionsZipUrl
 
 const mapContainer = ref<HTMLDivElement | null>(null)
 let map: any = null
@@ -169,11 +195,25 @@ let pendingFeatureKey = ''
 let isOverRegion = false
 const hoverPanel = ref<{ show: boolean; props?: MingQingRegionProperties }>({ show: false })
 const showLegend = ref(true)
+const accuracyFilters = reactive<Record<number, boolean>>(ACCURACY_LEVELS.reduce((acc, level) => {
+  acc[level.level] = true
+  return acc
+}, {} as Record<number, boolean>))
+
+const allAccuracySelected = computed({
+  get: () => ACCURACY_LEVELS.every((level) => accuracyFilters[level.level]),
+  set: (value: boolean) => {
+    ACCURACY_LEVELS.forEach((level) => {
+      accuracyFilters[level.level] = value
+    })
+  }
+})
 
 const selectedMode = ref<MapMode>('flat')
 const selectedStyle = ref<string>(MAP_STYLES[0]?.id ?? 'mapbox://styles/mapbox/dark-v10')
 
-const startYear = ref(1368)
+const DEFAULT_START_YEAR = 1367
+const startYear = ref(DEFAULT_START_YEAR)
 const endYear = ref(1912)
 const selectedYear = ref(startYear.value)
 const playYear = ref(selectedYear.value)
@@ -192,6 +232,19 @@ watch(selectedYear, (year) => {
 
 watch(selectedStyle, (style) => applyMapStyle(style))
 watch(selectedMode, (mode) => applyMapProjection(mode))
+
+watch(regions, (list) => {
+  if (!list.length) return
+  if (selectedYear.value !== startYear.value) {
+    selectedYear.value = startYear.value
+    return
+  }
+  filterRegionsByYear(startYear.value)
+})
+
+watch(accuracyFilters, () => {
+  filterRegionsByYear(selectedYear.value)
+}, { deep: true })
 
 function setYear(year: number) {
   selectedYear.value = year
@@ -677,14 +730,16 @@ function getAccuracyColor(level: number) {
 
 function getAccuracyLabel(level: number) {
   const match = ACCURACY_LEVELS.find((item) => item.level === level)
-  return match ? match.title : '档位未明'
+  return match ? match.title : '未明'
 }
 
 function filterRegionsByYear(year: number) {
   const filtered = regions.value.filter((region) => {
     const beg = typeof region.properties.beginYear === 'number' ? region.properties.beginYear : -Infinity
     const end = typeof region.properties.endYear === 'number' ? region.properties.endYear : Infinity
-    return beg <= year && end >= year
+    if (!(beg <= year && end >= year)) return false
+    const accuracy = typeof region.properties.accuracy === 'number' ? region.properties.accuracy : 4
+    return accuracyFilters[accuracy] !== false
   })
   filteredRegions.value = filtered
   renderRegions(filtered)
@@ -907,6 +962,16 @@ onUnmounted(() => {
   }
   popup?.remove()
 })
+
+function onAccuracyToggle(level: number, event: Event) {
+  const target = event.target as HTMLInputElement | null
+  accuracyFilters[level] = Boolean(target?.checked)
+}
+
+function onAccuracySelectAll(event: Event) {
+  const target = event.target as HTMLInputElement | null
+  allAccuracySelected.value = Boolean(target?.checked)
+}
 </script>
 
 <style scoped lang="scss">
@@ -1050,6 +1115,7 @@ onUnmounted(() => {
 .legend-panel h4 {
   margin: 0 0 12px;
   font-size: 16px;
+  color: #fff;
 }
 
 .legend-panel ul {
@@ -1065,6 +1131,47 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.legend-select-all {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legend-checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(94, 234, 152, 0.45);
+  background: rgba(0, 0, 0, 0.2);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.legend-checkbox:checked {
+  background: linear-gradient(120deg, #34d399, #059669);
+  border-color: transparent;
+}
+
+.legend-checkbox:checked::after {
+  content: '\2713';
+  color: #fff;
+  font-size: 12px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
 }
 
 .swatch {

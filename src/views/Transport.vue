@@ -15,16 +15,16 @@
     <!-- 时间轴组件：居中底部，毛玻璃半透明效果 -->
     <div class="timeline-glass">
       <div class="timeline-labels">
-        <span class="timeline-mark active" @click="setYear(startYear)">{{ startYear }}</span>
+        <span class="timeline-mark" @click="setYear(startYear)">{{ startYear }}</span>
         <input type="range" :min="startYear" :max="endYear" v-model.number="selectedYear" class="timeline-slider" />
-        <span class="timeline-mark active" @click="setYear(endYear)">{{ endYear }}</span>
+        <span class="timeline-mark" @click="setYear(endYear)">{{ endYear }}</span>
         <button
           type="button"
           class="timeline-play"
           :class="{ playing: isPlaying }"
           @click="togglePlay"
           :aria-pressed="isPlaying"
-          aria-label="播放/暂停时间轴"
+          aria-label="播放/暂停唐代交通时间轴"
         >
           <span v-if="!isPlaying">▶ 播放</span>
           <span v-else>❚❚ 暂停</span>
@@ -32,12 +32,82 @@
       </div>
       <div class="timeline-selected">当前年份：<span class="highlight">{{ selectedYear }}</span></div>
     </div>
+
+    <transition name="legend">
+      <div class="legend-panel" v-if="showLegend" @mouseleave="showLegend = false">
+        <h4>节点类型</h4>
+        <div class="legend-select-all">
+          <label class="legend-item">
+            <input
+              type="checkbox"
+              class="legend-checkbox"
+              :checked="allTypesSelected"
+              @change="onTypeSelectAll($event)"
+            />
+            <div class="legend-text">
+              <strong>全选类型</strong>
+              <span>切换全部节点显示</span>
+            </div>
+          </label>
+        </div>
+        <ul>
+          <li v-for="type in TYPE_CATEGORIES" :key="type.key">
+            <label class="legend-item">
+              <input
+                type="checkbox"
+                :checked="Boolean(typeFilters[type.key])"
+                @change="onTypeToggle(type.key, $event)"
+                class="legend-checkbox"
+              />
+              <span class="swatch" :style="{ backgroundColor: type.color }" />
+              <div class="legend-text">
+                <strong>{{ type.label }}</strong>
+                <span>{{ type.description }}</span>
+              </div>
+            </label>
+          </li>
+        </ul>
+        <p class="legend-note">数据来源：唐代交通点位。</p>
+      </div>
+    </transition>
+    <button
+      v-if="!showLegend"
+      class="legend-toggle"
+      @mouseenter="showLegend = true"
+      @focus="showLegend = true"
+      aria-label="展开节点类型图例"
+    >类型</button>
+
+    <transition name="slide">
+      <div class="hover-panel compact" v-if="hoverPanel.show">
+        <div class="hover-top">
+          <div class="icon-wrap" :style="{ borderColor: hoverPanel.props?.color || '#e67e22' }">
+            <div class="icon-core" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }" />
+          </div>
+          <div class="hover-title">
+            <h4 class="title">{{ hoverPanel.props?.name }}</h4>
+            <div v-if="hoverPanel.props?.subtitle" class="subtitle">{{ hoverPanel.props?.subtitle }}</div>
+          </div>
+          <div class="meta" v-if="hoverPanel.props?.badge">
+            <span class="badge small" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }">{{ hoverPanel.props?.badge }}</span>
+          </div>
+        </div>
+
+        <div class="hover-body">
+          <div class="row" v-for="row in hoverPanel.props?.rows || []" :key="row.label">
+            <div class="label">{{ row.label }}</div>
+            <div class="value">{{ row.value }}</div>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import * as shapefile from 'shapefile'
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { unzipSync } from 'fflate'
+import { open as openShapefile } from 'shapefile'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 
 interface TangPointProperties {
   Name_CH: string
@@ -91,6 +161,77 @@ let isMouseDown = false
 let lastFeatureKey = ''
 let popupTimer: any = null
 let pendingFeatureKey = ''
+let activeHoverSource: 'point' | 'line' | null = null
+
+const TYPE_CATEGORIES = [
+  { key: '古城', label: '古城', description: '早期大型城址', color: '#f1c40f' },
+  { key: '县城', label: '县城', description: '县级行政中心', color: '#ff9f43' },
+  { key: '桥梁', label: '桥梁', description: '跨越河谷的交通节点', color: '#4dabf7' },
+  { key: '驿站', label: '驿站', description: '官方传递节点', color: '#ff6b6b' },
+  { key: '地名', label: '地名', description: '地理位置或区域称谓', color: '#a29bfe' },
+  { key: '关隘', label: '关隘', description: '战略要地或山口', color: '#c27ba0' },
+  { key: '城堡', label: '城堡', description: '军事驻守据点', color: '#9b59b6' },
+  { key: '镇城', label: '镇城', description: '镇级或更小城镇', color: '#e67e22' },
+  { key: '湖泊', label: '湖泊', description: '水域交通节点', color: '#1abc9c' },
+  { key: '堡寨', label: '堡寨', description: '小型防御聚落', color: '#d35400' },
+  { key: '军城', label: '军城', description: '军队驻扎城池', color: '#e84393' },
+  { key: '都城', label: '都城', description: '朝廷或区域首府', color: '#2ecc71' }
+]
+
+const TYPE_SYNONYM_MAP: Record<string, string> = {
+  station: '驿站',
+  post: '驿站',
+  'post station': '驿站',
+  courier: '驿站',
+  bridge: '桥梁',
+  pass: '关隘',
+  gate: '关隘',
+  castle: '城堡',
+  fort: '堡寨',
+  fortress: '堡寨',
+  town: '镇城',
+  city: '县城',
+  county: '县城',
+  countycity: '县城',
+  depot: '驿站',
+  placename: '地名',
+  name: '地名',
+  lake: '湖泊',
+  military: '军城',
+  garrison: '军城',
+  capital: '都城',
+  metropolis: '都城',
+  ancientcity: '古城',
+  oldcity: '古城'
+}
+
+const DEFAULT_TYPE_KEY = '地名'
+
+const TYPE_COLOR_MAP = TYPE_CATEGORIES.reduce<Record<string, string>>((acc, type) => {
+  acc[type.key] = type.color
+  return acc
+}, {})
+
+const TYPE_COLOR_EXPRESSION: any[] = ['match', ['coalesce', ['get', '__typeKey'], DEFAULT_TYPE_KEY]]
+TYPE_CATEGORIES.forEach((cat) => {
+  TYPE_COLOR_EXPRESSION.push(cat.key)
+  TYPE_COLOR_EXPRESSION.push(cat.color)
+})
+TYPE_COLOR_EXPRESSION.push(TYPE_COLOR_MAP[DEFAULT_TYPE_KEY] || '#e67e22')
+
+const typeFilters = reactive<Record<string, boolean>>(TYPE_CATEGORIES.reduce((acc, type) => {
+  acc[type.key] = true
+  return acc
+}, {} as Record<string, boolean>))
+
+const allTypesSelected = computed({
+  get: () => TYPE_CATEGORIES.every((cat) => typeFilters[cat.key]),
+  set: (value: boolean) => {
+    TYPE_CATEGORIES.forEach((cat) => {
+      typeFilters[cat.key] = value
+    })
+  }
+})
 
 // 地图显示模式
 const MAP_MODES = [
@@ -154,9 +295,29 @@ watch(terrainExaggeration, (val) => {
   } catch (e) {}
 })
 
+watch(typeFilters, () => {
+  filterByYear(selectedYear.value)
+}, { deep: true })
+
 // 交互优化：在用户交互（拖动/缩放/旋转/倾斜）期间降低 hillshade 强度，交互结束后恢复
 let savedHillEx: number | null = null
 let interactionTimer: any = null
+
+interface HoverPanelRow {
+  label: string
+  value: string
+}
+
+interface HoverPanelContent {
+  name: string
+  subtitle?: string
+  badge?: string
+  color?: string
+  rows: HoverPanelRow[]
+}
+
+const hoverPanel = ref<{ show: boolean; props?: HoverPanelContent }>({ show: false })
+const showLegend = ref(true)
 
 function reduceTerrainForInteraction() {
   if (!map) return
@@ -373,23 +534,6 @@ function setChineseLabels() {
   }
 }
 
-// 加载 Shapefile 数据，支持指定编码
-async function loadShapefileWithEncoding(filePath: string, encoding: string = 'utf-8'): Promise<any> {
-  try {
-    const source = await shapefile.open(filePath, undefined, { encoding });
-    const features = [];
-    let result = await source.read();
-    while (!result.done) {
-      features.push(result.value);
-      result = await source.read();
-    }
-    return { type: 'FeatureCollection', features };
-  } catch (error) {
-    console.error(`加载 Shapefile 文件失败: ${filePath}`, error);
-    throw error;
-  }
-}
-
 // 按年份筛选
 // 按年份筛选（健壮处理属性为字符串或缺失的情况）
 function filterByYear(year: number) {
@@ -412,7 +556,11 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
   if (!map) return
 
   // 使用 setData 更新已有 source，避免删除/重建导致的依赖冲突
-  const pointsData = { type: 'FeatureCollection', features: filteredPoints }
+  const normalizedPoints = preparePointFeatures(filteredPoints).filter((feature) => {
+    const typeKey = (feature.properties as any)?.__typeKey as string | undefined
+    return isTypeEnabled(typeKey)
+  })
+  const pointsData = { type: 'FeatureCollection', features: normalizedPoints }
   if (map.getSource('points')) {
     try {
       ;(map.getSource('points') as any).setData(pointsData)
@@ -435,7 +583,7 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
       source: 'points',
       paint: {
         'circle-radius': 6,
-        'circle-color': '#e67e22',
+        'circle-color': TYPE_COLOR_EXPRESSION,
         'circle-stroke-width': 1.5,
         'circle-stroke-color': '#fff'
       }
@@ -482,37 +630,10 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
     })
   }
 
-  // 绑定一次弹窗事件，避免重复绑定；对 hitbox 层使用 mousemove/mouseleave
+  // 绑定一次 hover 事件，避免重复绑定；对 hitbox 层使用 mousemove/mouseleave
   map.off('mousemove', 'points-hitbox')
   map.off('mouseleave', 'points-hitbox')
-  let popup = new mapboxgl.Popup({
-    closeButton: false,
-    closeOnClick: false,
-    anchor: 'top',
-    className: 'custom-popup'
-  })
-  // 更新弹窗内容生成逻辑，移除省字段
-  function generatePopupContent(properties: TangPointProperties): string {
-    const {
-      Name_CH, Name_EN, Type, PL_City, County, Town, Site, Beg_year, End_year
-    } = properties;
 
-    return `
-      <h3>${Name_CH || Name_EN || '未知名称'}</h3>
-      <p>
-        ${Type ? `<strong>类型：</strong>${Type}<br/>` : '<strong>类型：</strong>未知<br/>'}
-        ${PL_City || County || Town 
-          ? `<strong>市县镇：</strong>${PL_City || ''} ${County || ''} ${Town || ''}<br/>`
-          : '<strong>市县镇：</strong>未知<br/>'}
-        ${Site ? `<strong>遗址：</strong>${Site}<br/>` : '<strong>遗址：</strong>未知<br/>'}
-        ${(Beg_year || End_year) 
-          ? `<strong>起讫年：</strong>${Beg_year || '未知'} - ${End_year || '未知'}`
-          : '<strong>起讫年：</strong>未知'}
-      </p>
-    `;
-  }
-
-  // 优化弹窗事件绑定逻辑：在 hitbox 图层上使用 mousemove 更新弹窗，避免闪烁
   map.on('mousemove', 'points-hitbox', (e: any) => {
     isOverPoint = true
     map.getCanvas().style.cursor = isMouseDown ? 'grabbing' : 'pointer'
@@ -524,9 +645,7 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
     const featureKey = `${coord}|${name}`
 
     // 如果是同一要素，仅更新位置（避免重新渲染内容）
-    if (featureKey === lastFeatureKey) {
-      // 始终把弹窗定位到要素的经纬度（比鼠标位置更稳定）
-      if (coordArr) popup.setLngLat(coordArr)
+    if (featureKey === lastFeatureKey && activeHoverSource === 'point') {
       return
     }
 
@@ -537,9 +656,8 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
       // 如果用户已经离开或又到别的要素，取消
       if (!isOverPoint || pendingFeatureKey !== featureKey) return
       lastFeatureKey = featureKey
-      const content = generatePopupContent(feat.properties)
-      if (coordArr) popup.setLngLat(coordArr).setHTML(content).addTo(map)
-      else popup.setLngLat(e.lngLat).setHTML(content).addTo(map)
+      activeHoverSource = 'point'
+      hoverPanel.value = { show: true, props: buildPointPanel(feat.properties) }
     }, 120) // 120ms 延迟，可调整
   })
 
@@ -549,13 +667,15 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
     lastFeatureKey = ''
     if (popupTimer) { clearTimeout(popupTimer); popupTimer = null }
     map.getCanvas().style.cursor = isMouseDown ? 'grabbing' : ''
-    popup.remove()
+    if (activeHoverSource === 'point') {
+      hoverPanel.value = { show: false }
+      activeHoverSource = null
+    }
   })
 
   // 为路线图层添加弹窗（线的 tooltip）
   map.off('mousemove', 'lines')
   map.off('mouseleave', 'lines')
-  const popupLine = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, anchor: 'top', className: 'custom-popup' })
   let lastLineKey = ''
   let lineTimer: any = null
   let pendingLineKey = ''
@@ -570,8 +690,7 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
     const featureKey = `${name}|${beg}|${end}`
 
     // 如果是同一条路线，仅移动位置
-    if (featureKey === lastLineKey) {
-      popupLine.setLngLat(e.lngLat)
+    if (featureKey === lastLineKey && activeHoverSource === 'line') {
       return
     }
 
@@ -580,8 +699,8 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
     lineTimer = setTimeout(() => {
       if (pendingLineKey !== featureKey) return
       lastLineKey = featureKey
-      const info = `<h3>${name || '未知路线'}</h3><p>${(beg || end) ? `<strong>起讫年：</strong>${beg || '未知'} - ${end || '未知'}` : '<strong>起讫年：</strong>未知'}</p>`
-      popupLine.setLngLat(e.lngLat).setHTML(info).addTo(map)
+      activeHoverSource = 'line'
+      hoverPanel.value = { show: true, props: buildLinePanel(feat.properties) }
     }, 120)
   })
 
@@ -589,23 +708,18 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
     pendingLineKey = ''
     lastLineKey = ''
     if (lineTimer) { clearTimeout(lineTimer); lineTimer = null }
-    popupLine.remove()
+    if (activeHoverSource === 'line') {
+      hoverPanel.value = { show: false }
+      activeHoverSource = null
+    }
   })
 }
 
-// 地图弹窗显示逻辑
-let popup: any = null
-if (typeof window !== 'undefined' && window.mapboxgl) {
-  popup = new window.mapboxgl.Popup({closeButton: false, closeOnClick: false})
-  if (map) {
-    map.on('showPopup', (e: any) => {
-      popup.setLngLat(e.lngLat).setHTML(e.info).addTo(map)
-    })
-    map.on('hidePopup', () => {
-      popup.remove()
-    })
-  }
-}
+const RAW_BASE_URL = import.meta.env.BASE_URL ?? '/'
+const NORMALIZED_BASE_URL = RAW_BASE_URL.endsWith('/') ? RAW_BASE_URL : `${RAW_BASE_URL}/`
+const buildPublicDataUrl = (path: string) => `${NORMALIZED_BASE_URL}${path.replace(/^\/+/, '')}`
+const TANG_NODES_ZIP_URL = buildPublicDataUrl('data/tang/nodes.zip')
+const TANG_ROUTES_ZIP_URL = buildPublicDataUrl('data/tang/routes.zip')
 
 onMounted(() => {
   mapboxgl.accessToken = MAPBOX_TOKEN
@@ -671,24 +785,24 @@ onMounted(() => {
   // 确保地图样式加载完成后再添加数据源和图层，避免 Style is not done loading 报错
   map.on('load', async () => {
     try {
-      const nodesData = await loadShapefileWithEncoding('/data/tang/nodes.shp', 'gbk')
-      if (!nodesData || !nodesData.features) {
-        throw new Error('nodes.zip 解析失败或无 features')
+      const nodesData = await loadTangZipData(TANG_NODES_ZIP_URL)
+      if (!nodesData.length) {
+        throw new Error('交通点数据包内无 features')
       }
-      points.value = nodesData.features
+      points.value = nodesData as TangPointFeature[]
     } catch (e) {
-      console.error('交通点数据加载失败', e)
+      console.error(`[Transport] 交通点数据加载失败 (${TANG_NODES_ZIP_URL})`, e)
       alert('交通点数据加载失败，请检查文件内容和路径！')
       points.value = []
     }
     try {
-      const routesData = await loadShapefileWithEncoding('/data/tang/routes.shp', 'gbk')
-      if (!routesData || !routesData.features) {
-        throw new Error('routes.zip 解析失败或无 features')
+      const routesData = await loadTangZipData(TANG_ROUTES_ZIP_URL)
+      if (!routesData.length) {
+        throw new Error('交通线数据包内无 features')
       }
-      lines.value = routesData.features
+      lines.value = routesData as TangLineFeature[]
     } catch (e) {
-      console.error('交通线数据加载失败', e)
+      console.error(`[Transport] 交通线数据加载失败 (${TANG_ROUTES_ZIP_URL})`, e)
       alert('交通线数据加载失败，请检查文件内容和路径！')
       lines.value = []
     }
@@ -745,6 +859,142 @@ onUnmounted(() => {
     }
   } catch (e) {}
 })
+
+function formatYear(year?: number): string {
+  if (typeof year === 'number' && Number.isFinite(year)) return `${Math.round(year)}年`
+  return '未知'
+}
+
+function buildPointPanel(properties: TangPointProperties): HoverPanelContent {
+  const name = properties?.Name_CH || properties?.Name_EN || '未知交通点'
+  const subtitle = properties?.Name_EN && properties.Name_EN !== properties.Name_CH ? properties.Name_EN : undefined
+  const typeKey = (properties as any)?.__typeKey ? String((properties as any).__typeKey) : normalizeType(properties?.Type)
+  const readableType = TYPE_CATEGORIES.find((item) => item.key === typeKey)?.label || typeKey || '未知类型'
+  const location = [properties?.PL_City, properties?.County, properties?.Town].filter(Boolean).join(' / ') || '未知'
+  const site = properties?.Site || '未知'
+  const typeColor = getTypeColor(typeKey)
+
+  const rows: HoverPanelRow[] = [
+    { label: '类型', value: readableType },
+    { label: '位置', value: location },
+    { label: '遗址', value: site },
+    { label: '存续', value: `${formatYear(properties?.Beg_year)} - ${formatYear(properties?.End_year)}` }
+  ]
+
+  return {
+    name,
+    subtitle,
+    badge: readableType,
+    color: typeColor,
+    rows
+  }
+}
+
+async function loadTangZipData(zipUrl: string) {
+  const response = await fetch(zipUrl)
+  if (!response.ok) {
+    throw new Error(`获取数据失败：${response.status} ${response.statusText}`)
+  }
+
+  const archive = unzipSync(new Uint8Array(await response.arrayBuffer()))
+  const entries = Object.keys(archive)
+  const findEntry = (ext: string) => entries.find((name) => name.toLowerCase().endsWith(ext))
+  const shpName = findEntry('.shp')
+  const dbfName = findEntry('.dbf')
+  if (!shpName || !dbfName) {
+    throw new Error('数据压缩包缺少 shp/dbf 文件，无法解析')
+  }
+
+  const shpEntry = archive[shpName]
+  const dbfEntry = archive[dbfName]
+  if (!shpEntry || !dbfEntry) {
+    throw new Error('无法读取 shp/dbf 二进制内容')
+  }
+
+  const shpBuffer = sliceArrayBuffer(shpEntry)
+  const dbfBuffer = sliceArrayBuffer(dbfEntry)
+  const source: any = await openShapefile(shpBuffer, dbfBuffer, { encoding: 'gb18030' })
+  const features: GeoJSON.Feature[] = []
+
+  try {
+    while (true) {
+      const result = await source.read()
+      if (!result || result.done) break
+      if (result.value) features.push(result.value as GeoJSON.Feature)
+    }
+  } finally {
+    if (source && typeof source.cancel === 'function') {
+      try { source.cancel() } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn('[Transport] 关闭 shapefile 读取器失败', err)
+      }
+    }
+  }
+
+  return features
+}
+
+function sliceArrayBuffer(entry: Uint8Array): ArrayBuffer {
+  return entry.buffer.slice(entry.byteOffset, entry.byteOffset + entry.byteLength) as ArrayBuffer
+}
+
+function buildLinePanel(properties: TangLineProperties): HoverPanelContent {
+  const rows: HoverPanelRow[] = [
+    { label: '存续', value: `${formatYear(properties?.Beg_year)} - ${formatYear(properties?.End_year)}` }
+  ]
+
+  return {
+    name: properties?.Name || '未知路线',
+    subtitle: '唐代交通线',
+    badge: '交通线',
+    color: '#2980b9',
+    rows
+  }
+}
+
+function normalizeType(type?: string): string {
+  if (!type) return DEFAULT_TYPE_KEY
+  const raw = String(type).trim()
+  if (!raw) return DEFAULT_TYPE_KEY
+  const direct = TYPE_CATEGORIES.find((cat) => cat.key === raw)
+  if (direct) return direct.key
+  const synonym = TYPE_SYNONYM_MAP[raw.toLowerCase()]
+  if (synonym) return synonym
+  return DEFAULT_TYPE_KEY
+}
+
+function getTypeColor(typeKey?: string): string {
+  if (!typeKey) return TYPE_COLOR_MAP[DEFAULT_TYPE_KEY] || '#e67e22'
+  return TYPE_COLOR_MAP[typeKey] || TYPE_COLOR_MAP[DEFAULT_TYPE_KEY] || '#e67e22'
+}
+
+function preparePointFeatures(features: TangPointFeature[]): TangPointFeature[] {
+  return features.map((feature) => {
+    const typeKey = normalizeType(feature?.properties?.Type)
+    return {
+      ...feature,
+      properties: {
+        ...feature.properties,
+        __typeKey: typeKey
+      }
+    }
+  })
+}
+
+function isTypeEnabled(typeKey?: string | null): boolean {
+  const key = typeKey && TYPE_CATEGORIES.some((item) => item.key === typeKey) ? typeKey : DEFAULT_TYPE_KEY
+  return typeFilters[key] !== false
+}
+
+function onTypeToggle(key: string, event: Event) {
+  const target = event.target as HTMLInputElement | null
+  typeFilters[key] = Boolean(target?.checked)
+}
+
+function onTypeSelectAll(event: Event) {
+  const target = event.target as HTMLInputElement | null
+  allTypesSelected.value = Boolean(target?.checked)
+}
 </script>
 
 <style scoped>
@@ -764,147 +1014,340 @@ onUnmounted(() => {
 
 /* MapControls.vue 提供统一的选择器样式，不在此文件重复定义 */
 
-/* 时间轴样式 */
+/* 时间轴样式（与明清一致） */
 .timeline-glass {
   position: absolute;
   left: 50%;
   bottom: 32px;
   transform: translateX(-50%);
   min-width: 340px;
-  max-width: 600px;
-  background: rgba(255,255,255,0.35);
+  max-width: 620px;
+  background: rgba(12, 20, 30, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 18px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  padding: 18px 32px 12px 32px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px) saturate(180%);
+  padding: 18px 28px 12px 28px;
   z-index: 2100;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  color: #f4f7ff;
 }
+
 .timeline-labels {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 18px;
+  gap: 16px;
   width: 100%;
-  margin-bottom: 8px;
 }
+
+.timeline-slider {
+  flex: 1;
+  height: 4px;
+  margin: 0 8px;
+  accent-color: #e67e22;
+}
+
 .timeline-mark {
   cursor: pointer;
-  color: #2980b9;
-  font-size: 16px;
-  padding: 4px 14px;
-  border-radius: 8px;
-  font-weight: bold;
-  background: rgba(255,255,255,0.18);
+  color: #a8c5ff;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
   transition: background 0.2s, color 0.2s;
   user-select: none;
 }
-.timeline-mark.active {
-  background: #eaf6fb;
-  color: #e67e22;
-}
-.timeline-slider {
-  flex: 1;
-  width: 320px;
-  height: 4px;
-  margin: 0 12px;
-  accent-color: #2980b9;
-  transition: box-shadow 0.2s;
-}
-.timeline-slider:active {
-  box-shadow: 0 0 0 4px rgba(41,128,185,0.12);
-}
-.timeline-selected {
-  margin-top: 6px;
-  font-size: 15px;
-  color: #222;
-  letter-spacing: 1px;
-}
-.timeline-selected .highlight {
-  color: #e67e22;
-  font-weight: bold;
-  font-size: 18px;
-}
-.timeline-play {
-  margin-left: 12px;
-  padding: 4px 12px;
-  font-size: 14px;
+
+.timeline-mark:hover {
+  background: rgba(255, 255, 255, 0.15);
   color: #fff;
-  background: #2980b9;
+}
+
+.timeline-play {
   border: none;
-  border-radius: 12px;
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 14px;
   cursor: pointer;
-  transition: background 0.3s;
-}
-.timeline-play:hover {
-  background: #3498db;
-}
-
-/* 自定义弹窗样式 - 全局样式以确保生效 */
-.custom-popup .mapboxgl-popup-content {
-  background: rgba(255, 255, 255, 0.28) !important;
-  color: #333 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  padding: 12px 16px !important;
-  line-height: 1.6 !important;
-  font-family: 'Microsoft YaHei', Arial, sans-serif !important;
-  border: none !important;
-  box-sizing: border-box !important;
+  background: linear-gradient(120deg, #ff9966, #ff5e62);
+  color: #fff;
+  transition: transform 0.15s;
 }
 
-.custom-popup .mapboxgl-popup {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+.timeline-play.playing {
+  background: linear-gradient(120deg, #4facfe, #00f2fe);
 }
 
-.custom-popup h3 {
-  margin: 0 !important;
-  color: #e67e22 !important;
-  font-size: 16px !important;
+.timeline-play:active {
+  transform: scale(0.98);
 }
 
-.custom-popup p {
-  margin: 8px 0 0 !important;
-  font-size: 14px !important;
+.timeline-selected {
+  margin-top: 8px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.82);
 }
-</style>
 
-<!-- 全局样式：为 Mapbox 弹窗添加不受 scoped 限制的样式，确保毛玻璃与圆角生效 -->
-<style>
-/* global popup overrides (must be global so it applies to DOM appended to body) */
-.custom-popup.mapboxgl-popup {
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+.timeline-selected .highlight {
+  color: #ffdd99;
+  font-size: 18px;
+  margin-left: 4px;
 }
-.custom-popup.mapboxgl-popup .mapboxgl-popup-content {
-  background: rgba(255,255,255,0.28) !important;
-  color: #333 !important;
-  border-radius: 12px !important;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.12) !important;
-  backdrop-filter: blur(8px) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  padding: 12px 16px !important;
-  line-height: 1.6 !important;
-  font-family: 'Microsoft YaHei', Arial, sans-serif !important;
-  border: none !important;
-  box-sizing: border-box !important;
-}
-.custom-popup.mapboxgl-popup .mapboxgl-popup-tip {
-  display: none !important;
-}
-.custom-popup.mapboxgl-popup h3 { color: #e67e22 !important; margin:0 !important; }
-.custom-popup.mapboxgl-popup p { margin:8px 0 0 !important; }
-</style>
 
-<!-- global default for map canvas cursor: neutral default until we set inline styles -->
-<style>
-.mapboxgl-canvas { cursor: default; }
+.legend-panel {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 280px;
+  padding: 16px;
+  background: rgba(9, 15, 25, 0.76);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  color: #eef2ff;
+  z-index: 2000;
+}
+
+.legend-select-all {
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.legend-panel h4 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.legend-panel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legend-panel li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  cursor: pointer;
+}
+
+.legend-checkbox {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid rgba(94, 234, 152, 0.45);
+  background: rgba(0, 0, 0, 0.2);
+  position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.legend-checkbox:checked {
+  background: linear-gradient(120deg, #34d399, #059669);
+  border-color: transparent;
+}
+
+.legend-checkbox:checked::after {
+  content: '\2713';
+  color: #fff;
+  font-size: 12px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -58%);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.legend-text {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.legend-text strong {
+  color: #fff;
+}
+
+.legend-note {
+  margin-top: 14px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.legend-toggle {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: rgba(6, 9, 16, 0.82);
+  color: #eef2ff;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px 10px;
+  border-radius: 12px;
+  z-index: 2000;
+  cursor: pointer;
+}
+
+.legend-enter-active,
+.legend-leave-active {
+  transition: transform 220ms cubic-bezier(.2, .9, .2, 1), opacity 180ms ease;
+}
+
+.legend-enter-from,
+.legend-leave-to {
+  transform: translateX(12px);
+  opacity: 0;
+}
+
+.legend-enter-to,
+.legend-leave-from {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.hover-panel {
+  position: absolute;
+  left: 24px;
+  top: 72px;
+  width: 360px;
+  padding: 18px;
+  background: rgba(6, 9, 16, 0.88);
+  border-radius: 14px;
+  color: #f2f6ff;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  z-index: 3000;
+}
+
+.hover-panel.compact {
+  width: 300px;
+  padding: 12px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(8, 12, 18, 0.92), rgba(6, 9, 16, 0.86));
+  backdrop-filter: blur(6px) saturate(120%);
+}
+
+.hover-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 6px 18px rgba(2, 6, 12, 0.5);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.08));
+}
+
+.icon-core {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.hover-title .title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  max-width: 170px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.hover-title .subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 170px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  margin-left: auto;
+}
+
+.badge.small {
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  color: #06101d;
+  font-weight: 700;
+}
+
+.hover-body {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.label {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+}
+
+.value {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  text-align: right;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 220ms cubic-bezier(.2, .9, .2, 1), opacity 180ms ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(-12px);
+  opacity: 0;
+}
+
+.slide-enter-to,
+.slide-leave-from {
+  transform: translateX(0);
+  opacity: 1;
+}
 </style>
