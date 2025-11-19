@@ -101,6 +101,42 @@
         </div>
       </div>
     </transition>
+
+    <!-- WASD 漫游提示 -->
+    <div class="wasd-controls">
+      <!-- 移动 -->
+      <div class="control-section">
+        <div class="key w" :class="{ active: keysPressed.w }">W</div>
+        <div class="keys-row">
+          <div class="key a" :class="{ active: keysPressed.a }">A</div>
+          <div class="key s" :class="{ active: keysPressed.s }">S</div>
+          <div class="key d" :class="{ active: keysPressed.d }">D</div>
+        </div>
+        <div class="label">移动</div>
+      </div>
+      
+      <div class="divider"></div>
+
+      <!-- 升降 -->
+      <div class="control-section">
+        <div class="key q" :class="{ active: keysPressed.q }">Q</div>
+        <div class="key e" :class="{ active: keysPressed.e }">E</div>
+        <div class="label">升降</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 旋转 -->
+      <div class="control-section">
+        <div class="key up" :class="{ active: keysPressed.arrowup }">↑</div>
+        <div class="keys-row">
+          <div class="key left" :class="{ active: keysPressed.arrowleft }">←</div>
+          <div class="key down" :class="{ active: keysPressed.arrowdown }">↓</div>
+          <div class="key right" :class="{ active: keysPressed.arrowright }">→</div>
+        </div>
+        <div class="label">旋转</div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -162,6 +198,14 @@ let lastFeatureKey = ''
 let popupTimer: any = null
 let pendingFeatureKey = ''
 let activeHoverSource: 'point' | 'line' | null = null
+
+// 键盘控制状态
+const keysPressed = reactive({ 
+  w: false, a: false, s: false, d: false,
+  q: false, e: false,
+  arrowup: false, arrowdown: false, arrowleft: false, arrowright: false
+})
+let animationFrameId: number | null = null
 
 const TYPE_CATEGORIES = [
   { key: '古城', label: '古城', description: '早期大型城址', color: '#f1c40f' },
@@ -721,6 +765,94 @@ const buildPublicDataUrl = (path: string) => `${NORMALIZED_BASE_URL}${path.repla
 const TANG_NODES_ZIP_URL = buildPublicDataUrl('data/tang/nodes.zip')
 const TANG_ROUTES_ZIP_URL = buildPublicDataUrl('data/tang/routes.zip')
 
+// 键盘控制逻辑
+function handleKeyDown(e: KeyboardEvent) {
+  const tagName = (e.target as HTMLElement).tagName
+  if (tagName === 'INPUT' || tagName === 'TEXTAREA') return
+  
+  const key = e.key.toLowerCase()
+  if (Object.prototype.hasOwnProperty.call(keysPressed, key)) {
+    keysPressed[key as keyof typeof keysPressed] = true
+    if (!animationFrameId) {
+      loopCameraMovement()
+    }
+  }
+}
+
+function handleKeyUp(e: KeyboardEvent) {
+  const key = e.key.toLowerCase()
+  if (Object.prototype.hasOwnProperty.call(keysPressed, key)) {
+    keysPressed[key as keyof typeof keysPressed] = false
+  }
+}
+
+function loopCameraMovement() {
+  if (!map) {
+    animationFrameId = null
+    return
+  }
+  
+  const { w, a, s, d, q, e, arrowup, arrowdown, arrowleft, arrowright } = keysPressed
+  
+  // 检查是否有任意键被按下
+  if (!w && !a && !s && !d && !q && !e && !arrowup && !arrowdown && !arrowleft && !arrowright) {
+    animationFrameId = null
+    return
+  }
+
+  // 1. 平移 (WASD)
+  // 基础速度 (像素/帧)
+  const panSpeed = 15
+  const dx = (d ? panSpeed : 0) - (a ? panSpeed : 0)
+  const dy = (s ? panSpeed : 0) - (w ? panSpeed : 0)
+
+  if (dx !== 0 || dy !== 0) {
+    map.panBy([dx, dy], { animate: false })
+  }
+
+  // 2. 升降 (Q/E) -> 对应 Zoom
+  // Zoom 速度 (层级/帧)
+  const zoomSpeed = 0.05
+  if (q || e) {
+    const currentZoom = map.getZoom()
+    // Q: 下降 (Zoom In), E: 上升 (Zoom Out) - 注意：通常 Zoom In 是放大/靠近地面，Zoom Out 是缩小/远离
+    // 这里定义 Q 为下降(靠近地面, Zoom In), E 为上升(远离地面, Zoom Out)
+    const deltaZ = (q ? 1 : 0) - (e ? 1 : 0)
+    if (deltaZ !== 0) {
+      map.setZoom(currentZoom + deltaZ * zoomSpeed)
+    }
+  }
+
+  // 3. 旋转 (Arrows)
+  // 旋转速度 (度/帧)
+  const rotateSpeed = 1.5
+  const pitchSpeed = 1.0
+
+  // 左右键控制 Bearing (水平旋转)
+  if (arrowleft || arrowright) {
+    const currentBearing = map.getBearing()
+    // Mapbox bearing: 逆时针为负，顺时针为正。
+    // 通常游戏逻辑：按左键向左转(视角左转)，即逆时针(Bearing 减小)
+    // 按右键向右转(视角右转)，即顺时针(Bearing 增加)
+    const change = (arrowright ? 1 : 0) - (arrowleft ? 1 : 0)
+    map.setBearing(currentBearing + change * rotateSpeed)
+  }
+
+  // 上下键控制 Pitch (俯仰角)
+  if (arrowup || arrowdown) {
+    const currentPitch = map.getPitch()
+    // 上键：抬头 (Pitch 增加? 不，Mapbox Pitch 0 是垂直向下，60-85 是平视)
+    // 通常游戏逻辑：按上键(前进/抬头?) -> 这里定义为 Pitch 增加 (看向地平线)
+    // 按下键 -> Pitch 减小 (看向地面)
+    const deltaP = (arrowup ? 1 : 0) - (arrowdown ? 1 : 0)
+    // 限制 Pitch 范围，防止翻转
+    const newPitch = Math.max(0, Math.min(85, currentPitch + deltaP * pitchSpeed))
+    map.setPitch(newPitch)
+  }
+
+  animationFrameId = requestAnimationFrame(loopCameraMovement)
+}
+
 onMounted(() => {
   mapboxgl.accessToken = MAPBOX_TOKEN
 
@@ -735,8 +867,9 @@ onMounted(() => {
       logoPosition: 'bottom-right', 
     })
 
-    map.addControl(new mapboxgl.NavigationControl(), 'bottom-right') // 移动导航控件到右下角
-    map.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }))
+    // 将 Mapbox 默认控件放置到左下角，避免与右下角的自定义控制面板冲突
+    map.addControl(new mapboxgl.NavigationControl(), 'bottom-left')
+    map.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left')
 
     // 交互优化事件：在交互开始降低地形效果，交互结束恢复
     map.on('movestart', reduceTerrainForInteraction)
@@ -817,12 +950,21 @@ onMounted(() => {
   watch(selectedMode, mode => {
     applyMapProjection(mode)
   })
+
+  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keyup', handleKeyUp)
 })
 
 onUnmounted(() => {
   if (map) {
     map.remove()
     map = null
+  }
+  window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('keyup', handleKeyUp)
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
   }
 })
 
@@ -1349,5 +1491,76 @@ function onTypeSelectAll(event: Event) {
 .slide-leave-from {
   transform: translateX(0);
   opacity: 1;
+}
+
+.wasd-controls {
+  position: absolute;
+  bottom: 24px; /* 固定到最右下角，和底部居中时间轴错开 */
+  right: 24px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px; /* 缩小间距，避免过大占用可视面积 */
+  background: rgba(12, 20, 30, 0.56);
+  padding: 10px; /* 更紧凑，减少遮挡 */
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(3px);
+  z-index: 1000; /* 保持低于时间轴与信息面板，避免遮挡重要 UI */
+  pointer-events: none; /* 不阻塞底层交互 */
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.wasd-controls:hover {
+  opacity: 1;
+}
+
+.control-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  align-self: stretch;
+}
+
+.key {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.1s;
+}
+
+.key.active {
+  background: #e67e22;
+  border-color: #e67e22;
+  color: #000;
+  transform: scale(0.95);
+}
+
+.keys-row {
+  display: flex;
+  gap: 6px;
+}
+
+.wasd-controls .label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
 }
 </style>
