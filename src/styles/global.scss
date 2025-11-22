@@ -1,6 +1,10 @@
-@use '../assets/styles/main.scss';
+@use './variables' as *;
 
-// 确保html和body占满整个视口
+// Reset & Base Styles
+:root {
+  color-scheme: dark;
+}
+
 html,
 body {
   width: 100%;
@@ -8,10 +12,98 @@ body {
   margin: 0;
   padding: 0;
   overflow: hidden;
+  font-family: $font-family-base;
+  font-size: $font-size-base;
+  line-height: $line-height-base;
+  color: $text-primary;
+  background-color: $bg-primary;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-// 应用特定样式
 #app {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top left, #1a253a 0%, $bg-primary 60%);
+}
+
+// Typography
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-family: $font-family-serif;
+  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  line-height: $line-height-tight;
+}
+
+a {
+  color: $primary-color;
+  text-decoration: none;
+  transition: color $transition-duration-fast;
+
+  &:hover {
+    color: lighten($primary-color, 10%);
+  }
+}
+
+button {
+  font-family: inherit;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  background: transparent;
+}
+
+// Custom Scrollbar
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+// Utility Classes
+.glass-panel {
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-md;
+  border: 1px solid $border-color-light;
+  box-shadow: $box-shadow-base;
+}
+
+.text-gold {
+  color: $color-gold;
+}
+
+.text-jade {
+  color: $color-jade;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.absolute-full {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
 }

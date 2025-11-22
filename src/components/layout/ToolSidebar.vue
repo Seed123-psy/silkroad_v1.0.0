@@ -1,8 +1,16 @@
 <template>
   <aside class="tool-sidebar">
     <div class="sidebar-header">
-      <span class="logo">SilkRoad</span>
+      <div class="logo-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 17L12 22L22 17" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M2 12L12 17L22 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">SilkRoad</span>
     </div>
+    
     <nav class="sidebar-nav">
       <RouterLink
         v-for="item in navItems"
@@ -11,76 +19,101 @@
         class="nav-item"
         :class="{ active: currentPath === item.path }"
       >
-        <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+        <component :is="item.icon" class="nav-icon" aria-hidden="true" />
         <span class="nav-label">{{ item.label }}</span>
+        
+        <!-- Active Indicator -->
+        <div class="active-indicator" v-if="currentPath === item.path"></div>
       </RouterLink>
     </nav>
+
+    <div class="sidebar-footer">
+      <!-- Placeholder for future settings or profile -->
+    </div>
   </aside>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { 
+  GlobeAltIcon, 
+  ChartBarIcon, 
+  MapIcon, 
+  BuildingLibraryIcon 
+} from '@heroicons/vue/24/outline'
 
 interface NavItem {
   label: string
   path: string
-  icon: string
+  icon: any
 }
 
 const navItems: NavItem[] = [
   {
     label: '地球探索',
     path: '/',
-    icon: '🌍',
+    icon: GlobeAltIcon,
   },
   {
     label: '贸易图表',
     path: '/trade',
-    icon: '📊',
+    icon: ChartBarIcon,
   },
   {
     label: '唐代交通',
     path: '/transport',
-    icon: '🧭',
+    icon: MapIcon,
   },
-    {
-      label: '明清城区',
-      path: '/mingqing',
-      icon: '🏙️',
-    },
+  {
+    label: '明清城区',
+    path: '/mingqing',
+    icon: BuildingLibraryIcon,
+  },
 ]
 
 const route = useRoute()
-
 const currentPath = computed(() => route.path)
 </script>
 
 <style scoped lang="scss">
-@use '@/assets/styles/variables.scss' as *;
+@use '@/styles/variables.scss' as *;
 @use '@/assets/styles/mixins.scss' as *;
 
 .tool-sidebar {
-  width: 80px;
+  width: $sidebar-width;
   height: 100vh;
-  background: rgba(10, 15, 30, 0.85);
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(18px);
+  background: rgba(5, 8, 15, 0.85);
+  border-right: 1px solid $border-color-light;
+  backdrop-filter: $backdrop-blur-lg;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: $spacing-lg $spacing-sm;
-  gap: $spacing-lg;
-  box-sizing: border-box;
+  padding: $spacing-lg 0;
+  z-index: 100;
+  transition: width $transition-duration-base;
 }
 
 .sidebar-header {
-  color: $text-inverse;
-  font-weight: $font-weight-semibold;
-  font-size: $font-size-sm;
-  letter-spacing: 0.08em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-bottom: $spacing-2xl;
+  color: $color-gold;
+}
+
+.logo-icon {
+  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.3));
+}
+
+.logo-text {
+  font-family: $font-family-serif;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  text-align: center;
+  opacity: 0.9;
 }
 
 .sidebar-nav {
@@ -88,45 +121,63 @@ const currentPath = computed(() => route.path)
   flex-direction: column;
   gap: $spacing-md;
   width: 100%;
-  align-items: center;
+  padding: 0 $spacing-sm;
+  box-sizing: border-box;
 }
 
 .nav-item {
-  width: 100%;
-  padding: $spacing-sm $spacing-xs;
-  border-radius: $border-radius-lg;
-  color: rgba(255, 255, 255, 0.6);
-  text-decoration: none;
-  font-size: $font-size-xs;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: $spacing-xs;
-  transition:
-    background $transition-duration-fast $transition-timing-function,
-    color $transition-duration-fast $transition-timing-function,
-    transform $transition-duration-fast $transition-timing-function;
-
+  justify-content: center;
+  width: 100%;
+  height: 64px;
+  border-radius: $border-radius-lg;
+  color: $text-secondary;
+  transition: all $transition-duration-fast;
+  
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: $text-inverse;
-    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.05);
+    color: $text-primary;
+    
+    .nav-icon {
+      transform: translateY(-2px);
+    }
+  }
+  
+  &.active {
+    color: $color-gold;
+    background: rgba(212, 175, 55, 0.1);
+    
+    .nav-icon {
+      filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.4));
+    }
   }
 }
 
-.nav-item.active {
-  background: rgba(255, 255, 255, 0.18);
-  color: $text-inverse;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-}
-
 .nav-icon {
-  font-size: 20px;
-  line-height: 1;
+  width: 24px;
+  height: 24px;
+  margin-bottom: 4px;
+  transition: transform $transition-duration-fast;
 }
 
 .nav-label {
-  font-size: 12px;
+  font-size: 10px;
+  font-weight: $font-weight-medium;
+}
+
+.active-indicator {
+  position: absolute;
+  left: -8px; // Outside the padding
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 24px;
+  background: $color-gold;
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
 }
 
 @include mobile {
@@ -134,27 +185,57 @@ const currentPath = computed(() => route.path)
     width: 100%;
     height: 64px;
     flex-direction: row;
-    justify-content: center;
-    padding: $spacing-sm $spacing-md;
+    justify-content: space-between;
+    padding: 0 $spacing-md;
+    border-right: none;
+    border-top: 1px solid $border-color-light;
+    position: fixed;
+    bottom: 0;
+    top: auto;
+  }
+
+  .sidebar-header,
+  .sidebar-footer {
+    display: none;
   }
 
   .sidebar-nav {
     flex-direction: row;
-    justify-content: center;
-    gap: $spacing-lg;
+    justify-content: space-around;
+    padding: 0;
   }
 
   .nav-item {
-    flex-direction: row;
-    padding: $spacing-xs $spacing-md;
+    height: 48px;
+    width: auto;
+    flex: 1;
+    border-radius: $border-radius-base;
+    
+    &:hover {
+      background: transparent;
+    }
   }
-
-  .nav-icon {
-    font-size: 18px;
+  
+  .active-indicator {
+    display: none;
   }
-
-  .nav-label {
-    font-size: 13px;
+  
+  .nav-item.active {
+    background: transparent;
+    color: $color-gold;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      top: -8px; // Top border for mobile
+      left: 50%;
+      transform: translateX(-50%);
+      width: 24px;
+      height: 3px;
+      background: $color-gold;
+      border-radius: 0 0 2px 2px;
+      box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+    }
   }
 }
 </style>

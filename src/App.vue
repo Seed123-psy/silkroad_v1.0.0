@@ -16,7 +16,7 @@ import ToolSidebar from '@/components/layout/ToolSidebar.vue'
   display: flex;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle at top left, rgba(14, 37, 63, 0.95), rgba(7, 12, 24, 0.98));
+  // background handled in global.scss
   color: #fff;
 }
 

@@ -1,23 +1,13 @@
 <template>
   <Transition name="slide-fade">
-    <div v-if="city" class="city-info-panel">
+    <div v-if="city" class="city-info-panel glass-panel">
       <div class="panel-header">
         <h2 class="city-name">
           <span class="name-zh">{{ city.name }}</span>
           <span class="name-en">{{ city.nameEn }}</span>
         </h2>
         <button class="close-btn" aria-label="关闭" @click="handleClose">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -46,9 +36,7 @@
                     :key="i"
                     class="star"
                     :class="{ active: i <= city.importance }"
-                  >
-                    ★
-                  </span>
+                  >★</span>
                 </span>
               </span>
             </div>
@@ -68,7 +56,7 @@
         <!-- 历史时期 -->
         <section class="info-section">
           <h3 class="section-title">历史时期</h3>
-          <div class="period-tags">
+          <div class="tag-group">
             <span v-for="period in city.period" :key="period" class="tag period-tag">
               {{ getPeriodName(period) }}
             </span>
@@ -78,7 +66,7 @@
         <!-- 贸易商品 -->
         <section v-if="city.tradeItems && city.tradeItems.length > 0" class="info-section">
           <h3 class="section-title">主要贸易商品</h3>
-          <div class="trade-tags">
+          <div class="tag-group">
             <span v-for="trade in city.tradeItems" :key="trade" class="tag trade-tag">
               {{ trade }}
             </span>
@@ -110,7 +98,7 @@
         <!-- 现代遗址 -->
         <section v-if="city.modernSites && city.modernSites.length > 0" class="info-section">
           <h3 class="section-title">现代遗址</h3>
-          <div class="site-tags">
+          <div class="tag-group">
             <span v-for="site in city.modernSites" :key="site" class="tag site-tag">
               {{ site }}
             </span>
@@ -162,93 +150,86 @@ const getPeriodName = (period: string): string => {
 </script>
 
 <style scoped lang="scss">
-@use '@/assets/styles/variables.scss' as *;
+@use '@/styles/variables.scss' as *;
 @use '@/assets/styles/mixins.scss' as *;
 
 .city-info-panel {
   position: fixed;
-  top: $spacing-xl;
-  right: $spacing-xl;
-  width: 380px;
-  max-height: calc(100vh - #{$spacing-xl * 2});
-  background: rgba(255, 255, 255, 0.1); // 纯白色半透明
-  backdrop-filter: blur(24px) saturate(180%); // 强毛玻璃效果
-  -webkit-backdrop-filter: blur(24px) saturate(180%); // Safari支持
-  border: 1px solid rgba(255, 255, 255, 0.18); // 白色边框
+  top: $spacing-lg;
+  right: $spacing-lg;
+  width: 400px;
+  max-height: calc(100vh - #{$spacing-lg * 2});
   border-radius: $border-radius-xl;
-  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37); // 柔和阴影
   overflow: hidden;
-  z-index: 100;
-
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  
   @include mobile {
-    top: $spacing-md;
-    right: $spacing-md;
-    left: $spacing-md;
-    width: auto;
-    max-height: calc(100vh - #{$spacing-md * 2});
+    top: auto;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    width: 100%;
+    max-height: 80vh;
+    border-radius: $border-radius-xl $border-radius-xl 0 0;
+    border-bottom: none;
   }
 }
 
 .panel-header {
-  @include flex-between;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
   padding: $spacing-lg $spacing-xl;
-  background: rgba(255, 255, 255, 0.05); // 纯半透明
-  color: $text-inverse;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(10px);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+  border-bottom: 1px solid $border-color-light;
 }
 
 .city-name {
-  margin: 0;
-  font-size: $font-size-xl;
-  font-weight: $font-weight-bold;
-  line-height: $line-height-tight;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); // 文字阴影增强可读性
-
   .name-zh {
     display: block;
+    font-size: $font-size-2xl;
+    color: $color-gold;
     margin-bottom: $spacing-xs;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
   }
 
   .name-en {
     display: block;
     font-size: $font-size-sm;
+    color: $text-secondary;
     font-weight: $font-weight-normal;
-    opacity: 0.95;
+    letter-spacing: 0.05em;
   }
 }
 
 .close-btn {
-  @include button-base;
   padding: $spacing-xs;
-  background: rgba(255, 255, 255, 0.2);
-  color: $text-inverse;
-  border-radius: $border-radius-base;
-  @include transition(background);
+  color: $text-tertiary;
+  transition: color $transition-duration-fast;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.3);
-  }
-
-  svg {
-    display: block;
+    color: $text-primary;
   }
 }
 
 .panel-content {
-  padding: $spacing-lg $spacing-xl;
-  max-height: calc(100vh - #{$spacing-xl * 2} - 100px);
+  flex: 1;
   overflow-y: auto;
-  @include scrollbar(6px, transparent, rgba(255, 255, 255, 0.2));
-
-  @include mobile {
-    max-height: calc(100vh - #{$spacing-md * 2} - 100px);
-    padding: $spacing-md;
+  padding: $spacing-lg $spacing-xl;
+  
+  // Hide scrollbar for cleaner look but keep functionality
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
   }
 }
 
 .info-section {
-  margin-bottom: $spacing-lg;
+  margin-bottom: $spacing-xl;
 
   &:last-child {
     margin-bottom: 0;
@@ -256,12 +237,13 @@ const getPeriodName = (period: string): string => {
 }
 
 .section-title {
-  margin: 0 0 $spacing-md 0;
-  font-size: $font-size-base;
-  font-weight: $font-weight-semibold;
-  color: rgba(255, 255, 255, 0.95); // 白色文字
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3); // 半透明白色边框
+  font-size: $font-size-sm;
+  color: $color-sand;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: $spacing-md;
   padding-bottom: $spacing-xs;
+  border-bottom: 1px solid $border-color-light;
 }
 
 .info-grid {
@@ -271,126 +253,121 @@ const getPeriodName = (period: string): string => {
 }
 
 .info-item {
-  @include flex-column;
-  gap: $spacing-xs;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .info-label {
   font-size: $font-size-xs;
-  color: rgba(255, 255, 255, 0.6); // 半透明白色
-  font-weight: $font-weight-medium;
+  color: $text-tertiary;
 }
 
 .info-value {
   font-size: $font-size-base;
-  color: rgba(255, 255, 255, 0.95); // 白色
-  font-weight: $font-weight-semibold;
+  color: $text-primary;
+  font-weight: $font-weight-medium;
 }
 
 .importance-stars {
-  display: inline-flex;
-  gap: 2px;
-
   .star {
-    color: $border-color;
-    font-size: $font-size-lg;
-    @include transition(color);
-
+    color: $border-color-light;
+    font-size: $font-size-base;
+    margin-right: 2px;
+    
     &.active {
-      color: $warning-color;
+      color: $color-gold;
     }
   }
 }
 
 .description {
-  margin: 0;
-  font-size: $font-size-sm;
+  font-size: $font-size-base;
+  color: $text-secondary;
   line-height: $line-height-loose;
-  color: rgba(255, 255, 255, 0.8); // 半透明白色
+  text-align: justify;
 }
 
-.period-tags,
-.trade-tags,
-.site-tags {
+.tag-group {
   display: flex;
   flex-wrap: wrap;
   gap: $spacing-sm;
 }
 
-.event-list {
-  margin: 0;
-  padding-left: $spacing-lg;
-  list-style: none;
-}
-
-.event-item {
-  position: relative;
-  font-size: $font-size-sm;
-  line-height: $line-height-loose;
-  color: rgba(255, 255, 255, 0.8); // 半透明白色
-  margin-bottom: $spacing-sm;
-  padding-left: $spacing-md;
-
-  &::before {
-    content: '•';
-    position: absolute;
-    left: 0;
-    color: rgba(255, 255, 255, 0.6); // 半透明白色
-    font-weight: $font-weight-bold;
-  }
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-}
-
 .tag {
-  display: inline-block;
-  padding: $spacing-xs $spacing-md;
-  border-radius: $border-radius-xl;
+  padding: 4px 12px;
+  border-radius: $border-radius-full;
   font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
-  @include transition(transform);
+  border: 1px solid $border-color-light;
+  background: rgba(255,255,255,0.03);
+  color: $text-secondary;
+  transition: all $transition-duration-fast;
 
   &:hover {
-    transform: translateY(-2px);
+    border-color: $color-gold;
+    color: $color-gold;
+    background: rgba(212, 175, 55, 0.1);
   }
 }
 
 .period-tag {
-  background: rgba(255, 255, 255, 0.15); // 纯半透明
-  color: $text-inverse;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  // Specific styles if needed
 }
 
 .trade-tag {
-  background: rgba(255, 255, 255, 0.15); // 纯半透明
-  color: $text-inverse;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-color: rgba($color-terra, 0.3);
+  &:hover {
+    border-color: $color-terra;
+    color: $color-terra;
+    background: rgba($color-terra, 0.1);
+  }
 }
 
 .site-tag {
-  background: rgba(255, 255, 255, 0.15); // 纯半透明
-  color: $text-inverse;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-color: rgba($color-jade, 0.3);
+  &:hover {
+    border-color: $color-jade;
+    color: $color-jade;
+    background: rgba($color-jade, 0.1);
+  }
 }
 
-// 过渡动画
-.slide-fade-enter-active {
+.event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.event-item {
+  position: relative;
+  padding-left: $spacing-lg;
+  margin-bottom: $spacing-sm;
+  font-size: $font-size-sm;
+  color: $text-secondary;
+  line-height: $line-height-base;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $color-gold;
+    box-shadow: 0 0 4px $color-gold;
+  }
+}
+
+// Transitions
+.slide-fade-enter-active,
+.slide-fade-leave-active {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.slide-fade-leave-active {
-  transition: all 0.3s cubic-bezier(0.4, 0, 1, 1);
-}
-
-.slide-fade-enter-from {
-  transform: translateX(100%);
-  opacity: 0;
-}
-
+.slide-fade-enter-from,
 .slide-fade-leave-to {
-  transform: translateX(100%);
+  transform: translateX(20px);
   opacity: 0;
 }
 </style>
