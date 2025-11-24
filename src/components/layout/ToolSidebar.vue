@@ -40,7 +40,8 @@ import {
   GlobeAltIcon, 
   ChartBarIcon, 
   MapIcon, 
-  BuildingLibraryIcon 
+  BuildingLibraryIcon,
+  BuildingOfficeIcon
 } from '@heroicons/vue/24/outline'
 
 interface NavItem {
@@ -69,6 +70,11 @@ const navItems: NavItem[] = [
     label: '明清城区',
     path: '/mingqing',
     icon: BuildingLibraryIcon,
+  },
+  {
+    label: '大明宫',
+    path: '/daming-palace',
+    icon: BuildingOfficeIcon,
   },
 ]
 
