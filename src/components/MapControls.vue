@@ -6,7 +6,7 @@
 					<span>{{ modeLabel }}</span>
 					<span class="chev">▾</span>
 				</ListboxButton>
-				<Transition
+				<transition
 					enter-from-class="map-anim-enter"
 					enter-active-class="map-anim-enter-active"
 					leave-from-class="map-anim-leave"
@@ -22,7 +22,7 @@
 							{{ m.name }}
 						</ListboxOption>
 					</ListboxOptions>
-				</Transition>
+				</transition>
 			</div>
 		</Listbox>
 
@@ -32,7 +32,7 @@
 					<span>{{ styleLabel }}</span>
 					<span class="chev">▾</span>
 				</ListboxButton>
-				<Transition
+				<transition
 					enter-from-class="map-anim-enter"
 					enter-active-class="map-anim-enter-active"
 					leave-from-class="map-anim-leave"
@@ -48,7 +48,7 @@
 							{{ s.name }}
 						</ListboxOption>
 					</ListboxOptions>
-				</Transition>
+				</transition>
 			</div>
 		</Listbox>
 	</div>
@@ -56,8 +56,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import { Listbox, ListboxButton, ListboxOptions, ListboxOption, Transition } from '@headlessui/vue'
-
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 const props = defineProps({
 	modes: { type: Array as () => Array<any>, default: () => [] },
 	styles: { type: Array as () => Array<any>, default: () => [] },
