@@ -1,44 +1,100 @@
-# Vue 3 + TypeScript + Vite
+# Silk Road Visualization Project (v1.0.0)
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+This project is a comprehensive data visualization platform exploring the history, geography, and trade of the Silk Road. It leverages modern web technologies to provide interactive 3D maps, data charts, and immersive historical reconstructions.
 
-Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
+## 🛠 Tech Stack
 
-## 开发（本项目特定说明）
+- **Core Framework:** [Vue 3](https://vuejs.org/) (Composition API) + [TypeScript](https://www.typescriptlang.org/)
+- **Build Tool:** [Vite](https://vitejs.dev/)
+- **State Management:** [Pinia](https://pinia.vuejs.org/)
+- **Routing:** [Vue Router](https://router.vuejs.org/)
+- **3D Visualization:** [Three.js](https://threejs.org/) (WebGL)
+- **Map Visualization:** [Mapbox GL JS](https://docs.mapbox.com/mapbox-gl-js/)
+- **Charts & Data Viz:** [Apache ECharts](https://echarts.apache.org/) + [Vue-ECharts](https://github.com/ecomfe/vue-echarts)
+- **Animations:** [GSAP](https://greensock.com/gsap/)
+- **GIS Data Parsing:** `shapefile`, `shpjs`, `fflate`
+- **UI Components:** Headless UI, Heroicons
+- **Styling:** SCSS (Sass)
 
-如果你修改了前端依赖（例如新增 `@headlessui/vue`），请在项目根目录运行安装命令：
-
-Windows (cmd.exe):
-
-```
-npm install @headlessui/vue
-```
-
-或者同时安装建议的图标库（可选）：
-
-```
-npm install @heroicons/vue
-```
-
-确保你已在 Vite 环境中提供 Mapbox Token，否则地图无法加载。示例（Windows cmd.exe）:
+## 📂 Project Structure
 
 ```
-:: 临时在当前命令行会话中设置
-set VITE_MAPBOX_TOKEN=your_mapbox_token_here
+silkroad_v1.0.0/
+├── public/              # Static assets (GIS data, textures, images)
+├── src/
+│   ├── assets/          # JSON data, global styles
+│   ├── components/      # Reusable Vue components (Globe3D, Charts, etc.)
+│   ├── router/          # Route definitions
+│   ├── services/        # Data loading and processing services
+│   ├── stores/          # Pinia state stores
+│   ├── types/           # TypeScript type definitions
+│   ├── utils/           # Helper functions (Three.js helpers, coordinate utils)
+│   ├── views/           # Page views (Home, Transport, Trade, DamingPalace, etc.)
+│   ├── App.vue          # Root component
+│   └── main.ts          # Application entry point
+├── index.html           # HTML entry point
+├── package.json         # Project dependencies and scripts
+├── vite.config.ts       # Vite configuration
+└── README.md            # Project documentation
+```
 
-:: 然后启动开发服务器
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v16+ recommended)
+- npm or yarn
+
+### Installation
+
+1.  Clone the repository or navigate to the project directory.
+2.  Install dependencies:
+
+    ```bash
+    npm install
+    ```
+
+### Development
+
+Start the development server with hot-reload:
+
+```bash
 npm run dev
 ```
 
-如果你希望永久设置环境变量，请在项目根新建或编辑 `.env` 文件，添加：
+Access the application at `http://localhost:5173` (or the port shown in your terminal).
 
+### Build
+
+Build the project for production:
+
+```bash
+npm run build
 ```
-VITE_MAPBOX_TOKEN=your_mapbox_token_here
-```
 
-运行开发服务器后，打开以下路由以验证页面：
+The output will be in the `dist/` directory.
 
-- 唐代交通: `http://localhost:3000/#/transport`
-- 明清城区: `http://localhost:3000/#/mingqing`
+## ✨ Key Features
 
-安装依赖后，如果你在控制台或 IDE 中看到 TypeScript 报错（例如找不到 `@headlessui/vue` 的类型或模块），告诉我报错内容，我会帮你定位并修复（例如加类型声明或调整导入）。
+- **Interactive 3D Globe:** Visualizes Silk Road cities and routes on a 3D Earth model using Three.js.
+- **Historical Maps:** Detailed transport and geographical maps using Mapbox GL.
+- **Trade Analytics:** Interactive charts and graphs analyzing trade volume, goods, and economic data across different dynasties (Han, Tang, Song, Yuan, Ming, Qing).
+- **Daming Palace Reconstruction:** A particle-based 3D visualization of the Daming Palace, featuring the Hanyuan Hall and its iconic Dragon Tail Way (Longwei Dao).
+- **GIS Data Support:** Native support for parsing and displaying Shapefile (.shp) and DBF data.
+
+## 📦 Dependencies
+
+The project relies on the following key packages (ensure these are in your `package.json`):
+
+- `three`: For 3D rendering.
+- `mapbox-gl`: For map rendering.
+- `echarts` & `vue-echarts`: For statistical charts.
+- `gsap`: For smooth animations.
+- `shapefile` & `shpjs`: For reading GIS data formats.
+- `pinia`: For state management.
+- `vue-router`: For navigation.
+
+## 📝 Notes
+
+- Ensure you have a valid Mapbox Access Token if you plan to use Mapbox services extensively (configured in `src/views/Transport.vue` or `src/views/MingQing.vue`).
+- Large GIS files in `public/data` are loaded asynchronously.
