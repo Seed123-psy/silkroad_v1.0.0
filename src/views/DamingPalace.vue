@@ -44,8 +44,13 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 const PARTICLE_COUNT = 300000 // 提升到 30万以获得更细腻的表现
 const PARTICLE_SIZE = 0.45 // 增大粒子尺寸以增强可见性
 
-// 视图定义
-const views = [
+// 视图定义（添加类型）
+interface View {
+  name: string
+  cameraPos: { x: number; y: number; z: number }
+  target: { x: number; y: number; z: number }
+}
+const views: View[] = [
   { name: '全景鸟瞰', cameraPos: { x: 0, y: 60, z: 120 }, target: { x: 0, y: 0, z: 0 } },
   { name: '正立面', cameraPos: { x: 0, y: 10, z: 100 }, target: { x: 0, y: 10, z: 0 } },
   { name: '龙尾道', cameraPos: { x: 0, y: -10, z: 60 }, target: { x: 0, y: 10, z: 0 } },
@@ -81,7 +86,9 @@ function initScene() {
   const width = containerRef.value.clientWidth
   const height = containerRef.value.clientHeight
   camera = new THREE.PerspectiveCamera(45, width / height, 1, 1000)
-  const initialView = views[0]
+
+  // 初始视图防护（fallback 避免 views[0] 为 undefined）
+  const initialView: View = views[0] ?? { name: 'default', cameraPos: { x: 0, y: 60, z: 120 }, target: { x: 0, y: 0, z: 0 } }
   camera.position.set(initialView.cameraPos.x, initialView.cameraPos.y, initialView.cameraPos.z)
 
   // 3. 渲染器
@@ -98,6 +105,10 @@ function initScene() {
   controls.minDistance = 20
   controls.autoRotate = true
   controls.autoRotateSpeed = 0.5
+
+  // 将 controls.target 显式设置为初始视图的 target 并立即更新
+  controls.target.set(initialView.target.x, initialView.target.y, initialView.target.z)
+  controls.update()
 
   // 5. 生成粒子
   generateDamingPalace()
