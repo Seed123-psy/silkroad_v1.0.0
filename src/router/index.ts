@@ -22,8 +22,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/MingQing.vue'),
   },
   {
-    path: '/daming-palace',
-    name: 'DamingPalace',
+    path: '/silkroad',
+    name: 'Silkroad',
     component: () => import('@/views/DamingPalace.vue'),
   },
 ]

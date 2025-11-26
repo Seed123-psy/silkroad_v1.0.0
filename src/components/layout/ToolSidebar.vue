@@ -72,8 +72,8 @@ const navItems: NavItem[] = [
     icon: BuildingLibraryIcon,
   },
   {
-    label: '大明宫',
-    path: '/daming-palace',
+    label: '丝绸之路',
+    path: '/silkroad',
     icon: BuildingOfficeIcon,
   },
 ]

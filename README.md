@@ -29,7 +29,7 @@ silkroad_v1.0.0/
 │   ├── stores/          # Pinia state stores
 │   ├── types/           # TypeScript type definitions
 │   ├── utils/           # Helper functions (Three.js helpers, coordinate utils)
-│   ├── views/           # Page views (Home, Transport, Trade, DamingPalace, etc.)
+│   ├── views/           # Page views (Home, Transport, Trade, Silkroad, etc.)
 │   ├── App.vue          # Root component
 │   └── main.ts          # Application entry point
 ├── index.html           # HTML entry point
@@ -79,7 +79,7 @@ The output will be in the `dist/` directory.
 - **Interactive 3D Globe:** Visualizes Silk Road cities and routes on a 3D Earth model using Three.js.
 - **Historical Maps:** Detailed transport and geographical maps using Mapbox GL.
 - **Trade Analytics:** Interactive charts and graphs analyzing trade volume, goods, and economic data across different dynasties (Han, Tang, Song, Yuan, Ming, Qing).
-- **Daming Palace Reconstruction:** A particle-based 3D visualization of the Daming Palace, featuring the Hanyuan Hall and its iconic Dragon Tail Way (Longwei Dao).
+-- **Silkroad Page:** The project includes a dedicated page for the Silk Road visualizations (formerly a Daming Palace reconstruction page). It may contain interactive or placeholder content depending on build.
 - **GIS Data Support:** Native support for parsing and displaying Shapefile (.shp) and DBF data.
 
 ## 📦 Dependencies
