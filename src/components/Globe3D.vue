@@ -928,6 +928,77 @@ onMounted(() => {
   }
 })
 
+/**
+ * 处理手势旋转
+ * @param deltaX 水平移动距离
+ * @param deltaY 垂直移动距离
+ */
+function handleGestureRotate(deltaX: number, deltaY: number) {
+  if (!controls || !camera) return
+
+  const speed = 5 // 旋转速度系数
+  
+  // 获取当前相机相对于目标的偏移
+  const offset = new THREE.Vector3()
+  offset.copy(camera.position).sub(controls.target)
+  
+  // 转换为球坐标
+  const radius = offset.length()
+  let theta = Math.atan2(offset.x, offset.z)
+  let phi = Math.acos(Math.max(-1, Math.min(1, offset.y / radius)))
+  
+  // 应用旋转
+  theta -= deltaX * speed
+  phi -= deltaY * speed
+  
+  // 限制垂直角度，防止万向节死锁
+  phi = Math.max(0.1, Math.min(Math.PI - 0.1, phi))
+  
+  // 转回笛卡尔坐标
+  offset.x = radius * Math.sin(phi) * Math.sin(theta)
+  offset.y = radius * Math.cos(phi)
+  offset.z = radius * Math.sin(phi) * Math.cos(theta)
+  
+  // 更新相机位置
+  camera.position.copy(controls.target).add(offset)
+  camera.lookAt(controls.target)
+  
+  // 更新控制器状态
+  controls.update()
+  markNeedsRender()
+}
+
+/**
+ * 处理手势缩放
+ * @param factor 缩放因子 (>1 放大/拉近, <1 缩小/拉远)
+ */
+function handleGestureZoom(factor: number) {
+  if (!controls || !camera) return
+  
+  const offset = new THREE.Vector3()
+  offset.copy(camera.position).sub(controls.target)
+  const currentDistance = offset.length()
+  
+  // 计算新距离 (注意：放大意味着距离变小，所以除以 factor)
+  let newDistance = currentDistance / factor
+  
+  // 限制缩放范围
+  newDistance = Math.max(controls.minDistance, Math.min(controls.maxDistance, newDistance))
+  
+  // 应用新距离
+  offset.setLength(newDistance)
+  camera.position.copy(controls.target).add(offset)
+  
+  controls.update()
+  markNeedsRender()
+}
+
+// 暴露方法给父组件
+defineExpose({
+  handleGestureRotate,
+  handleGestureZoom
+})
+
 // 组件卸载
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
