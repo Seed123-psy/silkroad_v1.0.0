@@ -425,10 +425,10 @@ const ROUTE_COLOR_MAP: Record<string, string> = {
   略阳道: '#1dd1a1',
   回中道: '#ffcd3c',
   萧关道: '#48dbfb',
-  河湟道: '#00d2d3'
+  河湟道: '#9B6B4A'
 }
 
-const ROUTE_COLOR_PALETTE = ['#ff5e57', '#ff884e', '#ffa94d', '#ffcd3c', '#10ac84', '#00d2d3', '#48dbfb', '#2e86de', '#5f27cd', '#f368e0', '#ff6b6b', '#1dd1a1']
+const ROUTE_COLOR_PALETTE = ['#ff5e57', '#ff884e', '#ffa94d', '#ffcd3c', '#10ac84', '#9B6B4A', '#48dbfb', '#2e86de', '#5f27cd', '#f368e0', '#ff6b6b', '#1dd1a1']
 
 const HAN_LAYER_IDS = {
   west: { source: 'han-west-points', layer: 'han-west-points-circle' },
@@ -1219,7 +1219,7 @@ function buildLineFeatures(rawFeatures: GeoJSON.Feature[]): HanLineFeature[] {
           name,
           folderPath: typeof rawProps.FolderPath === 'string' ? rawProps.FolderPath : undefined,
           length: lengthValue ? lengthValue * 111 : undefined,
-          color: getRouteColor(name, rawProps.FolderPath as string | undefined)
+          color: normalizeColorToHex(getRouteColor(name, rawProps.FolderPath as string | undefined))
         }
       }
     })
@@ -1283,7 +1283,7 @@ function ensureHanLayers() {
       source: HAN_LAYER_IDS.west.source,
       paint: {
         'circle-color': POINT_COLOR_EXPRESSION,
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 3, 6, 5, 9, 8, 12, 12],
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 4.5, 6, 7, 9, 11, 12, 16],
         'circle-stroke-width': 1.2,
         'circle-stroke-color': '#ffffff',
         'circle-opacity': 0.88
@@ -1298,7 +1298,7 @@ function ensureHanLayers() {
       source: HAN_LAYER_IDS.east.source,
       paint: {
         'circle-color': POINT_COLOR_EXPRESSION,
-        'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 3, 6, 5, 9, 8, 12, 12],
+        'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 4.5, 6, 7, 9, 11, 12, 16],
         'circle-stroke-width': 1.2,
         'circle-stroke-color': '#0b1c2c',
         'circle-opacity': 0.9
@@ -1453,7 +1453,7 @@ function buildLineHoverContent(props: HanLineProperties): HoverPanelContent {
     name: props.name,
     subtitle: '两汉交通线',
     badge: '交通线',
-    color: props.color,
+    color: normalizeColorToHex((props.color && String(props.color).trim()) || getRouteColor(props.name || '', props.folderPath)),
     rows
   }
 }
@@ -1539,6 +1539,46 @@ function getRouteColor(name: string, folderPath?: string): string {
   if (!ROUTE_COLOR_PALETTE.length) return '#e67e22'
   const paletteColor = ROUTE_COLOR_PALETTE[hash % ROUTE_COLOR_PALETTE.length]
   return paletteColor ?? '#e67e22'
+}
+
+function normalizeColorToHex(input: unknown, fallback = '#e67e22'): string {
+  if (!input && input !== '') return fallback
+  // already a hex string
+  if (typeof input === 'string') {
+    const s = input.trim()
+    // basic hex check
+    if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(s)) return s.toLowerCase()
+    // try to parse rgb(...) or rgba(...)
+    const rgbMatch = s.match(/rgba?\(([^)]+)\)/)
+    if (rgbMatch) {
+      const parts = rgbMatch[1].split(',').map(p => Number(p.trim()))
+      if (parts.length >= 3 && parts.every(n => Number.isFinite(n))) {
+        const r = Math.round(parts[0])
+        const g = Math.round(parts[1])
+        const b = Math.round(parts[2])
+        return rgbToHex(r, g, b)
+      }
+    }
+    // fallback try to look up in ROUTE_COLOR_MAP
+    const mapVal = ROUTE_COLOR_MAP[s]
+    if (mapVal) return mapVal.toLowerCase()
+    return fallback
+  }
+  // numeric value (0xRRGGBB)
+  if (typeof input === 'number' && Number.isFinite(input)) {
+    const num = input as number
+    const r = (num >> 16) & 255
+    const g = (num >> 8) & 255
+    const b = num & 255
+    return rgbToHex(r, g, b)
+  }
+  return fallback
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (v: number) => Math.max(0, Math.min(255, Math.round(v)))
+  const toHex = (v: number) => clamp(v).toString(16).padStart(2, '0')
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
 function getPointTypeColor(type?: string, dataset?: HanPointProperties['dataset'], fallback?: string): string {

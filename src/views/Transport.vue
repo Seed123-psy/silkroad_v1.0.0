@@ -707,9 +707,9 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
       type: 'circle',
       source: 'points',
       paint: {
-        'circle-radius': 6,
+        'circle-radius': 3.5,
         'circle-color': TYPE_COLOR_EXPRESSION,
-        'circle-stroke-width': 1.5,
+        'circle-stroke-width': 1,
         'circle-stroke-color': '#fff'
       }
     })
@@ -749,7 +749,7 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
       type: 'line',
       source: 'lines',
       paint: {
-        'line-width': 3,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.2, 5, 2.2, 8, 4, 12, 7],
         'line-color': getRouteColorExpression()
       }
     })

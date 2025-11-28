@@ -75,15 +75,22 @@ export function createCityMarker(city: City, radius: number): THREE.Group {
   const glow = new THREE.Mesh(glowGeometry, glowMaterial)
   markerGroup.add(glow)
 
-  // 3. 创建文字标签（简洁的白色文字）
+  // 3. 创建文字标签（高清晰度，带描边）
   const labelTexture = createTextTexture(city.name, {
-    fontSize: 50,
+    fontSize: 64, // 提高分辨率
+    fontFamily: '"Ma Shan Zheng", "Kaiti", "STKaiti", "KaiTi", "楷体", sans-serif', // 使用书法风格字体
     color: '#ffffff',
-    backgroundColor: 'transparent', // 透明背景
-    padding: 0,
+    backgroundColor: 'transparent',
+    padding: 4,
   })
 
-  const labelGeometry = new THREE.PlaneGeometry(0.3, 0.08)
+  // 根据纹理宽高比动态计算平面大小，避免文字变形
+  const image = labelTexture.image
+  const aspectRatio = image.width / image.height
+  const labelHeight = 0.15 // 稍微调大一点
+  const labelWidth = labelHeight * aspectRatio
+
+  const labelGeometry = new THREE.PlaneGeometry(labelWidth, labelHeight)
   const labelMaterial = new THREE.MeshBasicMaterial({
     map: labelTexture,
     transparent: true,
@@ -94,7 +101,7 @@ export function createCityMarker(city: City, radius: number): THREE.Group {
   const label = new THREE.Mesh(labelGeometry, labelMaterial)
 
   // 标签位置在标注点上方
-  label.position.set(0, 0.05, 0)
+  label.position.set(0, 0.08, 0)
 
   // 标签始终面向相机（Billboard效果将在渲染循环中实现）
   label.renderOrder = 999 // 确保标签在最上层渲染
@@ -200,7 +207,7 @@ export function createStarField(count: number = 10000, radius: number = 100): TH
 export function createTextTexture(text: string, options: TextOptions = {}): THREE.CanvasTexture {
   const {
     fontSize = 24,
-    fontFamily = 'Arial, Microsoft YaHei, sans-serif', // 添加中文字体支持
+    fontFamily = 'Arial, Microsoft YaHei, sans-serif',
     color = '#ffffff',
     backgroundColor = 'rgba(0, 0, 0, 0.6)',
     padding = 8,
@@ -211,13 +218,19 @@ export function createTextTexture(text: string, options: TextOptions = {}): THRE
   const context = canvas.getContext('2d')!
 
   // 设置字体以测量文字尺寸
-  context.font = `bold ${fontSize}px ${fontFamily}` // 使用粗体
+  const fontStr = `bold ${fontSize}px ${fontFamily}`
+  context.font = fontStr
   const metrics = context.measureText(text)
   const textWidth = metrics.width
 
-  // 设置Canvas尺寸（需要是2的幂次方以获得更好的性能）
-  const canvasWidth = Math.pow(2, Math.ceil(Math.log2(textWidth + padding * 2)))
-  const canvasHeight = Math.pow(2, Math.ceil(Math.log2(fontSize + padding * 2)))
+  // 设置Canvas尺寸（使用2的幂次方，但确保有足够空间画描边）
+  // 增加额外的padding给描边
+  const strokeWidth = fontSize * 0.1
+  const totalPadding = padding + strokeWidth
+
+  const canvasWidth = Math.pow(2, Math.ceil(Math.log2(textWidth + totalPadding * 2)))
+  const canvasHeight = Math.pow(2, Math.ceil(Math.log2(fontSize * 1.5 + totalPadding * 2)))
+  
   canvas.width = canvasWidth
   canvas.height = canvasHeight
 
@@ -228,15 +241,30 @@ export function createTextTexture(text: string, options: TextOptions = {}): THRE
   }
 
   // 绘制文字
-  context.font = `${fontSize}px ${fontFamily}`
-  context.fillStyle = color
+  context.font = fontStr
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  context.fillText(text, canvasWidth / 2, canvasHeight / 2)
+  
+  const centerX = canvasWidth / 2
+  const centerY = canvasHeight / 2
+
+  // 绘制描边
+  context.lineWidth = strokeWidth
+  context.strokeStyle = 'rgba(0, 0, 0, 0.8)' // 深色描边
+  context.lineJoin = 'round'
+  context.strokeText(text, centerX, centerY)
+
+  // 绘制填充
+  context.fillStyle = color
+  context.fillText(text, centerX, centerY)
 
   // 创建纹理
   const texture = new THREE.CanvasTexture(canvas)
   texture.needsUpdate = true
+  // 提高纹理质量
+  texture.minFilter = THREE.LinearFilter
+  texture.magFilter = THREE.LinearFilter
+  texture.generateMipmaps = false 
 
   return texture
 }

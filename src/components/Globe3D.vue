@@ -498,6 +498,20 @@ function animate() {
     needsRender = true
   }
 
+  // 更新流动路线动画
+  const time = performance.now() / 1000
+  let hasFlowingRoutes = false
+  routeMeshes.forEach(mesh => {
+    if (mesh.userData.isFlowing && mesh.material instanceof THREE.ShaderMaterial) {
+      mesh.material.uniforms.time.value = time
+      hasFlowingRoutes = true
+    }
+  })
+
+  if (hasFlowingRoutes) {
+    needsRender = true
+  }
+
   // 只在需要时重新渲染
   if (needsRender) {
     // 实现视锥体剔除
