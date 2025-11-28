@@ -4,62 +4,89 @@
 
 ```
 silkroad_v1.0.0/
+├── public/              # 公共静态资源
+│   ├── data/            # GIS数据 (Shapefiles, GeoJSON)
+│   ├── images/          # 图片资源
+│   └── textures/        # 3D纹理资源
+├── scripts/             # 脚本工具
+│   └── checkTangData.mjs # 数据检查脚本
 ├── src/
 │   ├── assets/          # 静态资源
-│   │   ├── images/      # 图片资源
-│   │   └── models/      # 3D模型资源
-│   ├── components/      # 组件
-│   │   ├── common/      # 通用组件
-│   │   ├── layout/      # 布局组件
-│   │   └── visualization/ # 可视化组件
+│   │   ├── data/        # 本地JSON数据
+│   │   └── styles/      # 组件样式
+│   ├── components/      # Vue组件
+│   │   ├── layout/      # 布局组件 (ToolSidebar)
+│   │   ├── CityInfoPanel.vue
+│   │   ├── Globe3D.vue
+│   │   ├── MapControls.vue
+│   │   └── TradeVolumeChart.vue
+│   ├── composables/     # 组合式API (Hooks)
+│   │   └── useGestureControl.ts
 │   ├── router/          # 路由配置
+│   ├── services/        # 业务服务
+│   │   ├── dataService.ts
+│   │   ├── exportService.ts
+│   │   └── modelLoaderService.ts
 │   ├── stores/          # Pinia状态管理
-│   ├── views/           # 页面视图
-│   ├── utils/           # 工具函数
-│   ├── services/        # API服务
-│   ├── types/           # TypeScript类型定义
+│   │   ├── app.ts
+│   │   └── chartStore.ts
 │   ├── styles/          # 全局样式
-│   │   ├── variables.scss  # SCSS变量
-│   │   └── global.scss     # 全局样式
+│   │   ├── global.scss
+│   │   └── variables.scss
+│   ├── types/           # TypeScript类型定义
+│   │   ├── artifact.ts
+│   │   ├── city.ts
+│   │   ├── display.ts
+│   │   ├── event.ts
+│   │   ├── mapbox-gl.d.ts
+│   │   ├── shapefile.d.ts
+│   │   └── trade.ts
+│   ├── utils/           # 工具函数
+│   │   ├── coordinateUtils.ts
+│   │   ├── dataProcessor.ts
+│   │   └── threeHelpers.ts
+│   ├── views/           # 页面视图
+│   │   ├── DamingPalace.vue
+│   │   ├── Home.vue
+│   │   ├── MingQing.vue
+│   │   ├── SilkRoad.vue
+│   │   ├── Trade.vue
+│   │   └── Transport.vue
 │   ├── App.vue          # 根组件
 │   ├── main.ts          # 入口文件
 │   ├── vite-env.d.ts    # Vite环境变量类型
 │   └── shims-vue.d.ts   # Vue组件类型声明
-├── public/              # 公共静态资源
-├── .eslintrc.cjs        # ESLint配置
-├── .prettierrc.json     # Prettier配置
-├── .prettierignore      # Prettier忽略文件
-├── vite.config.ts       # Vite配置
-├── tsconfig.json        # TypeScript配置
-├── tsconfig.app.json    # 应用TypeScript配置
+├── eslint.config.js     # ESLint配置
+├── index.html           # HTML入口
 ├── package.json         # 项目依赖
-├── .env                 # 环境变量
-├── .env.development     # 开发环境变量
-└── .env.production      # 生产环境变量
+├── tsconfig.json        # TypeScript配置
+├── vite.config.ts       # Vite配置
+└── README.md            # 项目说明
 ```
 
 ## 已安装的核心依赖
 
-### 生产依赖
+### 生产依赖 (dependencies)
 - **vue**: ^3.5.24 - Vue 3框架
 - **vue-router**: 路由管理
 - **pinia**: 状态管理
 - **three**: Three.js 3D库
-- **@types/three**: Three.js类型定义
+- **mapbox-gl**: Mapbox GL JS 地图库
 - **echarts**: ECharts图表库
+- **vue-echarts**: ECharts Vue封装
 - **gsap**: GSAP动画库
+- **@mediapipe/tasks-vision**: 计算机视觉(手势识别)
+- **shapefile / shpjs**: GIS数据解析
+- **@headlessui/vue**: 无样式UI组件
+- **@heroicons/vue**: 图标库
 
-### 开发依赖
+### 开发依赖 (devDependencies)
 - **vite**: 构建工具
 - **typescript**: TypeScript支持
 - **sass**: Sass预处理器
 - **eslint**: 代码检查
 - **prettier**: 代码格式化
-- **@typescript-eslint/parser**: TypeScript ESLint解析器
-- **@typescript-eslint/eslint-plugin**: TypeScript ESLint插件
-- **eslint-plugin-vue**: Vue ESLint插件
-- **eslint-config-prettier**: Prettier ESLint配置
-- **eslint-plugin-prettier**: Prettier ESLint插件
+- **vue-tsc**: Vue类型检查
 
 ## 可用脚本
 

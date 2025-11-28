@@ -24,7 +24,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/silkroad',
     name: 'Silkroad',
-    component: () => import('@/views/DamingPalace.vue'),
+    component: () => import('@/views/SilkRoad.vue'),
   },
 ]
 

@@ -102,6 +102,23 @@
       </div>
     </transition>
 
+    <!-- 手势控制 UI -->
+    <div class="gesture-controls">
+      <button class="gesture-btn" @click="toggleCamera" :class="{ active: isCameraOpen }">
+        <span class="icon">📷</span>
+        {{ isCameraOpen ? '关闭手势' : '开启手势' }}
+      </button>
+      
+      <div v-show="isCameraOpen" class="camera-wrapper">
+        <video ref="videoRef" class="input_video" autoplay playsinline></video>
+        <canvas ref="canvasRef" class="output_canvas"></canvas>
+        <div class="gesture-status">
+          <p>状态: {{ gestureStatus }}</p>
+          <p class="hint">单手捏合: 移动地图 | 双手开合: 缩放地图</p>
+        </div>
+      </div>
+    </div>
+
     <!-- WASD 漫游提示 -->
     <div class="wasd-controls">
       <!-- 移动 -->
@@ -144,6 +161,7 @@
 import { unzipSync } from 'fflate'
 import { open as openShapefile } from 'shapefile'
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useGestureControl } from '@/composables/useGestureControl'
 
 interface TangPointProperties {
   Name_CH: string
@@ -198,6 +216,37 @@ let lastFeatureKey = ''
 let popupTimer: any = null
 let pendingFeatureKey = ''
 let activeHoverSource: 'point' | 'line' | null = null
+
+// --- 手势控制逻辑 ---
+const { 
+  isCameraOpen, 
+  videoRef, 
+  canvasRef, 
+  gestureStatus, 
+  toggleCamera, 
+  setCallbacks 
+} = useGestureControl()
+
+setCallbacks(
+  (deltaX, deltaY) => {
+    if (map) {
+      // 摄像头是镜像的，且 delta 是归一化坐标
+      // 移动灵敏度
+      const sensitivity = 2000 
+      // 反转 X 轴以匹配镜像，反转 Y 轴以匹配屏幕坐标系
+      map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
+    }
+  },
+  (zoomFactor) => {
+    if (map) {
+      const currentZoom = map.getZoom()
+      // 缩放灵敏度
+      const sensitivity = 0.4
+      const deltaZoom = (zoomFactor - 1) * sensitivity * 10 // 放大系数
+      map.setZoom(currentZoom + deltaZoom)
+    }
+  }
+)
 
 // 键盘控制状态
 const keysPressed = reactive({ 
@@ -463,39 +512,60 @@ function applyMapStyle(styleId: string) {
 
 function applyMapProjection(mode: string) {
   if (!map) return
+  
+  // 通用的星空/深空背景配置
+  const fogConfig = {
+    'range': [0.5, 10],
+    'color': '#242B4B',
+    'high-color': '#161B33',
+    'space-color': '#0B0B15',
+    'star-intensity': mode === 'globe' ? 0.8 : 0.0 // 星星仅在 globe 模式下可见
+  }
+
   if (mode === 'globe') {
-    // 球形投影：不启用地形放大效果，仅设置 globe 投影并添加天空层
+    // 球形投影
     map.setProjection('globe')
     setTimeout(() => {
       if (map.getProjection().name !== 'globe') {
         map.setProjection('globe')
       }
     }, 100)
-    // 仅添加 sky 层以增强球形视觉，但不添加 raster-dem / setTerrain
-    map.once('style.load', () => {
-      if (!map.getLayer('sky')) {
-        map.addLayer({
-          id: 'sky',
-          type: 'sky',
-          paint: {
-            'sky-type': 'atmosphere',
-            'sky-atmosphere-sun': [0.0, 0.0],
-            'sky-atmosphere-sun-intensity': 15,
-            'sky-atmosphere-color': '#101020',
-            'sky-atmosphere-halo-color': '#222244',
-            'sky-opacity': 1
-          }
-        })
-      }
-    })
+    
+    // 设置星空背景
+    map.setFog(fogConfig)
+
+    // 移除可能存在的 sky 层（globe 模式下 fog 自带星空，不需要 sky layer）
+    if (map.getLayer('sky')) {
+      map.removeLayer('sky')
+    }
   } else {
-    // 默认平面（mercator）或立体（terrain）都使用 mercator 投影
+    // 平面或立体投影 (Mercator)
     map.setProjection('mercator')
     setTimeout(() => {
       if (map.getProjection().name !== 'mercator') {
         map.setProjection('mercator')
       }
     }, 100)
+    
+    // 在 Mercator 模式下也设置 Fog，营造深邃氛围
+    map.setFog(fogConfig)
+
+    // 添加 Sky layer 以在倾斜视角下显示深色天空
+    if (!map.getLayer('sky')) {
+      map.addLayer({
+        id: 'sky',
+        type: 'sky',
+        paint: {
+          'sky-type': 'atmosphere',
+          'sky-atmosphere-sun': [0.0, 0.0],
+          'sky-atmosphere-sun-intensity': 15,
+          'sky-atmosphere-color': '#242B4B',
+          'sky-atmosphere-halo-color': '#161B33',
+          'sky-opacity': 1
+        }
+      })
+    }
+
     // 如果是 terrain 模式，则启用地形 DEM 与阴影图层
     if (mode === 'terrain') {
       try {
@@ -1562,5 +1632,95 @@ function onTypeSelectAll(event: Event) {
   margin-top: 4px;
   text-align: center;
   white-space: nowrap;
+}
+
+.gesture-controls {
+  position: absolute;
+  bottom: 140px; /* 位于 WASD 上方 */
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.gesture-btn {
+  background: rgba(12, 20, 30, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-family: inherit;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.gesture-btn:hover {
+  background: rgba(12, 20, 30, 0.88);
+  transform: translateY(-2px);
+}
+
+.gesture-btn.active {
+  background: rgba(74, 158, 255, 0.3);
+  border-color: #4a9eff;
+  color: #4a9eff;
+}
+
+.camera-wrapper {
+  position: relative;
+  width: 200px;
+  height: 150px;
+  background: #000;
+  border: 2px solid #333;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.input_video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.output_canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+}
+
+.gesture-status {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  padding: 6px;
+  text-align: center;
+  font-size: 11px;
+}
+
+.gesture-status p {
+  margin: 0;
+}
+
+.gesture-status .hint {
+  font-size: 9px;
+  color: #aaa;
+  margin-top: 2px;
 }
 </style>

@@ -30,12 +30,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import Globe3D from '@/components/Globe3D.vue'
 import CityInfoPanel from '@/components/CityInfoPanel.vue'
 import { dataService } from '@/services/dataService'
 import type { City, Route } from '@/types'
-import { FilesetResolver, HandLandmarker, type HandLandmarkerResult } from '@mediapipe/tasks-vision'
+import { useGestureControl } from '@/composables/useGestureControl'
 
 const cities = ref<City[]>([])
 const routes = ref<Route[]>([])
@@ -45,185 +45,33 @@ const autoRotate = ref(true)
 let hoverResetTimer: number | null = null
 
 // --- 手势控制逻辑 ---
-const isCameraOpen = ref(false)
-const videoRef = ref<HTMLVideoElement | null>(null)
-const canvasRef = ref<HTMLCanvasElement | null>(null)
-const gestureStatus = ref('初始化中...')
-let handLandmarker: HandLandmarker | undefined
-let animationFrameId: number
-let lastVideoTime = -1
+const { 
+  isCameraOpen, 
+  videoRef, 
+  canvasRef, 
+  gestureStatus, 
+  toggleCamera, 
+  setCallbacks 
+} = useGestureControl()
 
-// 手势状态追踪
-let lastPinchCenter = { x: 0, y: 0 }
-let isPinching = false
-let lastTwoHandDist = 0
-
-const toggleCamera = async () => {
-  if (isCameraOpen.value) {
-    stopCamera()
-  } else {
-    await startCamera()
-  }
-}
-
-const startCamera = async () => {
-  isCameraOpen.value = true
-  autoRotate.value = false // 开启手势时关闭自动旋转
-  gestureStatus.value = '加载模型...'
-
-  try {
-    const vision = await FilesetResolver.forVisionTasks(
-      'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
-    )
-    
-    handLandmarker = await HandLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
-        delegate: "GPU"
-      },
-      runningMode: "VIDEO",
-      numHands: 2
-    })
-
-    const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-    if (videoRef.value) {
-      videoRef.value.srcObject = stream
-      videoRef.value.addEventListener('loadeddata', predictWebcam)
+// 设置手势回调
+setCallbacks(
+  (deltaX, deltaY) => {
+    if (globeRef.value) {
+      globeRef.value.handleGestureRotate(deltaX, deltaY)
     }
-    gestureStatus.value = '准备就绪'
-  } catch (error) {
-    console.error(error)
-    gestureStatus.value = '启动失败: ' + error
-    isCameraOpen.value = false
-  }
-}
-
-const stopCamera = () => {
-  isCameraOpen.value = false
-  autoRotate.value = true // 关闭手势时恢复自动旋转
-  if (videoRef.value && videoRef.value.srcObject) {
-    const stream = videoRef.value.srcObject as MediaStream
-    stream.getTracks().forEach(track => track.stop())
-    videoRef.value.srcObject = null
-  }
-  if (animationFrameId) {
-    cancelAnimationFrame(animationFrameId)
-  }
-  handLandmarker = undefined
-}
-
-const predictWebcam = async () => {
-  if (!handLandmarker || !videoRef.value || !canvasRef.value) return
-
-  const video = videoRef.value
-  const canvas = canvasRef.value
-  const ctx = canvas.getContext('2d')
-  
-  if (video.videoWidth > 0 && canvas.width !== video.videoWidth) {
-    canvas.width = video.videoWidth
-    canvas.height = video.videoHeight
-  }
-
-  let startTimeMs = performance.now()
-  if (lastVideoTime !== video.currentTime) {
-    lastVideoTime = video.currentTime
-    const results = handLandmarker.detectForVideo(video, startTimeMs)
-    
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
-      drawHands(ctx, results)
-    }
-    
-    handleGestures(results)
-  }
-
-  if (isCameraOpen.value) {
-    animationFrameId = requestAnimationFrame(predictWebcam)
-  }
-}
-
-const drawHands = (ctx: CanvasRenderingContext2D, results: HandLandmarkerResult) => {
-  if (results.landmarks) {
-    for (const landmarks of results.landmarks) {
-      for (const point of landmarks) {
-        ctx.beginPath()
-        ctx.arc(point.x * ctx.canvas.width, point.y * ctx.canvas.height, 3, 0, 2 * Math.PI)
-        ctx.fillStyle = "#00FF00"
-        ctx.fill()
-      }
+  },
+  (zoomFactor) => {
+    if (globeRef.value) {
+      globeRef.value.handleGestureZoom(zoomFactor)
     }
   }
-}
+)
 
-const handleGestures = (results: HandLandmarkerResult) => {
-  const landmarks = results.landmarks
-  
-  if (!landmarks || landmarks.length === 0) {
-    gestureStatus.value = '未检测到手势'
-    isPinching = false
-    lastTwoHandDist = 0
-    return
-  }
-
-  // 双手逻辑：缩放
-  if (landmarks.length === 2 && landmarks[0] && landmarks[1]) {
-    const hand1 = landmarks[0][9]
-    const hand2 = landmarks[1][9]
-    
-    if (!hand1 || !hand2) return
-
-    const dist = Math.hypot(hand1.x - hand2.x, hand1.y - hand2.y)
-    
-    if (lastTwoHandDist > 0) {
-      const delta = dist - lastTwoHandDist
-      if (Math.abs(delta) > 0.005) {
-        const zoomFactor = 1 + delta * 2
-        if (globeRef.value) {
-          globeRef.value.handleGestureZoom(zoomFactor)
-        }
-        gestureStatus.value = delta > 0 ? '放大中' : '缩小中'
-      }
-    }
-    lastTwoHandDist = dist
-    isPinching = false
-  } 
-  // 单手逻辑：旋转 (捏合手势)
-  else if (landmarks.length === 1 && landmarks[0]) {
-    lastTwoHandDist = 0
-    const hand = landmarks[0]
-    const thumbTip = hand[4]
-    const indexTip = hand[8]
-    
-    if (!thumbTip || !indexTip) return
-
-    const pinchDist = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y)
-    const isCurrentlyPinching = pinchDist < 0.08
-
-    const centerX = (thumbTip.x + indexTip.x) / 2
-    const centerY = (thumbTip.y + indexTip.y) / 2
-
-    if (isCurrentlyPinching) {
-      if (isPinching) {
-        const deltaX = (centerX - lastPinchCenter.x)
-        const deltaY = (centerY - lastPinchCenter.y)
-        
-        if (globeRef.value) {
-          // 传递移动增量给地球组件
-          globeRef.value.handleGestureRotate(deltaX, deltaY)
-        }
-        gestureStatus.value = '旋转地球'
-      }
-      isPinching = true
-      lastPinchCenter = { x: centerX, y: centerY }
-    } else {
-      isPinching = false
-      gestureStatus.value = '手掌张开 (停止旋转)'
-    }
-  }
-}
-
-onUnmounted(() => {
-  stopCamera()
+// 监听摄像头开关状态，控制自动旋转
+import { watch } from 'vue'
+watch(isCameraOpen, (isOpen) => {
+  autoRotate.value = !isOpen
 })
 
 const handleCityHover = (city: City | null) => {

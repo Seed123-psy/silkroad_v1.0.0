@@ -111,6 +111,59 @@
       </div>
     </transition>
 
+    <!-- 手势控制 UI -->
+    <div class="gesture-controls">
+      <button class="gesture-btn" @click="toggleCamera" :class="{ active: isCameraOpen }">
+        <span class="icon">📷</span>
+        {{ isCameraOpen ? '关闭手势' : '开启手势' }}
+      </button>
+      
+      <div v-show="isCameraOpen" class="camera-wrapper">
+        <video ref="videoRef" class="input_video" autoplay playsinline></video>
+        <canvas ref="canvasRef" class="output_canvas"></canvas>
+        <div class="gesture-status">
+          <p>状态: {{ gestureStatus }}</p>
+          <p class="hint">单手捏合: 移动地图 | 双手开合: 缩放地图</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- WASD 漫游提示 -->
+    <div class="wasd-controls">
+      <!-- 移动 -->
+      <div class="control-section">
+        <div class="key w" :class="{ active: keysPressed.w }">W</div>
+        <div class="keys-row">
+          <div class="key a" :class="{ active: keysPressed.a }">A</div>
+          <div class="key s" :class="{ active: keysPressed.s }">S</div>
+          <div class="key d" :class="{ active: keysPressed.d }">D</div>
+        </div>
+        <div class="label">移动</div>
+      </div>
+      
+      <div class="divider"></div>
+
+      <!-- 升降 -->
+      <div class="control-section">
+        <div class="key q" :class="{ active: keysPressed.q }">Q</div>
+        <div class="key e" :class="{ active: keysPressed.e }">E</div>
+        <div class="label">升降</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- 旋转 -->
+      <div class="control-section">
+        <div class="key up" :class="{ active: keysPressed.arrowup }">↑</div>
+        <div class="keys-row">
+          <div class="key left" :class="{ active: keysPressed.arrowleft }">←</div>
+          <div class="key down" :class="{ active: keysPressed.arrowdown }">↓</div>
+          <div class="key right" :class="{ active: keysPressed.arrowright }">→</div>
+        </div>
+        <div class="label">旋转</div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -121,6 +174,7 @@ import shp from 'shpjs'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import MapControls from '@/components/MapControls.vue'
+import { useGestureControl } from '@/composables/useGestureControl'
 
 type MapMode = 'flat' | 'globe' | 'terrain'
 
@@ -186,6 +240,33 @@ let popup: any = null
 let hoveredRegionId: number | null = null
 let regionInteractionDisposer: (() => void) | null = null
 let latestRegionGeoJSON: GeoJSON.FeatureCollection | null = null
+
+// --- 手势控制逻辑 ---
+const { 
+  isCameraOpen, 
+  videoRef, 
+  canvasRef, 
+  gestureStatus, 
+  toggleCamera, 
+  setCallbacks 
+} = useGestureControl()
+
+setCallbacks(
+  (deltaX, deltaY) => {
+    if (map) {
+      const sensitivity = 2000 
+      map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
+    }
+  },
+  (zoomFactor) => {
+    if (map) {
+      const currentZoom = map.getZoom()
+      const sensitivity = 0.4
+      const deltaZoom = (zoomFactor - 1) * sensitivity * 10
+      map.setZoom(currentZoom + deltaZoom)
+    }
+  }
+)
 
 const regions = ref<MingQingRegionFeature[]>([])
 const filteredRegions = ref<MingQingRegionFeature[]>([])
@@ -761,15 +842,31 @@ function applyMapStyle(styleId: string) {
 
 function applyMapProjection(mode: MapMode) {
   if (!map) return
+
+  // 通用的星空/深空背景配置
+  const fogConfig = {
+    'range': [0.5, 10],
+    'color': '#242B4B',
+    'high-color': '#161B33',
+    'space-color': '#0B0B15',
+    'star-intensity': mode === 'globe' ? 0.8 : 0.0 // 星星仅在 globe 模式下可见
+  }
+
   if (mode === 'globe') {
     map.setProjection('globe')
     disableTerrain()
-    ensureSkyLayer()
+    // 设置星空背景
+    map.setFog(fogConfig)
+    // 移除可能存在的 sky 层
+    removeSkyLayer()
     return
   }
 
   map.setProjection('mercator')
-  removeSkyLayer()
+  // 在 Mercator 模式下也设置 Fog
+  map.setFog(fogConfig)
+  // 添加 Sky layer
+  ensureSkyLayer()
 
   if (mode === 'terrain') {
     enableTerrain()
@@ -822,9 +919,9 @@ function ensureSkyLayer() {
     paint: {
       'sky-type': 'atmosphere',
       'sky-atmosphere-sun': [0.0, 0.0],
-      'sky-atmosphere-sun-intensity': 12,
-      'sky-atmosphere-color': '#101020',
-      'sky-atmosphere-halo-color': '#1f2a44',
+      'sky-atmosphere-sun-intensity': 15,
+      'sky-atmosphere-color': '#242B4B',
+      'sky-atmosphere-halo-color': '#161B33',
       'sky-opacity': 1
     }
   })
@@ -861,6 +958,95 @@ function restoreTerrainAfterInteraction() {
     savedHillEx = null
     interactionTimer = null
   }, 220)
+}
+
+// 键盘控制状态
+const keysPressed = reactive({ 
+  w: false, a: false, s: false, d: false,
+  q: false, e: false,
+  arrowup: false, arrowdown: false, arrowleft: false, arrowright: false
+})
+let animationFrameId: number | null = null
+
+// 键盘控制逻辑
+function handleKeyDown(e: KeyboardEvent) {
+  const tagName = (e.target as HTMLElement).tagName
+  if (tagName === 'INPUT' || tagName === 'TEXTAREA') return
+  
+  const key = e.key.toLowerCase()
+  if (Object.prototype.hasOwnProperty.call(keysPressed, key)) {
+    keysPressed[key as keyof typeof keysPressed] = true
+    if (!animationFrameId) {
+      loopCameraMovement()
+    }
+  }
+}
+
+function handleKeyUp(e: KeyboardEvent) {
+  const key = e.key.toLowerCase()
+  if (Object.prototype.hasOwnProperty.call(keysPressed, key)) {
+    keysPressed[key as keyof typeof keysPressed] = false
+  }
+}
+
+function loopCameraMovement() {
+  if (!map) {
+    animationFrameId = null
+    return
+  }
+  
+  const { w, a, s, d, q, e, arrowup, arrowdown, arrowleft, arrowright } = keysPressed
+  
+  // 检查是否有任意键被按下
+  if (!w && !a && !s && !d && !q && !e && !arrowup && !arrowdown && !arrowleft && !arrowright) {
+    animationFrameId = null
+    return
+  }
+
+  // 1. 平移 (WASD)
+  // 基础速度 (像素/帧)
+  const panSpeed = 15
+  const dx = (d ? panSpeed : 0) - (a ? panSpeed : 0)
+  const dy = (s ? panSpeed : 0) - (w ? panSpeed : 0)
+
+  if (dx !== 0 || dy !== 0) {
+    map.panBy([dx, dy], { animate: false })
+  }
+
+  // 2. 升降 (Q/E) -> 对应 Zoom
+  // Zoom 速度 (层级/帧)
+  const zoomSpeed = 0.05
+  if (q || e) {
+    const currentZoom = map.getZoom()
+    // Q: 下降 (Zoom In), E: 上升 (Zoom Out)
+    const deltaZ = (q ? 1 : 0) - (e ? 1 : 0)
+    if (deltaZ !== 0) {
+      map.setZoom(currentZoom + deltaZ * zoomSpeed)
+    }
+  }
+
+  // 3. 旋转 (Arrows)
+  // 旋转速度 (度/帧)
+  const rotateSpeed = 1.5
+  const pitchSpeed = 1.0
+
+  // 左右键控制 Bearing (水平旋转)
+  if (arrowleft || arrowright) {
+    const currentBearing = map.getBearing()
+    const change = (arrowright ? 1 : 0) - (arrowleft ? 1 : 0)
+    map.setBearing(currentBearing + change * rotateSpeed)
+  }
+
+  // 上下键控制 Pitch (俯仰角)
+  if (arrowup || arrowdown) {
+    const currentPitch = map.getPitch()
+    const deltaP = (arrowup ? 1 : 0) - (arrowdown ? 1 : 0)
+    // 限制 Pitch 范围，防止翻转
+    const newPitch = Math.max(0, Math.min(85, currentPitch + deltaP * pitchSpeed))
+    map.setPitch(newPitch)
+  }
+
+  animationFrameId = requestAnimationFrame(loopCameraMovement)
 }
 
 function setChineseLabels() {
@@ -943,6 +1129,9 @@ onMounted(() => {
   map.on('pitchend', restoreTerrainAfterInteraction)
 
   void loadMingQingRegions()
+
+  window.addEventListener('keydown', handleKeyDown)
+  window.addEventListener('keyup', handleKeyUp)
 })
 
 onUnmounted(() => {
@@ -961,6 +1150,12 @@ onUnmounted(() => {
     map = null
   }
   popup?.remove()
+  window.removeEventListener('keydown', handleKeyDown)
+  window.removeEventListener('keyup', handleKeyUp)
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId)
+    animationFrameId = null
+  }
 })
 
 function onAccuracyToggle(level: number, event: Event) {
@@ -1329,5 +1524,166 @@ function onAccuracySelectAll(event: Event) {
     right: 12px;
     transform: none;
   }
+}
+
+.gesture-controls {
+  position: absolute;
+  bottom: 140px;
+  right: 24px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.gesture-btn {
+  background: rgba(12, 20, 30, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-family: inherit;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.gesture-btn:hover {
+  background: rgba(12, 20, 30, 0.88);
+  transform: translateY(-2px);
+}
+
+.gesture-btn.active {
+  background: rgba(74, 158, 255, 0.3);
+  border-color: #4a9eff;
+  color: #4a9eff;
+}
+
+.camera-wrapper {
+  position: relative;
+  width: 200px;
+  height: 150px;
+  background: #000;
+  border: 2px solid #333;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.input_video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1);
+}
+
+.output_canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform: scaleX(-1);
+}
+
+.gesture-status {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  padding: 6px;
+  text-align: center;
+  font-size: 11px;
+}
+
+.gesture-status p {
+  margin: 0;
+}
+
+.gesture-status .hint {
+  font-size: 9px;
+  color: #aaa;
+  margin-top: 2px;
+}
+
+.wasd-controls {
+  position: absolute;
+  bottom: 24px; /* 固定到最右下角，和底部居中时间轴错开 */
+  right: 24px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px; /* 缩小间距，避免过大占用可视面积 */
+  background: rgba(12, 20, 30, 0.56);
+  padding: 10px; /* 更紧凑，减少遮挡 */
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(3px);
+  z-index: 1000; /* 保持低于时间轴与信息面板，避免遮挡重要 UI */
+  pointer-events: none; /* 不阻塞底层交互 */
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.wasd-controls:hover {
+  opacity: 1;
+}
+
+.control-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.divider {
+  width: 1px;
+  background: rgba(255, 255, 255, 0.15);
+  align-self: stretch;
+}
+
+.key {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.1s;
+}
+
+.key.active {
+  background: #e67e22;
+  border-color: #e67e22;
+  color: #000;
+  transform: scale(0.95);
+}
+
+.keys-row {
+  display: flex;
+  gap: 6px;
+}
+
+.wasd-controls .label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 4px;
+  text-align: center;
+  white-space: nowrap;
 }
 </style>
