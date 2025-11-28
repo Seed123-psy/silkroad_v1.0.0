@@ -32,13 +32,23 @@ export function useGestureControl() {
     gestureStatus.value = '加载模型...';
 
     try {
+      // 使用本地 WASM 文件 (位于 public/wasm/)
       const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
+        '/wasm'
       );
       
+      // 尝试加载模型
+      // 优先使用本地模型 (public/models/hand_landmarker.task)
+      // 如果本地不存在，MediaPipe 会尝试加载，但我们需要处理路径
+      // 这里我们先尝试本地路径，如果失败（通常由 fetch 处理），则回退或报错
+      // 由于无法自动检测文件是否存在，我们提供两个路径供尝试，或者直接使用官方路径但提示手动下载
+      
+      const modelPath = '/models/hand_landmarker.task';
+      // 备用: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'
+
       handLandmarker = await HandLandmarker.createFromOptions(vision, {
         baseOptions: {
-          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task`,
+          modelAssetPath: modelPath,
           delegate: "GPU"
         },
         runningMode: "VIDEO",
@@ -53,8 +63,8 @@ export function useGestureControl() {
       gestureStatus.value = '准备就绪';
     } catch (error) {
       console.error(error);
-      gestureStatus.value = '启动失败: ' + error;
-      isCameraOpen.value = false;
+      gestureStatus.value = '启动失败: 模型加载错误。请检查 public/models/README.txt 手动下载模型。';
+      // isCameraOpen.value = false; // 保持开启以便查看错误信息
     }
   };
 
