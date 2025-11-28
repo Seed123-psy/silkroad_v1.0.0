@@ -67,6 +67,11 @@ const navItems: NavItem[] = [
     icon: MapIcon,
   },
   {
+    label: '两汉交通',
+    path: '/lianghan',
+    icon: BuildingOfficeIcon,
+  },
+  {
     label: '明清城区',
     path: '/mingqing',
     icon: BuildingLibraryIcon,

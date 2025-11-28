@@ -99,6 +99,17 @@ The output files will be in the `dist` directory.
 2. **Ming & Qing Map**: Navigate to the Ming/Qing section to view historical administrative maps. Use the timeline at the bottom to change the year.
 3. **Trade & Transport**: View specific visualizations for trade routes and transportation networks.
 
+### 🗺 LiangHan Dataset (两汉交通)
+
+- All shapefiles (Western/Eastern Han points and route lines) live in `public/data/lianghan/`.
+- The accompanying point attribute tables are stored in Excel form (`*_han_points.xlsx`). Convert them into JSON with:
+  ```bash
+  node scripts/convertLiangHanXlsx.mjs
+  ```
+  This regenerates `src/assets/data/liangHan/{westernHanPoints,easternHanPoints}.json`, which the `LiangHan.vue` view merges with the shapefiles at runtime.
+- If you add new fields to the spreadsheets, re-run the conversion script and reload the app to see the updated sidebar/hover details.
+- A helper script `scripts/inspectLiangHan.mjs` prints the available shapefile attributes for quick sanity checks during future dataset updates.
+
 ---
 
 <a name="chinese"></a>
@@ -197,3 +208,13 @@ npm run build
 1. **首页**: 探索 3D 地球。点击“相机”图标开启手势控制。
 2. **明清地图**: 导航至明清部分查看历史行政地图。使用底部的时间轴更改年份。
 3. **贸易与交通**: 查看贸易路线和交通网络的具体可视化内容。
+
+### 🗺 两汉交通数据
+
+- 所有西汉/东汉交通点与两汉交通线的 Shapefile 文件位于 `public/data/lianghan/`。
+- `*_han_points.xlsx` 为交通点属性表，可通过以下命令转为前端直接加载的 JSON：
+  ```bash
+  node scripts/convertLiangHanXlsx.mjs
+  ```
+  该脚本会更新 `src/assets/data/liangHan/westernHanPoints.json` 与 `easternHanPoints.json`，`LiangHan.vue` 会在运行时自动合并这些属性并渲染侧栏/悬浮面板。
+- 如需核对 Shapefile 字段，可执行 `node scripts/inspectLiangHan.mjs` 快速打印属性列表，便于后续扩展。
