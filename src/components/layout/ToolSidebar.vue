@@ -71,11 +71,6 @@ const navItems: NavItem[] = [
     path: '/mingqing',
     icon: BuildingLibraryIcon,
   },
-  {
-    label: '丝绸之路',
-    path: '/silkroad',
-    icon: BuildingOfficeIcon,
-  },
 ]
 
 const route = useRoute()
