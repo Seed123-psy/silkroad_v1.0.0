@@ -1550,13 +1550,19 @@ function normalizeColorToHex(input: unknown, fallback = '#e67e22'): string {
     if (/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(s)) return s.toLowerCase()
     // try to parse rgb(...) or rgba(...)
     const rgbMatch = s.match(/rgba?\(([^)]+)\)/)
-    if (rgbMatch) {
-      const parts = rgbMatch[1].split(',').map(p => Number(p.trim()))
-      if (parts.length >= 3 && parts.every(n => Number.isFinite(n))) {
-        const r = Math.round(parts[0])
-        const g = Math.round(parts[1])
-        const b = Math.round(parts[2])
-        return rgbToHex(r, g, b)
+    const inner = rgbMatch?.[1]
+    if (typeof inner === 'string') {
+      const partsRaw = inner.split(',').map(p => p.trim())
+      if (partsRaw.length >= 3) {
+        const rNum = Number(partsRaw[0])
+        const gNum = Number(partsRaw[1])
+        const bNum = Number(partsRaw[2])
+        if (Number.isFinite(rNum) && Number.isFinite(gNum) && Number.isFinite(bNum)) {
+          const r = Math.round(rNum)
+          const g = Math.round(gNum)
+          const b = Math.round(bNum)
+          return rgbToHex(r, g, b)
+        }
       }
     }
     // fallback try to look up in ROUTE_COLOR_MAP

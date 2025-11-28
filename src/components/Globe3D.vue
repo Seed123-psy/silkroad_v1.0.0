@@ -503,7 +503,10 @@ function animate() {
   let hasFlowingRoutes = false
   routeMeshes.forEach(mesh => {
     if (mesh.userData.isFlowing && mesh.material instanceof THREE.ShaderMaterial) {
-      mesh.material.uniforms.time.value = time
+      const mat = mesh.material as THREE.ShaderMaterial & { uniforms?: Record<string, { value: number } | undefined> }
+      if (mat.uniforms && mat.uniforms.time && typeof mat.uniforms.time.value === 'number') {
+        mat.uniforms.time.value = time
+      }
       hasFlowingRoutes = true
     }
   })

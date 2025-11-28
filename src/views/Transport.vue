@@ -1259,7 +1259,7 @@ function toneDownColor(hex: string, mixHex: string, ratio: number): string {
   const mix = hexToRgb(mixHex)
   if (!base || !mix) return hex
   const blended = base.map((channel, idx) => {
-    const mixChannel = mix[idx]
+    const mixChannel = (Array.isArray(mix) && typeof mix[idx] === 'number') ? mix[idx] : 0
     return Math.round(channel * (1 - ratio) + mixChannel * ratio)
   }) as [number, number, number]
   return rgbToHex(blended[0], blended[1], blended[2])
