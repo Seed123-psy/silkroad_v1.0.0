@@ -179,6 +179,8 @@ interface TangLineProperties {
   Name: string
   Beg_year: number
   End_year: number
+  __routeColor?: string
+  __routeName?: string
 }
 type TangPointFeature = {
   type: 'Feature'
@@ -311,6 +313,15 @@ TYPE_CATEGORIES.forEach((cat) => {
   TYPE_COLOR_EXPRESSION.push(cat.color)
 })
 TYPE_COLOR_EXPRESSION.push(TYPE_COLOR_MAP[DEFAULT_TYPE_KEY] || '#e67e22')
+
+const DEFAULT_ROUTE_COLOR = '#2980b9'
+const ROUTE_COLOR_PALETTE = ['#ff5e57', '#ff884e', '#ffa94d', '#ffcd3c', '#10ac84', '#00d2d3', '#48dbfb', '#2e86de', '#5f27cd', '#f368e0', '#ff6b6b', '#1dd1a1']
+const ROUTE_TONE_BASE = '#1f2835'
+const ROUTE_TONE_RATIO = 0.28
+const routeColorCache = new Map<string, string>()
+function getRouteColorExpression(): any[] {
+  return ['coalesce', ['get', '__routeColor'], DEFAULT_ROUTE_COLOR]
+}
 
 const typeFilters = reactive<Record<string, boolean>>(TYPE_CATEGORIES.reduce((acc, type) => {
   acc[type.key] = true
@@ -739,9 +750,15 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
       source: 'lines',
       paint: {
         'line-width': 3,
-        'line-color': '#2980b9'
+        'line-color': getRouteColorExpression()
       }
     })
+  } else {
+    try {
+      map.setPaintProperty('lines', 'line-color', getRouteColorExpression())
+    } catch (e) {
+      // 忽略偶发的样式更新错误
+    }
   }
 
   // 绑定一次 hover 事件，避免重复绑定；对 hitbox 层使用 mousemove/mouseleave
@@ -1003,7 +1020,7 @@ onMounted(() => {
       if (!routesData.length) {
         throw new Error('交通线数据包内无 features')
       }
-      lines.value = routesData as TangLineFeature[]
+      lines.value = assignRouteColors(routesData as TangLineFeature[])
     } catch (e) {
       console.error(`[Transport] 交通线数据加载失败 (${TANG_ROUTES_ZIP_URL})`, e)
       alert('交通线数据加载失败，请检查文件内容和路径！')
@@ -1151,15 +1168,16 @@ function sliceArrayBuffer(entry: Uint8Array): ArrayBuffer {
 }
 
 function buildLinePanel(properties: TangLineProperties): HoverPanelContent {
+  const routeName = properties?.__routeName || properties?.Name || '未知路线'
   const rows: HoverPanelRow[] = [
     { label: '存续', value: `${formatYear(properties?.Beg_year)} - ${formatYear(properties?.End_year)}` }
   ]
 
   return {
-    name: properties?.Name || '未知路线',
+    name: routeName,
     subtitle: '唐代交通线',
     badge: '交通线',
-    color: '#2980b9',
+    color: properties?.__routeColor || DEFAULT_ROUTE_COLOR,
     rows
   }
 }
@@ -1191,6 +1209,80 @@ function preparePointFeatures(features: TangPointFeature[]): TangPointFeature[] 
       }
     }
   })
+}
+
+function assignRouteColors(features: TangLineFeature[]): TangLineFeature[] {
+  return features.map((feature, index) => {
+    const routeName = resolveRouteName(feature?.properties?.Name, index)
+    const routeColor = getOrCreateRouteColor(routeName)
+    return {
+      ...feature,
+      properties: {
+        ...feature.properties,
+        Name: feature?.properties?.Name || routeName,
+        __routeName: routeName,
+        __routeColor: routeColor
+      }
+    }
+  })
+}
+
+function resolveRouteName(rawName?: string, index?: number): string {
+  const trimmed = typeof rawName === 'string' ? rawName.trim() : ''
+  if (trimmed) return trimmed
+  return `路线${(typeof index === 'number' ? index : 0) + 1}`
+}
+
+function getOrCreateRouteColor(routeName: string): string {
+  if (!routeColorCache.has(routeName)) {
+    routeColorCache.set(routeName, generateRouteColor(routeName))
+  }
+  return routeColorCache.get(routeName) || DEFAULT_ROUTE_COLOR
+}
+
+function generateRouteColor(routeName: string): string {
+  const index = Math.abs(hashString(routeName)) % ROUTE_COLOR_PALETTE.length
+  const paletteColor = ROUTE_COLOR_PALETTE[index] || DEFAULT_ROUTE_COLOR
+  return toneDownColor(paletteColor, ROUTE_TONE_BASE, ROUTE_TONE_RATIO)
+}
+
+function hashString(value: string): number {
+  let hash = 0
+  for (let i = 0; i < value.length; i += 1) {
+    hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0
+  }
+  return hash
+}
+
+function toneDownColor(hex: string, mixHex: string, ratio: number): string {
+  const base = hexToRgb(hex)
+  const mix = hexToRgb(mixHex)
+  if (!base || !mix) return hex
+  const blended = base.map((channel, idx) => {
+    const mixChannel = mix[idx]
+    return Math.round(channel * (1 - ratio) + mixChannel * ratio)
+  }) as [number, number, number]
+  return rgbToHex(blended[0], blended[1], blended[2])
+}
+
+function hexToRgb(hex: string): [number, number, number] | null {
+  const normalized = hex.replace('#', '')
+  if (!(normalized.length === 6 || normalized.length === 3)) return null
+  const expanded = normalized.length === 3
+    ? normalized.split('').map((char) => `${char}${char}`).join('')
+    : normalized
+  const num = Number.parseInt(expanded, 16)
+  if (Number.isNaN(num)) return null
+  const r = (num >> 16) & 255
+  const g = (num >> 8) & 255
+  const b = num & 255
+  return [r, g, b]
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  const clamp = (value: number) => Math.max(0, Math.min(255, value))
+  const toHex = (value: number) => clamp(value).toString(16).padStart(2, '0')
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
 function isTypeEnabled(typeKey?: string | null): boolean {

@@ -39,11 +39,40 @@
           </ul>
         </section>
 
-        <section v-if="descriptionParagraphs.length" class="info-section">
-          <h3>资料说明</h3>
-          <p v-for="(paragraph, index) in descriptionParagraphs" :key="index" class="description">
-            {{ paragraph }}
-          </p>
+        <section v-if="showRouteNarratives" class="info-section narrative">
+          <h3>丝绸之路路线说明</h3>
+          <div class="narrative-wrapper">
+            <div
+              v-for="section in narrativeSections"
+              :key="section.id"
+              class="narrative-block"
+            >
+              <h4 class="narrative-title">{{ section.title }}</h4>
+              <p
+                v-for="(paragraph, idx) in section.content"
+                :key="`${section.id}-p-${idx}`"
+                class="narrative-text"
+              >
+                {{ paragraph }}
+              </p>
+              <div v-if="section.children?.length" class="narrative-children">
+                <div
+                  v-for="child in section.children"
+                  :key="child.id"
+                  class="narrative-subblock"
+                >
+                  <h5 class="narrative-subtitle">{{ child.title }}</h5>
+                  <p
+                    v-for="(paragraph, cIdx) in child.content"
+                    :key="`${child.id}-p-${cIdx}`"
+                    class="narrative-text"
+                  >
+                    {{ paragraph }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
       </div>
     </div>
@@ -53,6 +82,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { HanFeaturePanelData } from '@/types/lianghan'
+import { liangHanRouteNarratives, type RouteNarrativeBlock } from '@/assets/data/liangHan/routeNarratives'
 
 interface Props {
   feature: HanFeaturePanelData | null
@@ -60,6 +90,29 @@ interface Props {
 
 const props = defineProps<Props>()
 const emit = defineEmits<{ (e: 'close'): void }>()
+const narrativeSections = computed<RouteNarrativeBlock[]>(() => {
+  if (!props.feature || props.feature.kind !== 'line') return []
+  const directKey = props.feature.properties.name?.trim()
+  if (directKey && liangHanRouteNarratives[directKey]) {
+    return liangHanRouteNarratives[directKey]
+  }
+
+  const folderPath = props.feature.properties.folderPath || ''
+  if (!folderPath) return []
+
+  const folderSegments = folderPath
+    .split('/')
+    .map((segment) => segment.replace(/\.kmz$/i, '').trim())
+    .filter(Boolean)
+
+  for (const candidate of [...folderSegments].reverse()) {
+    if (liangHanRouteNarratives[candidate]) {
+      return liangHanRouteNarratives[candidate]
+    }
+  }
+
+  return []
+})
 
 const title = computed(() => {
   if (!props.feature) return ''
@@ -119,13 +172,7 @@ const siteEntries = computed(() => {
     : []
 })
 
-const descriptionParagraphs = computed(() => {
-  if (!props.feature) return [] as string[]
-  if (props.feature.kind === 'point') return []
-  const raw = props.feature.properties.description
-  if (!raw) return []
-  return raw.split(/\n+/).map((item) => item.trim()).filter(Boolean)
-})
+const showRouteNarratives = computed(() => props.feature?.kind === 'line' && narrativeSections.value.length > 0)
 
 function formatYear(year?: number) {
   if (year === undefined || Number.isNaN(year)) return '不详'
@@ -240,12 +287,42 @@ function formatYear(year?: number) {
   margin-left: 12px;
 }
 
-.description {
-  margin: 0 0 10px;
+.narrative-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.narrative-block {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.narrative-title {
+  margin: 0 0 8px;
+  font-size: 15px;
+  color: #fdf2d0;
+}
+
+.narrative-subtitle {
+  margin: 12px 0 6px;
+  font-size: 14px;
+  color: #f8d17a;
+}
+
+.narrative-text {
+  margin: 0 0 8px;
   font-size: 14px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.88);
   text-align: justify;
+}
+
+.narrative-subblock {
+  padding-left: 12px;
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .slide-fade-enter-active,

@@ -10,6 +10,7 @@ export interface HanPointProperties {
   nameEn?: string
   type?: string
   classification?: string
+  typeKey?: string
   province?: string
   prefecture?: string
   county?: string
@@ -30,8 +31,6 @@ export interface HanLineProperties {
   id: string
   name: string
   folderPath?: string
-  popupHtml?: string
-  description?: string
   length?: number
   color: string
 }

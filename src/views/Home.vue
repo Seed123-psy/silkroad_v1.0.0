@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import Globe3D from '@/components/Globe3D.vue'
 import CityInfoPanel from '@/components/CityInfoPanel.vue'
 import { dataService } from '@/services/dataService'
@@ -42,6 +42,7 @@ const routes = ref<Route[]>([])
 const hoveredCity = ref<City | null>(null)
 const globeRef = ref<any>(null)
 const autoRotate = ref(true)
+const isNodeHovered = ref(false)
 let hoverResetTimer: number | null = null
 
 // --- 手势控制逻辑 ---
@@ -68,10 +69,16 @@ setCallbacks(
   }
 )
 
-// 监听摄像头开关状态，控制自动旋转
-import { watch } from 'vue'
-watch(isCameraOpen, (isOpen) => {
-  autoRotate.value = !isOpen
+const updateAutoRotate = () => {
+  autoRotate.value = !isCameraOpen.value && !isNodeHovered.value
+}
+
+watch(isCameraOpen, () => {
+  updateAutoRotate()
+})
+
+watch(isNodeHovered, () => {
+  updateAutoRotate()
 })
 
 const handleCityHover = (city: City | null) => {
@@ -82,10 +89,14 @@ const handleCityHover = (city: City | null) => {
 
   if (city) {
     hoveredCity.value = city
+    isNodeHovered.value = true
+    updateAutoRotate()
   } else {
     hoverResetTimer = window.setTimeout(() => {
       hoveredCity.value = null
+      isNodeHovered.value = false
       hoverResetTimer = null
+      updateAutoRotate()
     }, 150)
   }
 }
@@ -111,6 +122,8 @@ onMounted(async () => {
     console.error('Failed to load data:', err)
   }
 })
+
+updateAutoRotate()
 </script>
 
 <style scoped lang="scss">
