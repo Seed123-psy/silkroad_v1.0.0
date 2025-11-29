@@ -16,7 +16,7 @@
     "@heroicons/vue": "^2.2.0",
     "@mediapipe/tasks-vision": "^0.10.22-rc.20250304",
     "@types/three": "^0.181.0",
-    "echarts": "^6.0.0",
+    "echarts": "^5.6.0",
     "echarts-gl": "^2.0.9",
     "fflate": "^0.8.2",
     "gsap": "^3.13.0",
@@ -26,7 +26,7 @@
     "shpjs": "^6.1.0",
     "three": "^0.181.1",
     "vue": "^3.5.24",
-    "vue-echarts": "^8.0.1",
+    "vue-echarts": "^7.0.0",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
@@ -42,11 +42,11 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-vue": "^10.5.1",
+    "exceljs": "^4.4.0",
     "prettier": "^3.6.2",
     "sass": "^1.94.0",
     "typescript": "~5.9.3",
     "vite": "^7.2.2",
-    "vue-tsc": "^3.1.3",
-    "xlsx": "^0.18.5"
+    "vue-tsc": "^3.1.3"
   }
 }

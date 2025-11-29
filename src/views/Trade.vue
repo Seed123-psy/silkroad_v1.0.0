@@ -180,6 +180,37 @@
             <span>地图加载失败，请检查网络连接</span>
             <button @click="retryLoadMap">重试</button>
           </div>
+          <div v-if="!mapLoading && !mapError" class="map-control-panel">
+            <div class="control-title">视角控制</div>
+            <div class="control-row">
+              <div class="row-label">
+                <span>缩放</span>
+                <span class="value">{{ zoomDisplayLabel }}</span>
+              </div>
+              <input
+                class="map-slider"
+                type="range"
+                :min="zoomSliderRange.min"
+                :max="zoomSliderRange.max"
+                step="1"
+                v-model.number="zoomSliderValue"
+              />
+            </div>
+            <div class="control-row">
+              <div class="row-label">
+                <span>俯仰</span>
+                <span class="value">{{ globeAlpha }}°</span>
+              </div>
+              <input
+                class="map-slider"
+                type="range"
+                :min="pitchRange.min"
+                :max="pitchRange.max"
+                step="1"
+                v-model.number="globeAlpha"
+              />
+            </div>
+          </div>
           <div ref="globeChartRef" class="full-chart"></div>
         </div>
 
@@ -361,6 +392,32 @@ const currentView = ref<'list' | 'map' | 'network'>('list');
 const mapLoading = ref(false);
 const mapError = ref(false);
 
+const zoomRange = { min: 15, max: 200 };
+const pitchRange = { min: 20, max: 80 };
+const zoomSliderRange = { min: 0, max: 100 };
+
+const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
+const sliderToDistance = (sliderVal: number) => {
+  const ratio = (sliderVal - zoomSliderRange.min) / (zoomSliderRange.max - zoomSliderRange.min);
+  const distance = zoomRange.max - ratio * (zoomRange.max - zoomRange.min);
+  return clamp(distance, zoomRange.min, zoomRange.max);
+};
+const distanceToSlider = (distance: number) => {
+  const ratio = (zoomRange.max - distance) / (zoomRange.max - zoomRange.min);
+  const sliderVal = zoomSliderRange.min + ratio * (zoomSliderRange.max - zoomSliderRange.min);
+  return clamp(sliderVal, zoomSliderRange.min, zoomSliderRange.max);
+};
+
+const globeDistance = ref(sliderToDistance(60));
+const globeAlpha = ref(40);
+const zoomSliderValue = computed({
+  get: () => Math.round(distanceToSlider(globeDistance.value)),
+  set: (val: number) => {
+    globeDistance.value = sliderToDistance(val);
+  }
+});
+const zoomDisplayLabel = computed(() => `${zoomSliderValue.value}%`);
+
 const retryLoadMap = () => {
   mapError.value = false;
   updateGlobeChart();
@@ -386,6 +443,18 @@ let categoryChart: echarts.ECharts | null = null;
 let topGoodsChart: echarts.ECharts | null = null;
 let globeChart: echarts.ECharts | null = null;
 let networkChart: echarts.ECharts | null = null;
+
+const applyGlobeViewControl = () => {
+  if (!globeChart) return;
+  globeChart.setOption({
+    geo3D: {
+      viewControl: {
+        distance: globeDistance.value,
+        alpha: globeAlpha.value
+      }
+    }
+  });
+};
 
 // --- 计算属性 ---
 
@@ -627,14 +696,17 @@ const updateGlobeChart = async () => {
       },
       
       viewControl: {
-        distance: 80,
-        alpha: 40,
+        distance: globeDistance.value,
+        alpha: globeAlpha.value,
         beta: 0,
-        minAlpha: 20,
-        maxAlpha: 80,
+        minAlpha: pitchRange.min,
+        maxAlpha: pitchRange.max,
+        minDistance: zoomRange.min,
+        maxDistance: zoomRange.max,
         panMouseButton: 'left',
         rotateMouseButton: 'right',
-        center: [10, 0, 0]
+        center: [10, 0, 0],
+        zoomSensitivity: 2
       },
 
       postEffect: {
@@ -761,6 +833,10 @@ const updateNetworkChart = () => {
 };
 
 // --- 生命周期 ---
+watch([globeDistance, globeAlpha], () => {
+  applyGlobeViewControl();
+});
+
 watch([selectedPeriod, selectedCategory, selectedFromCity, selectedToCity, minVal, maxVal, searchQuery], () => {
   currentPage.value = 1;
   updateCharts();
@@ -1015,6 +1091,85 @@ onUnmounted(() => {
   height: 100%;
 }
 
+.map-control-panel {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 220px;
+  padding: 0.75rem 1rem;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid #334155;
+  border-radius: 10px;
+  z-index: 20;
+  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.6);
+  backdrop-filter: blur(6px);
+}
+
+.map-control-panel .control-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin-bottom: 0.5rem;
+}
+
+.map-control-panel .control-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.map-control-panel .control-row:last-child {
+  margin-bottom: 0;
+}
+
+.row-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.row-label .value {
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.map-slider {
+  width: 100%;
+  accent-color: #3b82f6;
+  cursor: pointer;
+  height: 6px;
+  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+  border-radius: 999px;
+  appearance: none;
+}
+
+.map-slider::-moz-range-track {
+  height: 6px;
+  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+  border-radius: 999px;
+}
+
+.map-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 4px 8px rgba(2, 6, 23, 0.4);
+}
+
+.map-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #3b82f6;
+  box-shadow: 0 4px 8px rgba(2, 6, 23, 0.4);
+}
+
 // --- Center Panel (List) ---
 .data-list-container {
   flex: 1;
@@ -1249,5 +1404,12 @@ onUnmounted(() => {
 @media (max-width: 768px) {
   .dashboard-grid { grid-template-columns: 1fr; }
   .right-panel { flex-direction: column; }
+  .map-control-panel {
+    width: calc(100% - 2rem);
+    left: 1rem;
+    right: 1rem;
+    top: auto;
+    bottom: 1rem;
+  }
 }
 </style>
