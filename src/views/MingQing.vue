@@ -123,7 +123,7 @@
         <canvas ref="canvasRef" class="output_canvas"></canvas>
         <div class="gesture-status">
           <p>状态: {{ gestureStatus }}</p>
-          <p class="hint">单手捏合: 移动地图 | 双手开合: 缩放地图</p>
+          <p class="hint">单手捏合: 移动 | 单手张开: 旋转/倾斜 | 双手开合: 缩放</p>
         </div>
       </div>
     </div>
@@ -254,16 +254,37 @@ const {
 setCallbacks(
   (deltaX, deltaY) => {
     if (map) {
-      const sensitivity = 2000 
+      const sensitivity = 1000 
       map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
     }
   },
   (zoomFactor) => {
     if (map) {
       const currentZoom = map.getZoom()
-      const sensitivity = 0.4
+      const sensitivity = 0.3
       const deltaZoom = (zoomFactor - 1) * sensitivity * 10
       map.setZoom(currentZoom + deltaZoom)
+    }
+  },
+  (deltaX, deltaY) => {
+    if (map) {
+      // 旋转灵敏度
+      const rotateSensitivity = 50
+      const pitchSensitivity = 50
+
+      const currentBearing = map.getBearing()
+      const currentPitch = map.getPitch()
+
+      // deltaX > 0 (向右) -> 逆时针旋转 -> bearing 减小
+      const newBearing = currentBearing - deltaX * rotateSensitivity
+      
+      // deltaY > 0 (向下) -> 视角变低 -> pitch 减少
+      const newPitch = currentPitch - deltaY * pitchSensitivity
+
+      map.jumpTo({
+        bearing: newBearing,
+        pitch: Math.max(0, Math.min(85, newPitch))
+      })
     }
   }
 )

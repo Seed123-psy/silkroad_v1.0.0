@@ -114,7 +114,7 @@
         <canvas ref="canvasRef" class="output_canvas"></canvas>
         <div class="gesture-status">
           <p>状态: {{ gestureStatus }}</p>
-          <p class="hint">单手捏合: 移动地图 | 双手开合: 缩放地图</p>
+          <p class="hint">单手捏合: 移动 | 单手张开: 旋转/倾斜 | 双手开合: 缩放</p>
         </div>
       </div>
     </div>
@@ -234,7 +234,7 @@ setCallbacks(
     if (map) {
       // 摄像头是镜像的，且 delta 是归一化坐标
       // 移动灵敏度
-      const sensitivity = 2000 
+      const sensitivity = 1000 
       // 反转 X 轴以匹配镜像，反转 Y 轴以匹配屏幕坐标系
       map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
     }
@@ -243,9 +243,31 @@ setCallbacks(
     if (map) {
       const currentZoom = map.getZoom()
       // 缩放灵敏度
-      const sensitivity = 0.4
+      const sensitivity = 0.3
       const deltaZoom = (zoomFactor - 1) * sensitivity * 10 // 放大系数
       map.setZoom(currentZoom + deltaZoom)
+    }
+  },
+  (deltaX, deltaY) => {
+    if (map) {
+      // 旋转灵敏度
+      const rotateSensitivity = 50
+      const pitchSensitivity = 50
+
+      const currentBearing = map.getBearing()
+      const currentPitch = map.getPitch()
+
+      // deltaX > 0 (向右) -> 逆时针旋转 -> bearing 减小 (修复左右反向)
+      const newBearing = currentBearing - deltaX * rotateSensitivity
+      
+      // deltaY > 0 (向下) -> 视角变低 -> pitch 减少
+      // deltaY < 0 (向上) -> 视角变高 -> pitch 增加
+      const newPitch = currentPitch - deltaY * pitchSensitivity
+
+      map.jumpTo({
+        bearing: newBearing,
+        pitch: Math.max(0, Math.min(85, newPitch))
+      })
     }
   }
 )

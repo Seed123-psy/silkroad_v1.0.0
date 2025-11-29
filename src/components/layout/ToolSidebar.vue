@@ -12,19 +12,51 @@
     </div>
     
     <nav class="sidebar-nav">
-      <RouterLink
-        v-for="item in navItems"
-        :key="item.path"
-        :to="item.path"
-        class="nav-item"
-        :class="{ active: currentPath === item.path }"
-      >
-        <component :is="item.icon" class="nav-icon" aria-hidden="true" />
-        <span class="nav-label">{{ item.label }}</span>
-        
-        <!-- Active Indicator -->
-        <div class="active-indicator" v-if="currentPath === item.path"></div>
-      </RouterLink>
+      <template v-for="item in navItems" :key="item.label">
+        <RouterLink
+          v-if="!item.children"
+          :to="item.path!"
+          class="nav-item"
+          :class="{ active: currentPath === item.path }"
+        >
+          <component :is="item.icon" class="nav-icon" aria-hidden="true" />
+          <span class="nav-label">{{ item.label }}</span>
+          
+          <!-- Active Indicator -->
+          <div class="active-indicator" v-if="currentPath === item.path"></div>
+        </RouterLink>
+
+        <div v-else class="nav-group-container">
+          <div 
+            class="nav-item group-header" 
+            :class="{ 'active': isGroupActive(item) }"
+            @click="toggleGroup(item.label)"
+          >
+            <component :is="item.icon" class="nav-icon" aria-hidden="true" />
+            <div class="label-row">
+              <span class="nav-label">{{ item.label }}</span>
+              <ChevronDownIcon 
+                class="group-arrow" 
+                :class="{ 'rotate-180': openGroups.includes(item.label) }" 
+              />
+            </div>
+          </div>
+          
+          <div class="group-children" v-show="openGroups.includes(item.label)">
+            <RouterLink
+              v-for="child in item.children"
+              :key="child.path"
+              :to="child.path!"
+              class="nav-item child-item"
+              :class="{ active: currentPath === child.path }"
+            >
+              <component :is="child.icon" class="nav-icon small" aria-hidden="true" />
+              <span class="nav-label">{{ child.label }}</span>
+              <div class="active-indicator" v-if="currentPath === child.path"></div>
+            </RouterLink>
+          </div>
+        </div>
+      </template>
     </nav>
 
     <div class="sidebar-footer">
@@ -34,20 +66,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { 
   GlobeAltIcon, 
   ChartBarIcon, 
-  MapIcon, 
   BuildingLibraryIcon,
-  BuildingOfficeIcon
+  ChevronDownIcon
 } from '@heroicons/vue/24/outline'
+import TransportRoutesIcon from '@/components/icons/TransportRoutesIcon.vue'
+import HanMingTransportIcon from '@/components/icons/HanMingTransportIcon.vue'
+import LiangHanTransportIcon from '@/components/icons/LiangHanTransportIcon.vue'
 
 interface NavItem {
   label: string
-  path: string
+  path?: string
   icon: any
+  children?: NavItem[]
 }
 
 const navItems: NavItem[] = [
@@ -62,24 +97,53 @@ const navItems: NavItem[] = [
     icon: ChartBarIcon,
   },
   {
-    label: '唐代交通',
-    path: '/transport',
-    icon: MapIcon,
-  },
-  {
-    label: '两汉交通',
-    path: '/lianghan',
-    icon: BuildingOfficeIcon,
+    label: '交通路线',
+    icon: TransportRoutesIcon,
+    children: [
+      {
+        label: '唐代交通',
+        path: '/transport',
+        icon: HanMingTransportIcon,
+      },
+      {
+        label: '两汉交通',
+        path: '/lianghan',
+        icon: HanMingTransportIcon,
+      },
+    ]
   },
   {
     label: '明清城区',
     path: '/mingqing',
-    icon: BuildingLibraryIcon,
+    icon: LiangHanTransportIcon,
   },
 ]
 
 const route = useRoute()
 const currentPath = computed(() => route.path)
+
+const openGroups = ref<string[]>([])
+
+const toggleGroup = (label: string) => {
+  const index = openGroups.value.indexOf(label)
+  if (index === -1) {
+    openGroups.value.push(label)
+  } else {
+    openGroups.value.splice(index, 1)
+  }
+}
+
+const isGroupActive = (item: NavItem) => {
+  if (!item.children) return false
+  return item.children.some(child => child.path === currentPath.value)
+}
+
+// Initialize openGroups
+navItems.forEach(item => {
+  if (isGroupActive(item)) {
+    openGroups.value.push(item.label)
+  }
+})
 </script>
 
 <style scoped lang="scss">
@@ -184,6 +248,56 @@ const currentPath = computed(() => route.path)
   background: $color-gold;
   border-radius: 0 2px 2px 0;
   box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+}
+
+.nav-group-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.group-header {
+  cursor: pointer;
+}
+
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.group-arrow {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.3s ease;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.group-children {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: $border-radius-lg;
+  padding: $spacing-xs 0;
+}
+
+.child-item {
+  height: 48px;
+  background: transparent;
+  
+  .nav-icon.small {
+    width: 20px;
+    height: 20px;
+  }
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
 }
 
 @include mobile {

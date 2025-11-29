@@ -14,17 +14,24 @@ export function useGestureControl() {
   // 状态追踪
   let lastPinchCenter = { x: 0, y: 0 };
   let isPinching = false;
+  
+  // 旋转状态追踪
+  let lastOpenCenter = { x: 0, y: 0 };
+  let isRotating = false;
 
   // 回调函数
   let onMoveCallback: ((dx: number, dy: number) => void) | null = null;
   let onZoomCallback: ((factor: number) => void) | null = null;
+  let onRotateCallback: ((dx: number, dy: number) => void) | null = null;
 
   const setCallbacks = (
     onMove: (dx: number, dy: number) => void,
-    onZoom: (factor: number) => void
+    onZoom: (factor: number) => void,
+    onRotate?: (dx: number, dy: number) => void
   ) => {
     onMoveCallback = onMove;
     onZoomCallback = onZoom;
+    if (onRotate) onRotateCallback = onRotate;
   };
 
   const startCamera = async () => {
@@ -180,8 +187,9 @@ export function useGestureControl() {
       
       // 重置单手状态
       isPinching = false;
+      isRotating = false;
     } 
-    // 单手逻辑：移动 (捏合手势)
+    // 单手逻辑：移动 (捏合) 或 旋转 (张开)
     else if (landmarks.length === 1 && landmarks[0]) {
       const hand = landmarks[0];
       const thumbTip = hand[4];
@@ -190,11 +198,14 @@ export function useGestureControl() {
       if (!thumbTip || !indexTip) return;
 
       const isCurrentlyPinching = isHandPinching(hand);
+      const isCurrentlyOpen = isHandOpen(hand);
 
       const centerX = (thumbTip.x + indexTip.x) / 2;
       const centerY = (thumbTip.y + indexTip.y) / 2;
 
       if (isCurrentlyPinching) {
+        // 捏合 -> 移动
+        isRotating = false;
         if (isPinching) {
           // 摄像头是镜像的，原始 x 坐标向左移动是减小。
           // 为了符合屏幕视觉（手向右移，屏幕上手向右移），我们需要反转 x 轴的变化量。
@@ -207,8 +218,21 @@ export function useGestureControl() {
         }
         isPinching = true;
         lastPinchCenter = { x: centerX, y: centerY };
+      } else if (isCurrentlyOpen) {
+        // 张开 -> 旋转/倾斜
+        isPinching = false;
+        if (isRotating) {
+          const deltaX = (centerX - lastOpenCenter.x) * -1;
+          const deltaY = (centerY - lastOpenCenter.y);
+          
+          if (onRotateCallback) onRotateCallback(deltaX, deltaY);
+          gestureStatus.value = '旋转/倾斜中';
+        }
+        isRotating = true;
+        lastOpenCenter = { x: centerX, y: centerY };
       } else {
         isPinching = false;
+        isRotating = false;
         gestureStatus.value = '手掌张开 (停止移动)';
       }
     }
