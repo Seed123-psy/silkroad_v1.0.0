@@ -784,18 +784,10 @@ const updateNetworkChart = () => {
   const links: any[] = [];
   const nodeSet = new Set<string>();
   const linkMap = new Map<string, number>();
-
-  // 聚合数据：城市 -> 城市 的贸易量
+  // 聚合数据：城市 -> 城市 的贸易量，并收集节点集合
   filteredRecords.value.forEach(r => {
-    if (!nodeSet.has(r.fromCity)) {
-      nodes.push({ name: r.fromCity, category: 0, symbolSize: 10, value: 0 });
-      nodeSet.add(r.fromCity);
-    }
-    if (!nodeSet.has(r.toCity)) {
-      nodes.push({ name: r.toCity, category: 0, symbolSize: 10, value: 0 });
-      nodeSet.add(r.toCity);
-    }
-
+    nodeSet.add(r.fromCity);
+    nodeSet.add(r.toCity);
     const linkKey = `${r.fromCity}-${r.toCity}`;
     linkMap.set(linkKey, (linkMap.get(linkKey) || 0) + r.volume);
   });
@@ -806,16 +798,26 @@ const updateNetworkChart = () => {
     links.push({ source, target, value: vol, lineStyle: { width: Math.min(vol / 100, 5) } });
   });
 
-  // 调整节点大小
-  nodes.forEach(n => {
-    // 简单逻辑：连接数越多越大
-    const count = links.filter(l => l.source === n.name || l.target === n.name).length;
-    n.symbolSize = 10 + count * 2;
+  // 计算每个节点的连接数（degree）
+  const degreeMap = new Map<string, number>();
+  links.forEach(l => {
+    degreeMap.set(l.source, (degreeMap.get(l.source) || 0) + 1);
+    degreeMap.set(l.target, (degreeMap.get(l.target) || 0) + 1);
+  });
+
+  // 生成节点数组并设置 value 为连接数，symbolSize 根据连接数调整
+  nodeSet.forEach(name => {
+    const degree = degreeMap.get(name) || 0;
+    const size = 10 + degree * 2; // 保持原先的视觉比例
+    nodes.push({ name, category: 0, symbolSize: Math.max(8, size), value: degree });
   });
 
   networkChart.setOption({
     backgroundColor: 'transparent',
-    tooltip: {},
+    tooltip: { formatter: function (params: any) {
+      if (params.dataType === 'edge') return `${params.data.source} → ${params.data.target}: ${params.data.value}`;
+      return `${params.data.name}: 连接数 ${params.data.value}`;
+    } },
     series: [
       {
         type: 'graph',
