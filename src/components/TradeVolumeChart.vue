@@ -5,7 +5,8 @@
         <h3 class="panel-title">{{ title }}</h3>
         <p class="panel-subtitle">{{ contextLabel }}</p>
       </div>
-      <div class="metric-toggle" role="group" aria-label="指标维度切换">
+      <div class="panel-actions">
+        <div class="metric-toggle" role="group" aria-label="指标维度切换">
         <button
           type="button"
           class="metric-btn"
@@ -22,6 +23,38 @@
         >
           以数量观察
         </button>
+        </div>
+
+        <div class="chart-controls" role="group" aria-label="图表视图切换">
+          <button
+            type="button"
+            class="control-btn"
+            :class="{ active: timelineMode === 'line' }"
+            @click="timelineMode = 'line'"
+            title="折线"
+          >
+            折线
+          </button>
+          <button
+            type="button"
+            class="control-btn"
+            :class="{ active: timelineMode === 'area' }"
+            @click="timelineMode = 'area'"
+            title="面积图"
+          >
+            面积
+          </button>
+          <button
+            type="button"
+            class="control-btn"
+            :class="{ active: timelineMode === 'bar' }"
+            @click="timelineMode = 'bar'"
+            title="柱状图"
+          >
+            柱状
+          </button>
+          <button type="button" class="control-btn" @click="exportTimelineImage" title="导出为图片">导出</button>
+        </div>
       </div>
     </header>
 
@@ -29,11 +62,17 @@
       <article class="metric-card">
         <span class="metric-label">总交易价值</span>
         <strong class="metric-value">{{ formatStat(metrics.totalValue, '￥') }}</strong>
+        <div class="metric-spark">
+          <v-chart :option="sparkOptions('value')" :autoresize="true" class="metric-spark-chart" />
+        </div>
         <span class="metric-hint">涵盖当前筛选条件</span>
       </article>
       <article class="metric-card">
         <span class="metric-label">总交易量</span>
         <strong class="metric-value">{{ formatStat(metrics.totalVolume) }}</strong>
+        <div class="metric-spark">
+          <v-chart :option="sparkOptions('volume')" :autoresize="true" class="metric-spark-chart" />
+        </div>
         <span class="metric-hint">单位指商品数量</span>
       </article>
       <article class="metric-card">
@@ -54,7 +93,7 @@
           <h4>时期走势</h4>
           <span class="chart-hint">价值与数量并行观察</span>
         </header>
-        <v-chart :option="timelineOption" :autoresize="true" class="chart" />
+        <v-chart ref="timelineChart" :option="timelineOption" :autoresize="true" class="chart" />
       </article>
 
       <article class="chart-card">
@@ -132,6 +171,54 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const activeMetric = ref<MetricKey>('value')
+
+// 图表显示模式：折线 / 面积 / 柱状
+const timelineMode = ref<'line' | 'area' | 'bar'>('line')
+
+// 引用用于导出图片
+const timelineChart = ref<any>(null)
+
+const exportTimelineImage = () => {
+  try {
+    const echartsInstance = timelineChart.value?.getEchartsInstance?.() || timelineChart.value
+    if (!echartsInstance) return
+    const url = echartsInstance.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#0b1220' })
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${props.title || 'trade-chart'}.png`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+  } catch (err) {
+    // ignore
+  }
+}
+
+const sparkOptions = (key: MetricKey): EChartsOption => {
+  const data = key === 'value' ? periodSeries.value.values : periodSeries.value.volumes
+  if (!data || !data.length) {
+    return {
+      title: { text: '', left: 'center' },
+    }
+  }
+  return {
+    grid: { left: 0, right: 0, top: 0, bottom: 0 },
+    xAxis: { show: false, type: 'category', data: periodSeries.value.categories },
+    yAxis: { show: false, type: 'value' },
+    series: [
+      {
+        type: 'line',
+        data,
+        smooth: true,
+        showSymbol: false,
+        lineStyle: { width: 2, color: key === 'value' ? '#ff9f1c' : '#5ec4ff' },
+        areaStyle: { color: key === 'value' ? 'rgba(255,159,28,0.12)' : 'rgba(94,196,255,0.08)' },
+      },
+    ],
+    tooltip: { show: false },
+    animation: false,
+  }
+}
 
 const periodNames: Record<string, string> = {
   han: '汉朝',
@@ -310,6 +397,10 @@ const timelineOption = computed<EChartsOption>(() => {
   if (!periodSeries.value.categories.length) {
     return emptyOption('暂无时期数据')
   }
+
+  const seriesType = timelineMode.value === 'bar' ? 'bar' : 'line'
+  const showArea = timelineMode.value === 'area'
+
   const lineStyles = {
     value: {
       color: '#ff9f1c',
@@ -324,6 +415,28 @@ const timelineOption = computed<EChartsOption>(() => {
       opacity: activeMetric.value === 'volume' ? 1 : 0.6,
     },
   }
+
+  const baseSeries = (name: string, data: number[], style: any) => {
+    const s: any = {
+      name,
+      type: seriesType,
+      data,
+      smooth: seriesType === 'line',
+      showSymbol: false,
+      lineStyle: {
+        color: style.color,
+        width: style.width,
+        opacity: style.opacity,
+      },
+      itemStyle: { opacity: style.opacity },
+      emphasis: { focus: 'series' },
+    }
+    if (showArea && seriesType === 'line') {
+      s.areaStyle = { color: style.area }
+    }
+    return s
+  }
+
   return {
     tooltip: {
       trigger: 'axis',
@@ -339,73 +452,24 @@ const timelineOption = computed<EChartsOption>(() => {
         return lines.join('<br/>')
       },
     },
-    legend: {
-      data: ['交易价值', '交易量'],
-      top: 12,
-      textStyle: { color: '#cbd5f5' },
-    },
-    grid: {
-      top: 60,
-      left: '3%',
-      right: '3%',
-      bottom: 20,
-      containLabel: true,
-    },
+    legend: { data: ['交易价值', '交易量'], top: 12, textStyle: { color: '#cbd5f5' } },
+    grid: { top: 60, left: '3%', right: '3%', bottom: 20, containLabel: true },
     xAxis: {
       type: 'category',
       data: periodSeries.value.categories,
       axisLine: { lineStyle: { color: 'rgba(148, 163, 184, 0.4)' } },
       axisLabel: { color: '#cbd5f5' },
-      boundaryGap: false,
+      boundaryGap: seriesType === 'bar',
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: {
-        color: '#cbd5f5',
-        formatter: (val: number) => formatStat(val),
-      },
+      axisLabel: { color: '#cbd5f5', formatter: (val: number) => formatStat(val) },
       splitLine: { lineStyle: { color: 'rgba(148, 163, 184, 0.15)' } },
     },
     series: [
-      {
-        name: '交易价值',
-        type: 'line',
-        data: periodSeries.value.values,
-        smooth: true,
-        showSymbol: false,
-        lineStyle: {
-          color: lineStyles.value.color,
-          width: lineStyles.value.width,
-          opacity: lineStyles.value.opacity,
-        },
-        areaStyle: {
-          color: lineStyles.value.area,
-        },
-        itemStyle: {
-          opacity: lineStyles.value.opacity,
-        },
-        emphasis: { focus: 'series' },
-      },
-      {
-        name: '交易量',
-        type: 'line',
-        data: periodSeries.value.volumes,
-        smooth: true,
-        showSymbol: false,
-        lineStyle: {
-          color: lineStyles.volume.color,
-          width: lineStyles.volume.width,
-          opacity: lineStyles.volume.opacity,
-        },
-        areaStyle: {
-          color: lineStyles.volume.area,
-        },
-        itemStyle: {
-          opacity: lineStyles.volume.opacity,
-        },
-        emphasis: { focus: 'series' },
-      },
+      baseSeries('交易价值', periodSeries.value.values, lineStyles.value),
+      baseSeries('交易量', periodSeries.value.volumes, lineStyles.volume),
     ],
     color: ['#ff9f1c', '#5ec4ff'],
   }
@@ -627,6 +691,36 @@ const formatStat = (value: number, prefix = '') => {
   gap: $spacing-lg;
 }
 
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.chart-controls {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  margin-left: 6px;
+}
+
+.control-btn {
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.65);
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: $border-radius-lg;
+  cursor: pointer;
+  transition: all $transition-duration-fast $transition-timing-function;
+}
+
+.control-btn.active {
+  background: rgba(255,255,255,0.08);
+  color: $text-inverse;
+  box-shadow: 0 6px 14px rgba(14, 30, 55, 0.25);
+}
+
 .panel-titles {
   display: flex;
   flex-direction: column;
@@ -689,6 +783,17 @@ const formatStat = (value: number, prefix = '') => {
   flex-direction: column;
   gap: $spacing-xs;
   box-shadow: 0 20px 45px rgba(10, 15, 30, 0.45);
+}
+
+.metric-spark {
+  width: 100%;
+  height: 40px;
+  margin-top: 8px;
+}
+
+.metric-spark-chart {
+  width: 100%;
+  height: 100%;
 }
 
 .metric-label {
