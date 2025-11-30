@@ -211,8 +211,8 @@ const sparkOptions = (key: MetricKey): EChartsOption => {
         data,
         smooth: true,
         showSymbol: false,
-        lineStyle: { width: 2, color: key === 'value' ? '#ff9f1c' : '#5ec4ff' },
-        areaStyle: { color: key === 'value' ? 'rgba(255,159,28,0.12)' : 'rgba(94,196,255,0.08)' },
+        lineStyle: { width: 2, color: key === 'value' ? '#e2c792' : '#8b949e' },
+        areaStyle: { color: key === 'value' ? 'rgba(226, 199, 146, 0.12)' : 'rgba(139, 148, 158, 0.08)' },
       },
     ],
     tooltip: { show: false },
@@ -230,14 +230,12 @@ const periodNames: Record<string, string> = {
 }
 
 const palette = [
-  '#f4a259',
-  '#5b8def',
-  '#ce5a57',
-  '#6fb98f',
-  '#a26ea1',
-  '#ffd166',
-  '#6c63ff',
-  '#06d6a0',
+  '#e2c792', // champagne gold
+  '#58a6ff', // tech blue
+  '#ff7b72', // soft red
+  '#3fb950', // modern green
+  '#d29922', // amber
+  '#8b949e', // grey
 ]
 
 const filteredData = computed(() => {
@@ -387,7 +385,7 @@ const emptyOption = (text: string): EChartsOption => ({
     left: 'center',
     top: 'middle',
     textStyle: {
-      color: '#8795af',
+      color: '#737373',
       fontSize: 14,
     },
   },
@@ -403,14 +401,14 @@ const timelineOption = computed<EChartsOption>(() => {
 
   const lineStyles = {
     value: {
-      color: '#ff9f1c',
-      area: 'rgba(255, 159, 28, 0.18)',
+      color: '#d4af37',
+      area: 'rgba(212, 175, 55, 0.18)',
       width: activeMetric.value === 'value' ? 4 : 2,
       opacity: activeMetric.value === 'value' ? 1 : 0.6,
     },
     volume: {
-      color: '#5ec4ff',
-      area: 'rgba(94, 196, 255, 0.16)',
+      color: '#e5e5e5',
+      area: 'rgba(229, 229, 229, 0.16)',
       width: activeMetric.value === 'volume' ? 4 : 2,
       opacity: activeMetric.value === 'volume' ? 1 : 0.6,
     },
@@ -440,9 +438,10 @@ const timelineOption = computed<EChartsOption>(() => {
   return {
     tooltip: {
       trigger: 'axis',
-      backgroundColor: 'rgba(15, 23, 42, 0.88)',
-      borderWidth: 0,
-      textStyle: { color: '#e2e8f0' },
+      backgroundColor: 'rgba(0, 0, 0, 0.88)',
+      borderWidth: 1,
+      borderColor: '#333',
+      textStyle: { color: '#e5e5e5' },
       formatter: (params: any) => {
         if (!Array.isArray(params)) return ''
         const lines = [`${params[0].axisValue}`]
@@ -452,26 +451,26 @@ const timelineOption = computed<EChartsOption>(() => {
         return lines.join('<br/>')
       },
     },
-    legend: { data: ['交易价值', '交易量'], top: 12, textStyle: { color: '#cbd5f5' } },
+    legend: { data: ['交易价值', '交易量'], top: 12, textStyle: { color: '#a3a3a3' } },
     grid: { top: 60, left: '3%', right: '3%', bottom: 20, containLabel: true },
     xAxis: {
       type: 'category',
       data: periodSeries.value.categories,
-      axisLine: { lineStyle: { color: 'rgba(148, 163, 184, 0.4)' } },
-      axisLabel: { color: '#cbd5f5' },
+      axisLine: { lineStyle: { color: 'rgba(115, 115, 115, 0.4)' } },
+      axisLabel: { color: '#a3a3a3' },
       boundaryGap: seriesType === 'bar',
     },
     yAxis: {
       type: 'value',
       axisLine: { show: false },
-      axisLabel: { color: '#cbd5f5', formatter: (val: number) => formatStat(val) },
-      splitLine: { lineStyle: { color: 'rgba(148, 163, 184, 0.15)' } },
+      axisLabel: { color: '#a3a3a3', formatter: (val: number) => formatStat(val) },
+      splitLine: { lineStyle: { color: 'rgba(115, 115, 115, 0.15)' } },
     },
     series: [
       baseSeries('交易价值', periodSeries.value.values, lineStyles.value),
       baseSeries('交易量', periodSeries.value.volumes, lineStyles.volume),
     ],
-    color: ['#ff9f1c', '#5ec4ff'],
+    color: ['#d4af37', '#e5e5e5'],
   }
 })
 
@@ -486,9 +485,10 @@ const goodsBarOption = computed<EChartsOption>(() => {
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
-      backgroundColor: 'rgba(15, 23, 42, 0.88)',
-      borderWidth: 0,
-      textStyle: { color: '#e2e8f0' },
+      backgroundColor: 'rgba(0, 0, 0, 0.88)',
+      borderWidth: 1,
+      borderColor: '#333',
+      textStyle: { color: '#e5e5e5' },
       formatter: (params: any) => {
         if (!Array.isArray(params) || !params.length) return ''
         const { axisValue, value } = params[0]
@@ -504,13 +504,13 @@ const goodsBarOption = computed<EChartsOption>(() => {
     },
     xAxis: {
       type: 'value',
-      axisLabel: { color: '#cbd5f5', formatter: (val: number) => formatStat(val) },
-      splitLine: { lineStyle: { color: 'rgba(148, 163, 184, 0.15)' } },
+      axisLabel: { color: '#a3a3a3', formatter: (val: number) => formatStat(val) },
+      splitLine: { lineStyle: { color: 'rgba(115, 115, 115, 0.15)' } },
     },
     yAxis: {
       type: 'category',
       data: categories,
-      axisLabel: { color: '#e2e8f0' },
+      axisLabel: { color: '#e5e5e5' },
       axisTick: { show: false },
     },
     series: [
@@ -525,7 +525,7 @@ const goodsBarOption = computed<EChartsOption>(() => {
         label: {
           show: true,
           position: 'right',
-          color: '#cbd5f5',
+          color: '#d4af37',
           formatter: (val: any) => formatStat(val.value),
         },
       },
@@ -542,9 +542,10 @@ const categoryPieOption = computed<EChartsOption>(() => {
   return {
     tooltip: {
       trigger: 'item',
-      backgroundColor: 'rgba(15, 23, 42, 0.88)',
-      borderWidth: 0,
-      textStyle: { color: '#e2e8f0' },
+      backgroundColor: 'rgba(0, 0, 0, 0.88)',
+      borderWidth: 1,
+      borderColor: '#333',
+      textStyle: { color: '#e5e5e5' },
       formatter: (params: any) => {
         return `${params.marker} ${params.name}<br/>${metricLabel.value}: ${formatStat(params.value)}<br/>占比: ${params.percent}%`
       },
@@ -552,7 +553,7 @@ const categoryPieOption = computed<EChartsOption>(() => {
     legend: {
       orient: 'horizontal',
       bottom: 0,
-      textStyle: { color: '#cbd5f5' },
+      textStyle: { color: '#a3a3a3' },
       data: legendLabels,
     },
     series: [
@@ -562,7 +563,7 @@ const categoryPieOption = computed<EChartsOption>(() => {
         center: ['50%', '45%'],
         roseType: 'radius',
         label: {
-          color: '#e2e8f0',
+          color: '#e5e5e5',
           formatter: '{b}\n{d}%',
         },
         labelLine: {
@@ -572,7 +573,7 @@ const categoryPieOption = computed<EChartsOption>(() => {
         },
         itemStyle: {
           borderRadius: 8,
-          borderColor: '#0f172a',
+          borderColor: '#0a0a0a',
           borderWidth: 2,
         },
         data: dataset.map((item, index) => ({
@@ -594,9 +595,10 @@ const flowSankeyOption = computed<EChartsOption>(() => {
   return {
     tooltip: {
       trigger: 'item',
-      backgroundColor: 'rgba(15, 23, 42, 0.88)',
-      borderWidth: 0,
-      textStyle: { color: '#e2e8f0' },
+      backgroundColor: 'rgba(0, 0, 0, 0.88)',
+      borderWidth: 1,
+      borderColor: '#333',
+      textStyle: { color: '#e5e5e5' },
       formatter: (params: any) => {
         if (params.dataType === 'edge') {
           return `${params.data.source} → ${params.data.target}<br/>${metricLabel.value}: ${formatStat(params.data.value)}`
@@ -620,10 +622,10 @@ const flowSankeyOption = computed<EChartsOption>(() => {
         },
         itemStyle: {
           borderWidth: 1,
-          borderColor: '#1e2330',
+          borderColor: '#0a0a0a',
         },
         label: {
-          color: '#e2e8f0',
+          color: '#e5e5e5',
           fontSize: 12,
         },
         emphasis: {
@@ -681,7 +683,7 @@ const formatStat = (value: number, prefix = '') => {
   flex-direction: column;
   gap: $spacing-lg;
   width: 100%;
-  color: $text-inverse;
+  color: #e5e5e5;
 }
 
 .panel-header {
@@ -707,7 +709,7 @@ const formatStat = (value: number, prefix = '') => {
 .control-btn {
   border: none;
   background: transparent;
-  color: rgba(255,255,255,0.65);
+  color: #a3a3a3;
   padding: 6px 10px;
   font-size: 13px;
   border-radius: $border-radius-lg;
@@ -716,9 +718,9 @@ const formatStat = (value: number, prefix = '') => {
 }
 
 .control-btn.active {
-  background: rgba(255,255,255,0.08);
-  color: $text-inverse;
-  box-shadow: 0 6px 14px rgba(14, 30, 55, 0.25);
+  background: rgba(212, 175, 55, 0.2);
+  color: #d4af37;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
 }
 
 .panel-titles {
@@ -731,26 +733,27 @@ const formatStat = (value: number, prefix = '') => {
   margin: 0;
   font-size: 24px;
   letter-spacing: 0.04em;
+  color: #d4af37;
 }
 
 .panel-subtitle {
   margin: 0;
-  color: rgba(255, 255, 255, 0.6);
+  color: #737373;
   font-size: 14px;
 }
 
 .metric-toggle {
   display: inline-flex;
-  background: rgba(255, 255, 255, 0.06);
+  background: #141414;
   border-radius: $border-radius-xl;
   padding: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #333;
 }
 
 .metric-btn {
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.65);
+  color: #a3a3a3;
   padding: 6px 14px;
   font-size: 13px;
   border-radius: $border-radius-lg;
@@ -758,13 +761,13 @@ const formatStat = (value: number, prefix = '') => {
   transition: all $transition-duration-fast $transition-timing-function;
 
   &.active {
-    background: rgba(255, 255, 255, 0.18);
-    color: $text-inverse;
-    box-shadow: 0 6px 16px rgba(14, 30, 55, 0.35);
+    background: rgba(212, 175, 55, 0.2);
+    color: #d4af37;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
   }
 
   &:hover:not(.active) {
-    color: $text-inverse;
+    color: #e5e5e5;
   }
 }
 
@@ -775,14 +778,14 @@ const formatStat = (value: number, prefix = '') => {
 }
 
 .metric-card {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(160deg, #1a1a1a, #0a0a0a);
+  border: 1px solid #333;
   border-radius: $border-radius-xl;
   padding: $spacing-md;
   display: flex;
   flex-direction: column;
   gap: $spacing-xs;
-  box-shadow: 0 20px 45px rgba(10, 15, 30, 0.45);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
 }
 
 .metric-spark {
@@ -798,18 +801,19 @@ const formatStat = (value: number, prefix = '') => {
 
 .metric-label {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.6);
+  color: #a3a3a3;
 }
 
 .metric-value {
   font-size: 26px;
   font-weight: $font-weight-bold;
   letter-spacing: 0.02em;
+  color: #d4af37;
 }
 
 .metric-hint {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
+  color: #737373;
 }
 
 .chart-grid {
@@ -820,8 +824,8 @@ const formatStat = (value: number, prefix = '') => {
 }
 
 .chart-card {
-  background: rgba(9, 14, 28, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 10, 10, 0.9);
+  border: 1px solid #333;
   border-radius: $border-radius-xl;
   padding: $spacing-md;
   display: flex;
@@ -848,12 +852,13 @@ const formatStat = (value: number, prefix = '') => {
     margin: 0;
     font-size: 16px;
     letter-spacing: 0.02em;
+    color: #e5e5e5;
   }
 }
 
 .chart-hint {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.45);
+  color: #737373;
 }
 
 .chart {

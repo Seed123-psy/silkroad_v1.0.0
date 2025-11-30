@@ -1,36 +1,36 @@
-// 丝绸之路主题色板 (Silk Road Dark Theme)
+// 丝绸之路主题色板 (Silk Road Modern Dark Theme)
 
-// 核心背景色 - 深邃夜空/历史沉淀
-$bg-primary: #05080f;      // 最深背景，用于主容器
-$bg-secondary: #0a111f;    // 次级背景，用于侧边栏/卡片
-$bg-tertiary: #111a2d;     // 第三级背景，用于悬浮元素
-$bg-glass: rgba(10, 17, 31, 0.75); // 毛玻璃背景
-$bg-glass-light: rgba(255, 255, 255, 0.05); // 浅色毛玻璃
+// 核心背景色 - 现代深邃感 (Modern Deep)
+$bg-primary: #0f1115;      // 极深灰蓝，更中性
+$bg-secondary: #161b22;    // 次级背景
+$bg-tertiary: #21262d;     // 悬浮/卡片背景
+$bg-glass: rgba(22, 27, 34, 0.8); // 毛玻璃
+$bg-glass-light: rgba(255, 255, 255, 0.03);
 
-// 强调色 - 历史与自然
-$color-gold: #d4af37;      // 丝路金 - 用于高亮、重要文字
-$color-jade: #00a86b;      // 玉石绿 - 用于成功、自然元素
-$color-terra: #c04000;     // 陶土红 - 用于警告、贸易热点
-$color-silk: #f0f8ff;      // 丝绸白 - 用于主要文字
-$color-sand: #e6d5ac;      // 沙漠黄 - 用于次要文字/边框
+// 强调色 - 雅致与设计感
+$color-gold: #e2c792;      // 香槟金 - 比原版更柔和，不刺眼
+$color-jade: #58a6ff;      // 科技蓝/青 - 替换原来的纯绿，更现代
+$color-terra: #ff7b72;     // 柔和红 - 警告色
+$color-silk: #f0f6fc;      // 极淡蓝白 - 主要文字
+$color-sand: #8b949e;      // 灰阶 - 次要文字，不再用黄色调
 
 // 功能色
 $primary-color: $color-gold;
-$success-color: $color-jade;
-$warning-color: $color-sand;
+$success-color: #3fb950;   // 现代绿
+$warning-color: #d29922;   // 琥珀色
 $error-color: $color-terra;
-$info-color: #4a90e2;
+$info-color: #58a6ff;
 
 // 文字颜色
-$text-primary: rgba(255, 255, 255, 0.95);
-$text-secondary: rgba(255, 255, 255, 0.7);
-$text-tertiary: rgba(255, 255, 255, 0.45);
-$text-inverse: #05080f;
+$text-primary: #f0f6fc;
+$text-secondary: #8b949e;  // 经典暗黑模式副文本色
+$text-tertiary: #484f58;
+$text-inverse: #0f1115;
 
 // 边框与分割线
-$border-color: rgba(212, 175, 55, 0.15); // 金色微光边框
-$border-color-light: rgba(255, 255, 255, 0.1);
-$border-color-hover: rgba(212, 175, 55, 0.4);
+$border-color: rgba(240, 246, 252, 0.1); // 灰白微光，去黄
+$border-color-light: rgba(240, 246, 252, 0.05);
+$border-color-hover: $color-gold; // 悬浮时才显示金色
 
 // 尺寸变量
 $header-height: 64px;

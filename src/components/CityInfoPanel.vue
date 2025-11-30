@@ -306,7 +306,7 @@ const getPeriodName = (period: string): string => {
   &:hover {
     border-color: $color-gold;
     color: $color-gold;
-    background: rgba(212, 175, 55, 0.1);
+    background: rgba(226, 199, 146, 0.1);
   }
 }
 

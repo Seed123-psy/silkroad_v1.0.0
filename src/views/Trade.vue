@@ -132,8 +132,14 @@
             <div class="col col-period">时期</div>
             <div class="col col-route">路线</div>
             <div class="col col-goods">商品</div>
-            <div class="col col-amount">数量</div>
-            <div class="col col-value">价值</div>
+            <div class="col col-amount sortable" @click="toggleSort('volume')">
+              <span>数量</span>
+              <span class="sort-icon" :class="{ active: sortKey === 'volume', asc: sortKey === 'volume' && sortOrder === 'asc' }"></span>
+            </div>
+            <div class="col col-value sortable" @click="toggleSort('value')">
+              <span>价值</span>
+              <span class="sort-icon" :class="{ active: sortKey === 'value', asc: sortKey === 'value' && sortOrder === 'asc' }"></span>
+            </div>
           </div>
           
           <div class="list-body custom-scrollbar">
@@ -166,7 +172,26 @@
             </div>
             
             <div v-if="filteredRecords.length === 0" class="no-data">
-              没有找到匹配的记录
+              <div class="empty-state-card">
+                <div class="empty-illustration">
+                  <!-- 简洁的放大镜图标 + 金色环 -->
+                  <svg width="88" height="88" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                    <circle cx="12" cy="12" r="11" stroke="#2a2a2a" stroke-width="1" fill="#0a0a0a" />
+                    <circle cx="12" cy="10" r="6" stroke="#e2c792" stroke-width="2" fill="rgba(226, 199, 146,0.06)" />
+                    <path d="M16.5 16.5L21 21" stroke="#e2c792" stroke-width="1.5" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <div class="empty-texts">
+                  <h3 class="empty-title">未找到匹配的记录</h3>
+                  <p class="empty-desc">尝试调整筛选条件或清除关键词以显示更多结果。你也可以查看所有记录或导出样例以便离线分析。</p>
+
+                  <div class="empty-actions">
+                    <button class="btn btn-secondary" @click="resetFilters">重置筛选</button>
+                    <button class="btn btn-primary" @click="showAllRecords">查看所有记录</button>
+                    <button class="btn btn-ghost" @click="exportSample">导出样例 (JSON)</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -188,20 +213,7 @@
           </div>
           <div v-if="!mapLoading && !mapError" class="map-control-panel">
             <div class="control-title">视角控制</div>
-            <div class="control-row">
-              <div class="row-label">
-                <span>缩放</span>
-                <span class="value">{{ zoomDisplayLabel }}</span>
-              </div>
-              <input
-                class="map-slider"
-                type="range"
-                :min="zoomSliderRange.min"
-                :max="zoomSliderRange.max"
-                step="1"
-                v-model.number="zoomSliderValue"
-              />
-            </div>
+            <!-- 缩放滑块已移除，保留鼠标缩放操作 -->
             <div class="control-row">
               <div class="row-label">
                 <span>俯仰</span>
@@ -292,6 +304,7 @@ import * as echarts from 'echarts';
 import 'echarts-gl';
 import tradeDataRaw from '@/assets/data/lushang_trades.json';
 import citiesDataRaw from '@/assets/data/cities.json';
+import exportService from '@/services/exportService';
 
 // --- 类型定义 ---
 interface TradeGood {
@@ -395,7 +408,33 @@ const periods = [
   { label: '清', value: 'qing' },
 ];
 
+import { PALETTE, STATIC_CATEGORY_COLORS } from '@/constants/colors';
+
+const periodColors: Record<string, string> = {
+  han: PALETTE[1],
+  tang: PALETTE[0],
+  song: PALETTE[2],
+  yuan: PALETTE[3],
+  ming: PALETTE[4],
+  qing: PALETTE[5],
+}
+
 const categories = Object.entries(categoryMap).map(([k, v]) => ({ value: k, label: v }));
+
+// --- 排序状态 ---
+type SortKey = 'volume' | 'value' | null;
+type SortOrder = 'asc' | 'desc';
+const sortKey = ref<SortKey>(null);
+const sortOrder = ref<SortOrder>('desc');
+
+const toggleSort = (key: SortKey) => {
+  if (sortKey.value === key) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey.value = key;
+    sortOrder.value = 'desc';
+  }
+};
 
 // --- 状态 ---
 const currentView = ref<'list' | 'map' | 'network' | 'goods-network'>('list');
@@ -404,29 +443,10 @@ const mapError = ref(false);
 
 const zoomRange = { min: 15, max: 200 };
 const pitchRange = { min: 20, max: 80 };
-const zoomSliderRange = { min: 0, max: 100 };
 
-const clamp = (val: number, min: number, max: number) => Math.min(Math.max(val, min), max);
-const sliderToDistance = (sliderVal: number) => {
-  const ratio = (sliderVal - zoomSliderRange.min) / (zoomSliderRange.max - zoomSliderRange.min);
-  const distance = zoomRange.max - ratio * (zoomRange.max - zoomRange.min);
-  return clamp(distance, zoomRange.min, zoomRange.max);
-};
-const distanceToSlider = (distance: number) => {
-  const ratio = (zoomRange.max - distance) / (zoomRange.max - zoomRange.min);
-  const sliderVal = zoomSliderRange.min + ratio * (zoomSliderRange.max - zoomSliderRange.min);
-  return clamp(sliderVal, zoomSliderRange.min, zoomSliderRange.max);
-};
-
-const globeDistance = ref(sliderToDistance(60));
+// 移除滑块控制：使用鼠标滚轮/拖拽进行缩放，初始化为中间值
+const globeDistance = ref(60);
 const globeAlpha = ref(40);
-const zoomSliderValue = computed({
-  get: () => Math.round(distanceToSlider(globeDistance.value)),
-  set: (val: number) => {
-    globeDistance.value = sliderToDistance(val);
-  }
-});
-const zoomDisplayLabel = computed(() => `${zoomSliderValue.value}%`);
 
 const retryLoadMap = () => {
   mapError.value = false;
@@ -476,7 +496,7 @@ const toCities = computed(() => [...new Set(tradeRecords.value.map(r => r.toCity
 
 // 过滤后的记录
 const filteredRecords = computed(() => {
-  return tradeRecords.value.filter(r => {
+  let result = tradeRecords.value.filter(r => {
     const matchPeriod = !selectedPeriod.value || r.period === selectedPeriod.value;
     
     const good = goodsMap.get(r.goods);
@@ -498,6 +518,16 @@ const filteredRecords = computed(() => {
 
     return matchPeriod && matchCategory && matchFrom && matchTo && matchMin && matchMax && matchSearch;
   });
+
+  if (sortKey.value) {
+    result.sort((a, b) => {
+      const valA = a[sortKey.value!];
+      const valB = b[sortKey.value!];
+      return sortOrder.value === 'asc' ? valA - valB : valB - valA;
+    });
+  }
+
+  return result;
 });
 
 // 分页
@@ -529,6 +559,37 @@ const selectRecord = (record: TradeRecord) => {
   currentRecord.value = record;
 };
 
+// 重置筛选到默认值
+const resetFilters = () => {
+  selectedPeriod.value = '';
+  selectedCategory.value = '';
+  selectedFromCity.value = '';
+  selectedToCity.value = '';
+  minVal.value = null;
+  maxVal.value = null;
+  searchQuery.value = '';
+  currentPage.value = 1;
+  currentRecord.value = null;
+  updateCharts();
+};
+
+// 显示所有记录（清空筛选并切换到列表）
+const showAllRecords = () => {
+  resetFilters();
+  currentView.value = 'list';
+};
+
+// 导出示例数据（JSON）——导出前 50 条原始记录，方便用户离线查看结构
+const exportSample = () => {
+  try {
+    const sample = tradeRecords.value.slice(0, 50);
+    exportService.exportToJSON(sample, 'trade_sample');
+  } catch (e) {
+    console.error('导出样例失败', e);
+    alert('导出样例失败，请稍后重试');
+  }
+};
+
 // --- 图表逻辑 ---
 
 const updateCharts = () => {
@@ -548,60 +609,98 @@ const updateCharts = () => {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 
+  // 使用共享的静态类别颜色映射（从 constants 导入）
+
+  // 反向映射：中文类别名 -> 类别 code（用于把饼图中的中文名映射到静态颜色）
+  const labelToCode: Record<string, string> = {};
+  Object.entries(categoryMap).forEach(([code, label]) => {
+    labelToCode[label] = code;
+  });
+
+  const categoryColorMap: Record<string, string> = {};
+  catData.forEach((c) => {
+    const code = labelToCode[c.name] || 'other';
+    categoryColorMap[c.name] = STATIC_CATEGORY_COLORS[code] || PALETTE[0];
+  });
+
   categoryChart.setOption({
     backgroundColor: 'transparent',
     tooltip: { 
       trigger: 'item', 
       formatter: '{b}: {c} ({d}%)',
       confine: true,
-      backgroundColor: 'rgba(15, 23, 42, 0.9)',
-      borderColor: '#334155',
-      textStyle: { color: '#f1f5f9' }
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      borderColor: '#333',
+      textStyle: { color: '#e5e5e5' }
     },
     series: [{
       type: 'pie',
       radius: ['40%', '70%'],
       center: ['50%', '50%'],
-      itemStyle: { borderRadius: 5, borderColor: '#1e293b', borderWidth: 2 },
+      itemStyle: { borderRadius: 5, borderColor: '#141414', borderWidth: 2 },
       label: { show: false },
-      data: catData
+      data: catData,
+      color: [
+        PALETTE[0], PALETTE[1], PALETTE[2], PALETTE[3], PALETTE[4], PALETTE[5]
+      ]
     }]
   });
 
   // 2. 热门商品 (基于当前过滤结果)
   const goodCounts: Record<string, number> = {};
+  // 聚合时同时记录商品所属类别，用于给每条柱子着色
+  const goodAgg: Array<{ name: string; value: number; category: string }> = [];
+  const tempMap = new Map<string, { value: number; categoryCode: string }>();
   filteredRecords.value.forEach(r => {
-    const name = getGoodsName(r.goods);
-    goodCounts[name] = (goodCounts[name] || 0) + r.volume; // 按交易量
+    const goods = goodsMap.get(r.goods);
+    const name = goods ? goods.name : r.goods;
+    const catCode = goods ? (goods.category || 'other') : 'other';
+    const entry = tempMap.get(name) || { value: 0, categoryCode: catCode };
+    entry.value += r.volume;
+    tempMap.set(name, entry);
   });
 
-  const topGoods = Object.entries(goodCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10);
+  tempMap.forEach((v, k) => {
+    const label = categoryMap[v.categoryCode] || v.categoryCode;
+    goodAgg.push({ name: k, value: v.value, category: label });
+  });
+
+  const topGoods = goodAgg.sort((a, b) => b.value - a.value).slice(0, 10);
 
   topGoodsChart.setOption({
     backgroundColor: 'transparent',
     tooltip: { 
       trigger: 'axis',
       confine: true,
-      backgroundColor: 'rgba(15, 23, 42, 0.9)',
-      borderColor: '#334155',
-      textStyle: { color: '#f1f5f9' }
+      backgroundColor: 'rgba(0, 0, 0, 0.9)',
+      borderColor: '#333',
+      textStyle: { color: '#e5e5e5' }
     },
-    grid: { left: '3%', right: '10%', bottom: '3%', top: '3%', containLabel: true },
+    grid: { left: '3%', right: '24%', bottom: '3%', top: '3%', containLabel: true },
     xAxis: { type: 'value', splitLine: { show: false }, axisLabel: { show: false } },
     yAxis: { 
       type: 'category', 
-      data: topGoods.map(i => i[0]).reverse(),
-      axisLabel: { color: '#cbd5e1' },
+      data: topGoods.map(i => i.name).reverse(),
+      axisLabel: { color: '#a3a3a3' },
       axisLine: { show: false },
       axisTick: { show: false }
     },
     series: [{
       type: 'bar',
-      data: topGoods.map(i => i[1]).reverse(),
-      itemStyle: { color: '#3b82f6', borderRadius: [0, 4, 4, 0] },
-      label: { show: true, position: 'right', color: '#fff' }
+      data: topGoods.map(i => ({
+        value: i.value,
+        itemStyle: { color: categoryColorMap[i.category] || PALETTE[0] }
+      })).reverse(),
+      itemStyle: { borderRadius: [0, 6, 6, 0] },
+      label: {
+        show: true,
+        position: 'right',
+        color: '#0b0b0b',
+        backgroundColor: '#e2c792',
+        padding: [4, 10],
+        borderRadius: 12,
+        distance: 8,
+      }
     }]
   });
 
@@ -671,7 +770,7 @@ const updateGlobeChart = async () => {
           [...toCoord, MAP_HEIGHT + 0.0001]
         ],
         lineStyle: {
-          color: r.period === 'tang' ? '#f59e0b' : (r.period === 'han' ? '#ef4444' : '#3b82f6'),
+          color: periodColors[r.period] || PALETTE[0],
           curveness: 0
         }
       });
@@ -688,10 +787,10 @@ const updateGlobeChart = async () => {
       environment: '#000000', // 背景环境色设为黑色
       
       itemStyle: {
-        color: '#1e293b',
+        color: '#141414',
         opacity: 1,
         borderWidth: 0.5,
-        borderColor: '#475569'
+        borderColor: '#333'
       },
       
       groundPlane: {
@@ -749,8 +848,8 @@ const updateGlobeChart = async () => {
           trailWidth: 2,
           trailLength: 0.25,
           trailOpacity: 0.18,
-          // 使用更柔和的淡蓝色半透明以减弱亮度
-          trailColor: 'rgba(160,200,255,0.12)'
+          // 使用更柔和的淡金色半透明以减弱亮度
+          trailColor: 'rgba(226, 199, 146, 0.12)'
         },
         // 取消叠加混合，避免亮度叠加
         blendMode: 'normal',
@@ -768,7 +867,7 @@ const updateGlobeChart = async () => {
         symbol: 'circle',
         symbolSize: 8,
         itemStyle: {
-          color: '#4ade80',
+          color: PALETTE[0],
           opacity: 1
         },
         label: {
@@ -777,7 +876,7 @@ const updateGlobeChart = async () => {
           distance: 6,
           formatter: '{b}',
           textStyle: {
-            color: '#fff',
+            color: '#e5e5e5',
             fontSize: 12,
             backgroundColor: 'rgba(0,0,0,0.6)',
             padding: [2, 4],
@@ -842,10 +941,10 @@ const updateNetworkChart = () => {
         data: nodes,
         links: links,
         roam: true,
-        label: { show: true, position: 'right', color: '#fff' },
+        label: { show: true, position: 'right', color: PALETTE[3] },
         force: { repulsion: 200, edgeLength: 100 },
-        lineStyle: { color: '#3b82f6', curveness: 0.2, opacity: 0.6 },
-        itemStyle: { color: '#10b981' }
+        lineStyle: { color: PALETTE[0], curveness: 0.2, opacity: 0.6 },
+        itemStyle: { color: PALETTE[1] }
       }
     ]
   });
@@ -879,7 +978,7 @@ const updateGoodsNetworkChart = () => {
         category: 1, // 商品
         symbol: 'diamond',
         symbolSize: 20,
-        itemStyle: { color: '#f59e0b' },
+        itemStyle: { color: PALETTE[0] },
         value: g.category
       });
       addedNodes.add(goodId);
@@ -895,7 +994,7 @@ const updateGoodsNetworkChart = () => {
           category: 0, // 城市
           symbol: 'circle',
           symbolSize: 15,
-          itemStyle: { color: '#3b82f6' }
+          itemStyle: { color: PALETTE[3] }
         });
         addedNodes.add(cityId);
       }
@@ -903,7 +1002,7 @@ const updateGoodsNetworkChart = () => {
         source: cityId,
         target: goodId,
         value: '产出',
-        lineStyle: { color: '#10b981', curveness: 0.1 }
+        lineStyle: { color: PALETTE[4], curveness: 0.1 }
       });
     });
 
@@ -917,7 +1016,7 @@ const updateGoodsNetworkChart = () => {
           category: 0, // 城市
           symbol: 'circle',
           symbolSize: 15,
-          itemStyle: { color: '#3b82f6' }
+          itemStyle: { color: PALETTE[3] }
         });
         addedNodes.add(cityId);
       }
@@ -925,7 +1024,7 @@ const updateGoodsNetworkChart = () => {
         source: goodId,
         target: cityId,
         value: '销往',
-        lineStyle: { color: '#ef4444', curveness: 0.1 }
+        lineStyle: { color: PALETTE[5], curveness: 0.1 }
       });
     });
   });
@@ -942,7 +1041,7 @@ const updateGoodsNetworkChart = () => {
     },
     legend: {
       data: ['城市', '商品'],
-      textStyle: { color: '#fff' },
+      textStyle: { color: '#e5e5e5' },
       top: 10
     },
     series: [
@@ -953,7 +1052,7 @@ const updateGoodsNetworkChart = () => {
         links: links,
         categories: [{ name: '城市' }, { name: '商品' }],
         roam: true,
-        label: { show: true, position: 'right', color: '#fff' },
+        label: { show: true, position: 'right', color: '#e5e5e5' },
         force: {
           repulsion: 300,
           edgeLength: 120,
@@ -1037,8 +1136,8 @@ onUnmounted(() => {
 .trade-analysis-container {
   width: 100%;
   height: 100vh;
-  background-color: #0f172a;
-  color: #e2e8f0;
+  background-color: #000000;
+  color: #e5e5e5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1047,8 +1146,8 @@ onUnmounted(() => {
 
 .page-header {
   padding: 1rem 2rem;
-  background: #1e293b;
-  border-bottom: 1px solid #334155;
+  background: #141414;
+  border-bottom: 1px solid #333333;
   flex-shrink: 0;
 
   .header-content {
@@ -1060,11 +1159,11 @@ onUnmounted(() => {
   h1 {
     margin: 0;
     font-size: 1.5rem;
-    color: #f8fafc;
+    color: #e2c792;
   }
   
   .subtitle {
-    color: #94a3b8;
+    color: #737373;
     font-size: 0.85rem;
     margin-top: 0.25rem;
   }
@@ -1075,15 +1174,16 @@ onUnmounted(() => {
   }
 
   .stat-pill {
-    background: #334155;
+    background: #1f1f1f;
     padding: 0.5rem 1rem;
     border-radius: 8px;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    border: 1px solid #333;
 
-    .label { font-size: 0.75rem; color: #94a3b8; }
-    .value { font-size: 1.1rem; font-weight: bold; color: #60a5fa; }
+    .label { font-size: 0.75rem; color: #a3a3a3; }
+    .value { font-size: 1.1rem; font-weight: bold; color: #e2c792; }
   }
 }
 
@@ -1092,12 +1192,12 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: 300px 1fr 320px;
   gap: 1px; // Grid lines via background
-  background: #334155; // Border color
+  background: #333333; // Border color
   min-height: 0;
 }
 
 .panel {
-  background: #0f172a;
+  background: #000000;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -1109,15 +1209,15 @@ onUnmounted(() => {
 .panel-title {
   margin: 0 0 1rem 0;
   font-size: 1rem;
-  color: #f1f5f9;
+  color: #e2c792;
   font-weight: 600;
-  border-left: 3px solid #3b82f6;
+  border-left: 3px solid #e2c792;
   padding-left: 0.5rem;
 }
 
 // --- Left Panel ---
 .control-box {
-  background: #1e293b;
+  background: #141414;
   padding: 1rem;
   border-radius: 8px;
 }
@@ -1128,7 +1228,7 @@ onUnmounted(() => {
   label {
     display: block;
     font-size: 0.8rem;
-    color: #94a3b8;
+    color: #a3a3a3;
     margin-bottom: 0.5rem;
   }
 }
@@ -1140,29 +1240,29 @@ onUnmounted(() => {
 }
 
 .filter-btn {
-  background: #334155;
-  border: none;
-  color: #cbd5e1;
+  background: #2a2a2a;
+  border: 1px solid #333;
+  color: #a3a3a3;
   padding: 0.25rem 0.75rem;
   border-radius: 4px;
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.2s;
 
-  &:hover { background: #475569; }
-  &.active { background: #3b82f6; color: white; }
+  &:hover { background: #333; color: #e5e5e5; }
+  &.active { background: #e2c792; color: #000; border-color: #e2c792; font-weight: bold; }
 }
 
 .filter-select, .search-input, .range-input {
   width: 100%;
-  background: #0f172a;
-  border: 1px solid #334155;
-  color: white;
+  background: #0a0a0a;
+  border: 1px solid #333;
+  color: #e5e5e5;
   padding: 0.5rem;
   border-radius: 4px;
   outline: none;
   
-  &:focus { border-color: #3b82f6; }
+  &:focus { border-color: #e2c792; }
 }
 
 .range-inputs {
@@ -1176,23 +1276,24 @@ onUnmounted(() => {
   }
   
   .range-sep {
-    color: #94a3b8;
+    color: #737373;
   }
 }
 
 .chart-box {
-  background: #1e293b;
+  background: #141414;
   padding: 1rem;
   border-radius: 8px;
   flex: 1;
   display: flex;
   flex-direction: column;
   min-height: 250px;
+  overflow: visible; /* allow chart labels to overflow slightly without being clipped */
 }
 
 .chart-title {
   font-size: 0.9rem;
-  color: #cbd5e1;
+  color: #e5e5e5;
   margin: 0 0 0.5rem 0;
   text-align: center;
 }
@@ -1200,28 +1301,31 @@ onUnmounted(() => {
 .chart-container {
   flex: 1;
   width: 100%;
+  padding: 0.25rem 0.5rem; /* small inner padding to keep labels clear of box edge */
+  box-sizing: border-box;
+  overflow: visible;
 }
 
 .panel-tabs {
   display: flex;
   gap: 1rem;
   padding: 0.5rem 1rem;
-  background: #1e293b;
-  border-bottom: 1px solid #334155;
+  background: #141414;
+  border-bottom: 1px solid #333333;
 }
 
 .tab-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #a3a3a3;
   padding: 0.5rem 1rem;
   cursor: pointer;
   font-size: 0.9rem;
   border-bottom: 2px solid transparent;
   transition: all 0.2s;
 
-  &:hover { color: #cbd5e1; }
-  &.active { color: #60a5fa; border-bottom-color: #60a5fa; font-weight: bold; }
+  &:hover { color: #e5e5e5; }
+  &.active { color: #e2c792; border-bottom-color: #e2c792; font-weight: bold; }
 }
 
 .chart-view-container {
@@ -1229,7 +1333,7 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   position: relative;
-  background: #0f172a;
+  background: #000000;
 }
 
 .full-chart {
@@ -1243,18 +1347,18 @@ onUnmounted(() => {
   right: 1rem;
   width: 220px;
   padding: 0.75rem 1rem;
-  background: rgba(15, 23, 42, 0.95);
-  border: 1px solid #334155;
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid #333333;
   border-radius: 10px;
   z-index: 20;
-  box-shadow: 0 12px 24px rgba(2, 6, 23, 0.6);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(6px);
 }
 
 .map-control-panel .control-title {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #e2c792;
   margin-bottom: 0.5rem;
 }
 
@@ -1273,47 +1377,37 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: #a3a3a3;
 }
 
 .row-label .value {
-  color: #f8fafc;
+  color: #e5e5e5;
   font-weight: 600;
 }
 
 .map-slider {
   width: 100%;
-  accent-color: #3b82f6;
-  cursor: pointer;
   height: 6px;
-  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
+  background: #1f1f1f;
   border-radius: 999px;
   appearance: none;
-}
-
-.map-slider::-moz-range-track {
-  height: 6px;
-  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
-  border-radius: 999px;
 }
 
 .map-slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 16px;
-  height: 16px;
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #f8fafc;
-  border: 2px solid #3b82f6;
-  box-shadow: 0 4px 8px rgba(2, 6, 23, 0.4);
+  background: #e2c792;
+  border: none;
 }
 
 .map-slider::-moz-range-thumb {
-  width: 16px;
-  height: 16px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background: #f8fafc;
-  border: 2px solid #3b82f6;
-  box-shadow: 0 4px 8px rgba(2, 6, 23, 0.4);
+  background: #e2c792;
+  border: none;
 }
 
 // --- Center Panel (List) ---
@@ -1321,18 +1415,19 @@ onUnmounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #1e293b;
+  background: #141414;
   border-radius: 0 0 8px 8px; // Adjust radius
   overflow: hidden;
 }
 
 .list-header {
   display: flex;
-  background: #334155;
+  background: #1f1f1f;
   padding: 0.75rem 1rem;
   font-weight: 600;
   font-size: 0.85rem;
-  color: #e2e8f0;
+  color: #e2c792;
+  border-bottom: 1px solid #333333;
   
   .col { padding: 0 0.5rem; }
 }
@@ -1344,36 +1439,153 @@ onUnmounted(() => {
   .list-row {
     display: flex;
     padding: 0.75rem 1rem;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid #2a2a2a;
     cursor: pointer;
     transition: background 0.2s;
     align-items: center;
+    color: #e5e5e5;
 
-    &:hover { background: #283548; }
-    &.active { background: rgba(59, 130, 246, 0.15); border-left: 3px solid #3b82f6; }
+    &:hover { background: #1f1f1f; }
+    &.active { background: rgba(226, 199, 146, 0.1); border-left: 3px solid #e2c792; }
+  }
+}
+
+.no-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+
+  .empty-state-card {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    background: linear-gradient(180deg, rgba(20,20,20,0.6), rgba(10,10,10,0.6));
+    border: 1px solid #222;
+    padding: 1.25rem 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    width: min(720px, 90%);
+  }
+
+  .empty-illustration {
+    flex: 0 0 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(226, 199, 146,0.04);
+    border-radius: 8px;
+    border: 1px solid rgba(226, 199, 146,0.08);
+  }
+
+  .empty-texts {
+    flex: 1;
+  }
+
+  .empty-title {
+    margin: 0 0 0.25rem 0;
+    color: #e5e5e5;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .empty-desc {
+    margin: 0 0 1rem 0;
+    color: #a3a3a3;
+    font-size: 0.95rem;
+  }
+
+  .empty-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    padding: 0.45rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+
+  .btn-primary {
+    background: #e2c792;
+    color: #000;
+    border-color: #e2c792;
+    font-weight: 700;
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: #e5e5e5;
+    border: 1px solid #333;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: #a3a3a3;
+    border: 1px dashed rgba(163,163,163,0.15);
   }
 }
 
 .col {
-  &.col-id { width: 80px; color: #64748b; font-size: 0.8rem; }
+  &.col-id { width: 80px; color: #737373; font-size: 0.8rem; }
   &.col-period { width: 60px; }
   &.col-route { flex: 2; }
   &.col-goods { flex: 1.5; }
   &.col-amount { width: 80px; text-align: right; }
-  &.col-value { width: 100px; text-align: right; color: #fbbf24; }
+  &.col-value { width: 100px; text-align: right; color: #e2c792; }
+
+  &.sortable {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    transition: color 0.2s;
+    
+    &:hover {
+      color: #e2c792;
+    }
+  }
+}
+
+.sort-icon {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #737373;
+  vertical-align: middle;
+  transition: transform 0.2s, border-top-color 0.2s;
+  
+  &.active {
+    border-top-color: #e2c792;
+  }
+  
+  &.asc {
+    transform: rotate(180deg);
+  }
 }
 
 .tag {
   font-size: 0.75rem;
   padding: 0.1rem 0.4rem;
   border-radius: 3px;
-  background: #475569;
+  background: #2a2a2a;
+  color: #a3a3a3;
+  border: 1px solid #444;
   
-  &.han { background: #7f1d1d; color: #fecaca; }
-  &.tang { background: #7c2d12; color: #fed7aa; }
-  &.song { background: #14532d; color: #bbf7d0; }
-  &.yuan { background: #1e3a8a; color: #bfdbfe; }
-  &.ming { background: #4c1d95; color: #e9d5ff; }
+  &.han { border-color: #b8860b; color: #b8860b; }
+  &.tang { border-color: #e2c792; color: #e2c792; }
+  &.song { border-color: #8a6e2f; color: #8a6e2f; }
+  &.yuan { border-color: #e5e5e5; color: #e5e5e5; }
+  &.ming { border-color: #a3a3a3; color: #a3a3a3; }
+  &.qing { border-color: #737373; color: #737373; }
 }
 
 .route-flow {
@@ -1381,41 +1593,42 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  .arrow { color: #64748b; }
+  .arrow { color: #737373; }
 }
 
 .goods-info {
   display: flex;
   flex-direction: column;
   .goods-name { font-weight: 500; }
-  .goods-cat { font-size: 0.75rem; color: #94a3b8; }
+  .goods-cat { font-size: 0.75rem; color: #737373; }
 }
 
 .pagination-bar {
   padding: 0.75rem;
-  background: #1e293b;
-  border-top: 1px solid #334155;
+  background: #141414;
+  border-top: 1px solid #333333;
   display: flex;
   justify-content: center;
   align-items: center;
   gap: 1rem;
   font-size: 0.85rem;
+  color: #a3a3a3;
 
   button {
-    background: #334155;
-    border: none;
-    color: white;
+    background: #2a2a2a;
+    border: 1px solid #333333;
+    color: #e5e5e5;
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
     cursor: pointer;
     &:disabled { opacity: 0.5; cursor: not-allowed; }
-    &:hover:not(:disabled) { background: #475569; }
+    &:hover:not(:disabled) { background: #333333; border-color: #e2c792; color: #e2c792; }
   }
 }
 
 // --- Right Panel ---
 .detail-box {
-  background: #1e293b;
+  background: #141414;
   padding: 1rem;
   border-radius: 8px;
   
@@ -1423,14 +1636,14 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: #64748b;
+    color: #737373;
     height: 200px;
   }
 }
 
 .detail-card {
-  background: #0f172a;
-  border: 1px solid #334155;
+  background: #0a0a0a;
+  border: 1px solid #333333;
   border-radius: 8px;
   padding: 1rem;
 }
@@ -1439,7 +1652,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   margin-bottom: 1rem;
-  .detail-id { color: #64748b; font-family: monospace; }
+  .detail-id { color: #737373; font-family: monospace; }
 }
 
 .detail-route {
@@ -1452,7 +1665,7 @@ onUnmounted(() => {
   .route-line {
     flex: 1;
     height: 2px;
-    background: #334155;
+    background: #333333;
     margin: 0 1rem;
     position: relative;
     &::after {
@@ -1461,8 +1674,8 @@ onUnmounted(() => {
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: #64748b;
-      background: #0f172a;
+      color: #737373;
+      background: #0a0a0a;
       padding: 0 0.25rem;
     }
   }
@@ -1470,8 +1683,8 @@ onUnmounted(() => {
 
 .city-node {
   text-align: center;
-  .city-name { font-size: 1.1rem; font-weight: bold; color: #e2e8f0; }
-  .city-label { font-size: 0.75rem; color: #64748b; }
+  .city-name { font-size: 1.1rem; font-weight: bold; color: #e2c792; }
+  .city-label { font-size: 0.75rem; color: #737373; }
 }
 
 .detail-grid {
@@ -1481,18 +1694,18 @@ onUnmounted(() => {
 }
 
 .detail-item {
-  .value { font-size: 1rem; color: #e2e8f0; }
-  .value.highlight { color: #60a5fa; font-weight: bold; }
-  .value.money { color: #fbbf24; }
-  label { font-size: 0.75rem; color: #64748b; display: block; margin-bottom: 0.25rem; }
+  .value { font-size: 1rem; color: #e5e5e5; }
+  .value.highlight { color: #e2c792; font-weight: bold; }
+  .value.money { color: #e2c792; }
+  label { font-size: 0.75rem; color: #737373; display: block; margin-bottom: 0.25rem; }
 }
 
 // Scrollbar
 .custom-scrollbar {
   &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-track { background: #1e293b; }
-  &::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
-  &::-webkit-scrollbar-thumb:hover { background: #64748b; }
+  &::-webkit-scrollbar-track { background: #141414; }
+  &::-webkit-scrollbar-thumb { background: #333333; border-radius: 3px; }
+  &::-webkit-scrollbar-thumb:hover { background: #e2c792; }
 }
 
 .loading-overlay, .error-overlay {
@@ -1505,28 +1718,29 @@ onUnmounted(() => {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(0, 0, 0, 0.8);
   z-index: 10;
-  color: #e2e8f0;
+  color: #e5e5e5;
   gap: 1rem;
 
   .spinner {
     width: 40px;
     height: 40px;
-    border: 4px solid #334155;
-    border-top-color: #60a5fa;
+    border: 4px solid #333333;
+    border-top-color: #e2c792;
     border-radius: 50%;
     animation: spin 1s linear infinite;
   }
 
   button {
     padding: 0.5rem 1rem;
-    background: #3b82f6;
-    color: white;
+    background: #e2c792;
+    color: #000;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    &:hover { background: #2563eb; }
+    font-weight: bold;
+    &:hover { background: #b8860b; }
   }
 }
 
