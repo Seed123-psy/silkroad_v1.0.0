@@ -118,6 +118,12 @@
           >
             贸易网络关系
           </button>
+          <button 
+            :class="['tab-btn', { active: currentView === 'goods-network' }]" 
+            @click="currentView = 'goods-network'"
+          >
+            商品产地网络
+          </button>
         </div>
 
         <div v-if="currentView === 'list'" class="data-list-container">
@@ -216,6 +222,10 @@
 
         <div v-show="currentView === 'network'" class="chart-view-container">
           <div ref="networkChartRef" class="full-chart"></div>
+        </div>
+
+        <div v-show="currentView === 'goods-network'" class="chart-view-container">
+          <div ref="goodsNetworkChartRef" class="full-chart"></div>
         </div>
       </div>
 
@@ -388,7 +398,7 @@ const periods = [
 const categories = Object.entries(categoryMap).map(([k, v]) => ({ value: k, label: v }));
 
 // --- 状态 ---
-const currentView = ref<'list' | 'map' | 'network'>('list');
+const currentView = ref<'list' | 'map' | 'network' | 'goods-network'>('list');
 const mapLoading = ref(false);
 const mapError = ref(false);
 
@@ -438,11 +448,13 @@ const categoryChartRef = ref<HTMLElement | null>(null);
 const topGoodsChartRef = ref<HTMLElement | null>(null);
 const globeChartRef = ref<HTMLElement | null>(null);
 const networkChartRef = ref<HTMLElement | null>(null);
+const goodsNetworkChartRef = ref<HTMLElement | null>(null);
 
 let categoryChart: echarts.ECharts | null = null;
 let topGoodsChart: echarts.ECharts | null = null;
 let globeChart: echarts.ECharts | null = null;
 let networkChart: echarts.ECharts | null = null;
+let goodsNetworkChart: echarts.ECharts | null = null;
 
 const applyGlobeViewControl = () => {
   if (!globeChart) return;
@@ -601,6 +613,11 @@ const updateCharts = () => {
   // 4. 关系网络 (如果可见)
   if (currentView.value === 'network' && networkChart) {
     updateNetworkChart();
+  }
+
+  // 5. 商品产地网络 (如果可见)
+  if (currentView.value === 'goods-network' && goodsNetworkChart) {
+    updateGoodsNetworkChart();
   }
 };
 
@@ -834,6 +851,125 @@ const updateNetworkChart = () => {
   });
 };
 
+const updateGoodsNetworkChart = () => {
+  if (!goodsNetworkChart) return;
+
+  const nodes: any[] = [];
+  const links: any[] = [];
+  const addedNodes = new Set<string>();
+
+  // 筛选商品
+  const goodsToShow = tradeGoods.value.filter(g => {
+    const matchCategory = !selectedCategory.value || g.category === selectedCategory.value;
+    const query = searchQuery.value.toLowerCase();
+    const matchSearch = !query || 
+      g.name.includes(query) || 
+      g.origin.some(o => o.includes(query)) || 
+      g.destination.some(d => d.includes(query));
+    return matchCategory && matchSearch;
+  });
+
+  goodsToShow.forEach(g => {
+    // 商品节点
+    const goodId = `good-${g.id}`;
+    if (!addedNodes.has(goodId)) {
+      nodes.push({
+        id: goodId,
+        name: g.name,
+        category: 1, // 商品
+        symbol: 'diamond',
+        symbolSize: 20,
+        itemStyle: { color: '#f59e0b' },
+        value: g.category
+      });
+      addedNodes.add(goodId);
+    }
+
+    // 产地节点与连线
+    g.origin.forEach(city => {
+      const cityId = `city-${city}`;
+      if (!addedNodes.has(cityId)) {
+        nodes.push({
+          id: cityId,
+          name: city,
+          category: 0, // 城市
+          symbol: 'circle',
+          symbolSize: 15,
+          itemStyle: { color: '#3b82f6' }
+        });
+        addedNodes.add(cityId);
+      }
+      links.push({
+        source: cityId,
+        target: goodId,
+        value: '产出',
+        lineStyle: { color: '#10b981', curveness: 0.1 }
+      });
+    });
+
+    // 目的地节点与连线
+    g.destination.forEach(city => {
+      const cityId = `city-${city}`;
+      if (!addedNodes.has(cityId)) {
+        nodes.push({
+          id: cityId,
+          name: city,
+          category: 0, // 城市
+          symbol: 'circle',
+          symbolSize: 15,
+          itemStyle: { color: '#3b82f6' }
+        });
+        addedNodes.add(cityId);
+      }
+      links.push({
+        source: goodId,
+        target: cityId,
+        value: '销往',
+        lineStyle: { color: '#ef4444', curveness: 0.1 }
+      });
+    });
+  });
+
+  goodsNetworkChart.setOption({
+    backgroundColor: 'transparent',
+    tooltip: {
+      formatter: function (params: any) {
+        if (params.dataType === 'edge') {
+          return `${params.data.source.replace('city-', '').replace('good-', '')} ${params.data.value} ${params.data.target.replace('city-', '').replace('good-', '')}`;
+        }
+        return `${params.data.name}`;
+      }
+    },
+    legend: {
+      data: ['城市', '商品'],
+      textStyle: { color: '#fff' },
+      top: 10
+    },
+    series: [
+      {
+        type: 'graph',
+        layout: 'force',
+        data: nodes,
+        links: links,
+        categories: [{ name: '城市' }, { name: '商品' }],
+        roam: true,
+        label: { show: true, position: 'right', color: '#fff' },
+        force: {
+          repulsion: 300,
+          edgeLength: 120,
+          gravity: 0.1
+        },
+        lineStyle: {
+          width: 1,
+          opacity: 0.6
+        },
+        edgeSymbol: ['none', 'arrow'],
+        edgeSymbolSize: 6
+      }
+    ]
+  });
+};
+
 // --- 生命周期 ---
 watch([globeDistance, globeAlpha], () => {
   applyGlobeViewControl();
@@ -858,6 +994,12 @@ watch(currentView, async (newView) => {
     }
     updateNetworkChart();
     networkChart?.resize();
+  } else if (newView === 'goods-network') {
+    if (!goodsNetworkChart && goodsNetworkChartRef.value) {
+      goodsNetworkChart = echarts.init(goodsNetworkChartRef.value, 'dark');
+    }
+    updateGoodsNetworkChart();
+    goodsNetworkChart?.resize();
   }
 });
 
@@ -878,6 +1020,7 @@ onMounted(async () => {
     topGoodsChart?.resize();
     globeChart?.resize();
     networkChart?.resize();
+    goodsNetworkChart?.resize();
   });
 });
 
@@ -886,6 +1029,7 @@ onUnmounted(() => {
   topGoodsChart?.dispose();
   globeChart?.dispose();
   networkChart?.dispose();
+  goodsNetworkChart?.dispose();
 });
 </script>
 

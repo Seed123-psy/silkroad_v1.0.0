@@ -5,448 +5,220 @@
       "name": "丝绸",
       "nameEn": "Silk",
       "category": "textile",
-      "description": "中国著名出口商品，轻柔且奢华，为丝绸之路核心商品。",
-      "origin": [
-        "西安"
-      ],
-      "destination": [
-        "撒马尔罕",
-        "巴格达",
-        "君士坦丁堡"
-      ],
+      "description": "中国古代最重要的出口商品，以其轻柔、华丽和高贵著称，是丝绸之路名称的由来。",
+      "origin": ["长安", "洛阳", "杭州", "苏州", "成都"],
+      "destination": ["撒马尔罕", "巴格达", "大马士革", "君士坦丁堡", "罗马"],
       "peakPeriod": "tang",
-      "image": "/images/placeholder.jpg"
+      "image": "/images/goods/silk.jpg"
     },
     {
       "id": "porcelain",
       "name": "瓷器",
       "nameEn": "Porcelain",
       "category": "ceramic",
-      "description": "精美陶瓷工艺品，深受海外市场欢迎。",
-      "origin": [
-        "景德镇"
-      ],
-      "destination": [
-        "波斯",
-        "欧洲"
-      ],
-      "peakPeriod": "ming",
-      "image": "/images/placeholder.jpg"
+      "description": "中国发明的精美陶瓷，包括青瓷、白瓷和青花瓷，深受世界各地贵族喜爱。",
+      "origin": ["景德镇", "邢台", "越州", "长沙"],
+      "destination": ["波斯", "阿拉伯半岛", "东非", "欧洲"],
+      "peakPeriod": "song",
+      "image": "/images/goods/porcelain.jpg"
     },
     {
       "id": "tea",
       "name": "茶叶",
       "nameEn": "Tea",
       "category": "food",
-      "description": "重要的生活与交易商品，从中国传播到中亚与欧洲。",
-      "origin": [
-        "杭州",
-        "福建"
-      ],
-      "destination": [
-        "中亚",
-        "欧洲"
-      ],
+      "description": "源自中国的健康饮品，通过丝绸之路传播至中亚、西亚及欧洲，改变了世界的饮食习惯。",
+      "origin": ["杭州", "福建", "四川", "云南"],
+      "destination": ["中亚", "波斯", "俄罗斯", "欧洲"],
       "peakPeriod": "song",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "copperware",
-      "name": "铜器",
-      "nameEn": "Copperware",
-      "category": "metal",
-      "description": "日常与礼用金属制品，常作贸易商品。",
-      "origin": [
-        "长安",
-        "中原"
-      ],
-      "destination": [
-        "中亚"
-      ],
-      "peakPeriod": "tang",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "lacquer",
-      "name": "漆器",
-      "nameEn": "Lacquerware",
-      "category": "craft",
-      "description": "中国传统工艺品，精美耐用，常作为奢侈品出口。",
-      "origin": [
-        "苏州",
-        "江南"
-      ],
-      "destination": [
-        "中亚",
-        "西亚"
-      ],
-      "peakPeriod": "song",
-      "image": "/images/placeholder.jpg"
+      "image": "/images/goods/tea.jpg"
     },
     {
       "id": "jade",
       "name": "玉石",
       "nameEn": "Jade",
       "category": "gem",
-      "description": "和田玉等珍贵玉石，为重要的文化与贸易物品。",
-      "origin": [
-        "和田",
-        "缅甸"
-      ],
-      "destination": [
-        "长安"
-      ],
+      "description": "主要产自和田的珍贵矿石，在中国文化中象征着美德与高贵，是中原与西域贸易的关键商品。",
+      "origin": ["和田", "叶尔羌"],
+      "destination": ["长安", "洛阳", "开封", "北京"],
       "peakPeriod": "han",
-      "image": "/images/placeholder.jpg"
+      "image": "/images/goods/jade.jpg"
     },
     {
       "id": "spice",
       "name": "香料",
-      "nameEn": "Spice",
+      "nameEn": "Spices",
       "category": "food",
-      "description": "胡椒、肉桂等香料，来自印度与东南亚，是丝路重要补给物资。",
-      "origin": [
-        "印度",
-        "东南亚"
-      ],
-      "destination": [
-        "中国",
-        "中亚"
-      ],
-      "peakPeriod": "song",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "sutra",
-      "name": "佛经",
-      "nameEn": "Sutras",
-      "category": "cultural",
-      "description": "宗教典籍，佛教传播与文化交流的重要载体。",
-      "origin": [
-        "印度",
-        "中原"
-      ],
-      "destination": [
-        "敦煌",
-        "中亚"
-      ],
+      "description": "包括胡椒、肉桂、丁香等，主要产自东南亚和印度，用于烹饪、防腐和医药，价值连城。",
+      "origin": ["印度", "斯里兰卡", "东南亚"],
+      "destination": ["广州", "泉州", "长安", "欧洲"],
       "peakPeriod": "tang",
-      "image": "/images/placeholder.jpg"
+      "image": "/images/goods/spice.jpg"
     },
     {
-      "id": "instrument",
-      "name": "乐器",
-      "nameEn": "Musical Instruments",
-      "category": "cultural",
-      "description": "各地乐器交流促进了文化互鉴与艺术传播。",
-      "origin": [
-        "中亚",
-        "中国"
-      ],
-      "destination": [
-        "各地"
-      ],
+      "id": "glass",
+      "name": "玻璃器皿",
+      "nameEn": "Glassware",
+      "category": "craft",
+      "description": "罗马和波斯地区精湛的玻璃工艺品，色彩斑斓，造型独特，是中国皇室珍视的进口奢侈品。",
+      "origin": ["罗马", "大马士革", "巴格达"],
+      "destination": ["长安", "洛阳", "南京"],
       "peakPeriod": "tang",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "painting",
-      "name": "绘画",
-      "nameEn": "Painting",
-      "category": "art",
-      "description": "壁画与手卷等艺术品，体现文化交流成果。",
-      "origin": [
-        "敦煌",
-        "中原"
-      ],
-      "destination": [
-        "中亚",
-        "西亚"
-      ],
-      "peakPeriod": "tang",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "gem",
-      "name": "宝石",
-      "nameEn": "Gemstones",
-      "category": "gem",
-      "description": "中亚与波斯出产的宝石，为珍贵贸易商品。",
-      "origin": [
-        "中亚",
-        "波斯"
-      ],
-      "destination": [
-        "中国",
-        "欧洲"
-      ],
-      "peakPeriod": "yuan",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "leather",
-      "name": "皮革",
-      "nameEn": "Leather",
-      "category": "material",
-      "description": "皮革制品用于服饰与马具，来自中亚与波斯。",
-      "origin": [
-        "中亚",
-        "波斯"
-      ],
-      "destination": [
-        "中国"
-      ],
-      "peakPeriod": "tang",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "horse",
-      "name": "马匹",
-      "nameEn": "Horse",
-      "category": "livestock",
-      "description": "良马为军事与运输所需，西域汗血宝马尤为珍贵。",
-      "origin": [
-        "中亚",
-        "波斯"
-      ],
-      "destination": [
-        "中国"
-      ],
-      "peakPeriod": "tang",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "metal_goods",
-      "name": "金属制品",
-      "nameEn": "Metal Goods",
-      "category": "metal",
-      "description": "金属刀剑、器皿与工艺品等，从西亚与中亚流通。",
-      "origin": [
-        "波斯",
-        "中亚"
-      ],
-      "destination": [
-        "中国",
-        "西亚"
-      ],
-      "peakPeriod": "yuan",
-      "image": "/images/placeholder.jpg"
+      "image": "/images/goods/glass.jpg"
     },
     {
       "id": "carpet",
-      "name": "地毯",
-      "nameEn": "Carpet",
+      "name": "波斯地毯",
+      "nameEn": "Persian Carpet",
       "category": "textile",
-      "description": "波斯及中亚手工地毯，图案精美，是重要贸易商品。",
-      "origin": [
-        "波斯",
-        "中亚"
-      ],
-      "destination": [
-        "中国",
-        "欧洲"
-      ],
+      "description": "产自波斯和中亚的手工编织地毯，图案繁复精美，保暖且装饰性强。",
+      "origin": ["波斯", "布哈拉", "撒马尔罕"],
+      "destination": ["长安", "欧洲", "蒙古高原"],
       "peakPeriod": "yuan",
-      "image": "/images/placeholder.jpg"
+      "image": "/images/goods/carpet.jpg"
+    },
+    {
+      "id": "horse",
+      "name": "良马",
+      "nameEn": "Horses",
+      "category": "livestock",
+      "description": "包括著名的“汗血宝马”，是古代军事力量的核心，中原王朝常以丝绸交换西域良马。",
+      "origin": ["大宛", "伊犁", "蒙古高原"],
+      "destination": ["长安", "洛阳", "开封"],
+      "peakPeriod": "han",
+      "image": "/images/goods/horse.jpg"
+    },
+    {
+      "id": "paper",
+      "name": "纸张",
+      "nameEn": "Paper",
+      "category": "cultural",
+      "description": "中国四大发明之一，通过丝绸之路传入中亚和欧洲，极大地促进了人类文明的传播。",
+      "origin": ["长安", "洛阳", "撒马尔罕"],
+      "destination": ["巴格达", "大马士革", "开罗", "欧洲"],
+      "peakPeriod": "tang",
+      "image": "/images/goods/paper.jpg"
+    },
+    {
+      "id": "gold_silver",
+      "name": "金银器",
+      "nameEn": "Gold & Silverware",
+      "category": "metal",
+      "description": "萨珊波斯风格的金银器皿，工艺精湛，对中国唐代的金属工艺产生了深远影响。",
+      "origin": ["波斯", "粟特"],
+      "destination": ["长安", "大同"],
+      "peakPeriod": "tang",
+      "image": "/images/goods/gold_silver.jpg"
+    },
+    {
+      "id": "wine",
+      "name": "葡萄酒",
+      "nameEn": "Grape Wine",
+      "category": "food",
+      "description": "源自地中海和中亚的酿造酒，唐代时在中国风靡一时，留下了“葡萄美酒夜光杯”的诗句。",
+      "origin": ["高昌", "撒马尔罕", "波斯"],
+      "destination": ["长安", "洛阳"],
+      "peakPeriod": "tang",
+      "image": "/images/goods/wine.jpg"
+    },
+    {
+      "id": "fur",
+      "name": "皮毛",
+      "nameEn": "Furs",
+      "category": "material",
+      "description": "来自北亚和西伯利亚的珍贵兽皮，如貂皮、狐皮，是寒冷地区和贵族御寒的首选。",
+      "origin": ["西伯利亚", "蒙古高原"],
+      "destination": ["长安", "中亚", "欧洲"],
+      "peakPeriod": "ming",
+      "image": "/images/goods/fur.jpg"
+    },
+    {
+      "id": "gems",
+      "name": "宝石",
+      "nameEn": "Gemstones",
+      "category": "gem",
+      "description": "包括红蓝宝石、青金石、祖母绿等，主要产自中亚、南亚，用于装饰和宗教用途。",
+      "origin": ["巴达赫尚", "斯里兰卡", "印度"],
+      "destination": ["长安", "巴格达", "欧洲"],
+      "peakPeriod": "yuan",
+      "image": "/images/goods/gems.jpg"
+    },
+    {
+      "id": "cotton_textiles",
+      "name": "棉织品",
+      "nameEn": "Cotton Textiles",
+      "category": "textile",
+      "description": "棉花种植和纺织技术最早在印度和中亚发展，后传入中国，成为重要的衣料来源。",
+      "origin": ["印度", "高昌", "中亚"],
+      "destination": ["长安", "中原"],
+      "peakPeriod": "song",
+      "image": "/images/goods/cotton.jpg"
+    },
+    {
+      "id": "medicine",
+      "name": "药材",
+      "nameEn": "Medicinal Herbs",
+      "category": "medicine",
+      "description": "包括麝香、大黄、藏红花等，丝绸之路也是一条“医药之路”，促进了东西方医学的交流。",
+      "origin": ["西藏", "克什米尔", "甘肃"],
+      "destination": ["长安", "波斯", "欧洲"],
+      "peakPeriod": "ming",
+      "image": "/images/goods/medicine.jpg"
+    },
+    {
+      "id": "books",
+      "name": "书籍与佛经",
+      "nameEn": "Books & Sutras",
+      "category": "cultural",
+      "description": "承载着宗教信仰、科学知识和文学艺术的书籍，是丝绸之路上精神财富交换的载体。",
+      "origin": ["印度", "长安", "巴格达"],
+      "destination": ["敦煌", "奈良", "撒马尔罕"],
+      "peakPeriod": "tang",
+      "image": "/images/goods/books.jpg"
+    },
+    {
+      "id": "musical_instruments",
+      "name": "乐器",
+      "nameEn": "Musical Instruments",
+      "category": "cultural",
+      "description": "琵琶、胡琴等乐器通过丝绸之路传入中国，丰富了东方的音乐艺术。",
+      "origin": ["波斯", "库车"],
+      "destination": ["长安", "洛阳"],
+      "peakPeriod": "tang",
+      "image": "/images/goods/instruments.jpg"
+    },
+    {
+      "id": "sugar",
+      "name": "蔗糖",
+      "nameEn": "Sugar",
+      "category": "food",
+      "description": "制糖技术源自印度，唐代传入中国，被称为“石蜜”，是珍贵的甜味剂。",
+      "origin": ["印度", "孟加拉"],
+      "destination": ["长安", "波斯"],
+      "peakPeriod": "tang",
+      "image": "/images/goods/sugar.jpg"
+    },
+    {
+      "id": "lacquer",
+      "name": "漆器",
+      "nameEn": "Lacquerware",
+      "category": "craft",
+      "description": "中国特有的工艺品，耐腐蚀、耐热且美观，早在汉代就已出口至海外。",
+      "origin": ["四川", "长沙", "江南"],
+      "destination": ["中亚", "朝鲜", "日本"],
+      "peakPeriod": "han",
+      "image": "/images/goods/lacquer.jpg"
     },
     {
       "id": "ivory",
       "name": "象牙",
       "nameEn": "Ivory",
       "category": "luxury",
-      "description": "象牙为雕刻材料与奢侈品来源，常经由印度洋与内陆商路传入。",
-      "origin": [
-        "印度",
-        "东非"
-      ],
-      "destination": [
-        "西亚",
-        "中国"
-      ],
+      "description": "来自非洲和东南亚的珍贵材料，用于雕刻工艺品，是海上丝绸之路的重要商品。",
+      "origin": ["东非", "东南亚"],
+      "destination": ["广州", "泉州", "长安"],
       "peakPeriod": "song",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "glass",
-      "name": "玻璃制品",
-      "nameEn": "Glassware",
-      "category": "craft",
-      "description": "西亚与地中海地区出产的玻璃器皿，通过丝路传入东亚。",
-      "origin": [
-        "罗马",
-        "波斯"
-      ],
-      "destination": [
-        "中国"
-      ],
-      "peakPeriod": "tang",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "medicine",
-      "name": "药材",
-      "nameEn": "Medicinal Herbs",
-      "category": "food",
-      "description": "各地药材与香料常为贸易品，促进医学知识交流。",
-      "origin": [
-        "中亚",
-        "印度"
-      ],
-      "destination": [
-        "中国",
-        "西亚"
-      ],
-      "peakPeriod": "yuan",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "jewelry",
-      "name": "珠宝",
-      "nameEn": "Jewelry",
-      "category": "luxury",
-      "description": "贵重饰品与镶嵌工艺品，为贵族间交换的奢侈品。",
-      "origin": [
-        "波斯",
-        "中亚"
-      ],
-      "destination": [
-        "中国",
-        "欧洲"
-      ],
-      "peakPeriod": "ming",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "weapon",
-      "name": "武器",
-      "nameEn": "Weapons",
-      "category": "military",
-      "description": "刀剑与弓箭等，为军事与防护所需的交易商品。",
-      "origin": [
-        "西亚",
-        "中亚"
-      ],
-      "destination": [
-        "中国",
-        "欧洲"
-      ],
-      "peakPeriod": "yuan",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "luxury",
-      "name": "奢侈品",
-      "nameEn": "Luxury Goods",
-      "category": "luxury",
-      "description": "包含异域装饰品、细工艺物，为上流社会所需。",
-      "origin": [
-        "中亚",
-        "西亚",
-        "印度"
-      ],
-      "destination": [
-        "中国",
-        "欧洲"
-      ],
-      "peakPeriod": "ming",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "felt",
-      "name": "毛毡",
-      "nameEn": "Felt",
-      "category": "textile",
-      "description": "中亚常见的毡制品，用于帐篷、服饰及垫层。",
-      "origin": [
-        "中亚"
-      ],
-      "destination": [
-        "中国",
-        "西亚"
-      ],
-      "peakPeriod": "yuan",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "wool",
-      "name": "羊毛",
-      "nameEn": "Wool",
-      "category": "textile",
-      "description": "羊毛用于纺织与服饰制作，产自欧亚草原带。",
-      "origin": [
-        "中亚"
-      ],
-      "destination": [
-        "中国",
-        "西亚"
-      ],
-      "peakPeriod": "song",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "dried_fruits",
-      "name": "干果",
-      "nameEn": "Dried Fruits",
-      "category": "food",
-      "description": "干果如葡萄干、杏干等，便于长途运输的补给品。",
-      "origin": [
-        "中亚"
-      ],
-      "destination": [
-        "中国",
-        "西亚"
-      ],
-      "peakPeriod": "tang",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "wool_goods",
-      "name": "羊毛制品",
-      "nameEn": "Woolen Goods",
-      "category": "textile",
-      "description": "由羊毛制成的布料与服饰，来源于中亚与波斯地区。",
-      "origin": [
-        "中亚"
-      ],
-      "destination": [
-        "中国"
-      ],
-      "peakPeriod": "yuan",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "bullion",
-      "name": "金银器",
-      "nameEn": "Bullion & Silverware",
-      "category": "metal",
-      "description": "贵金属制品与器皿，作为财富与贸易媒介。",
-      "origin": [
-        "波斯",
-        "中亚"
-      ],
-      "destination": [
-        "中国",
-        "欧洲"
-      ],
-      "peakPeriod": "ming",
-      "image": "/images/placeholder.jpg"
-    },
-    {
-      "id": "cotton",
-      "name": "棉花",
-      "nameEn": "Cotton",
-      "category": "textile",
-      "description": "棉花与棉织物，为纺织业重要原料与商品。",
-      "origin": [
-        "中亚",
-        "南亚"
-      ],
-      "destination": [
-        "中国",
-        "西亚"
-      ],
-      "peakPeriod": "song",
-      "image": "/images/placeholder.jpg"
+      "image": "/images/goods/ivory.jpg"
     }
   ],
   "tradeRecords": [
