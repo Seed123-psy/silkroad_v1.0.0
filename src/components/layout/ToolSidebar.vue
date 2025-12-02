@@ -110,6 +110,11 @@ const navItems: NavItem[] = [
         path: '/lianghan',
         icon: HanMingTransportIcon,
       },
+          {
+            label: '蒙元路线',
+            path: '/mengyuan',
+            icon: LiangHanTransportIcon,
+          },
     ]
   },
   {

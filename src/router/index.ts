@@ -22,6 +22,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/LiangHan.vue'),
   },
   {
+    path: '/mengyuan',
+    name: 'MengYuan',
+    component: () => import('@/views/MengYuanRoutes.vue'),
+  },
+  {
     path: '/mingqing',
     name: 'MingQing',
     component: () => import('@/views/MingQing.vue'),

@@ -1,0 +1,25 @@
+{
+  "description": "MengYuan available line datasets. Each entry maps an identifier to the base path (without extension) under /data/mengyuan/line.",
+  "routes": [
+    { "id": "1218", "base": "line/1218lines" },
+    { "id": "1220", "base": "line/1220lines" },
+    { "id": "1222", "base": "line/1222lines" },
+    { "id": "1224", "base": "line/1224lines" },
+    { "id": "1246", "base": "line/1246lines" },
+    { "id": "1249", "base": "line/1249lines" },
+    { "id": "1253", "base": "line/1253lines" },
+    { "id": "1254", "base": "line/1254lines" },
+    { "id": "1259", "base": "line/1259lines" },
+    { "id": "1260-1", "base": "line/1260-1lines" },
+    { "id": "1260-2", "base": "line/1260-2lines" },
+    { "id": "1271", "base": "line/1271lines" },
+    { "id": "1276", "base": "line/1276lines" },
+    { "id": "1318", "base": "line/1318lines" },
+    { "id": "1326", "base": "line/1326lines" },
+    { "id": "1331", "base": "line/1331lines" },
+    { "id": "1336", "base": "line/1336lines" },
+    { "id": "1338", "base": "line/1338lines" },
+    { "id": "1347", "base": "line/1347lines" },
+    { "id": "1350", "base": "line/1350lines" }
+  ]
+}

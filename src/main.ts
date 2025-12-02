@@ -3,6 +3,7 @@ import App from './App.vue'
 import router from './router'
 import pinia from './stores'
 import './styles/global.scss'
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 // Dev helper: swallow Mapbox telemetry POSTs to avoid noisy console errors
 if (import.meta.env.DEV && typeof window !== 'undefined') {
