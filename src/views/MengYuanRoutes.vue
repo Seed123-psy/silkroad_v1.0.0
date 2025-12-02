@@ -12,12 +12,36 @@
       stylePlaceholder="选择地图样式"
     />
 
+    <transition name="slide">
+      <div class="hover-panel compact" v-if="hoverPanel.show">
+        <div class="hover-top">
+          <div class="icon-wrap" :style="{ borderColor: hoverPanel.props?.color || '#e67e22' }">
+            <div class="icon-core" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }" />
+          </div>
+          <div class="hover-title">
+            <h4 class="title">{{ hoverPanel.props?.name }}</h4>
+            <div v-if="hoverPanel.props?.subtitle" class="subtitle">{{ hoverPanel.props?.subtitle }}</div>
+          </div>
+          <div class="meta" v-if="hoverPanel.props?.badge">
+            <span class="badge small" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }">{{ hoverPanel.props?.badge }}</span>
+          </div>
+        </div>
+
+        <div class="hover-body">
+          <div class="row" v-for="row in hoverPanel.props?.rows || []" :key="row.label">
+            <div class="label">{{ row.label }}</div>
+            <div class="value">{{ row.value }}</div>
+          </div>
+        </div>
+      </div>
+    </transition>
+
       <!-- 路线选择下拉（浮动在地图上） -->
       <div class="route-select" role="region" aria-label="路线选择">
         <label for="routeSelect">选择路线编号：</label>
           <select id="routeSelect" v-model="selectedRouteId" :disabled="manifestLoading">
             <option value="">-- 请选择 --</option>
-            <option v-for="r in routes" :key="r.id" :value="r.id">{{ r.id }}</option>
+              <option v-for="r in routes" :key="r.id" :value="r.id">{{ r.label || r.id }}</option>
           </select>
           <div class="route-hint" v-if="manifestLoading">清单加载中…</div>
           <div class="route-hint" v-else>共 {{ routes.length }} 条路线</div>
@@ -123,12 +147,28 @@ const manifestError = ref<string | null>(null)
 const loadingRoute = ref(false)
 const routeError = ref<string | null>(null)
 
+interface HoverPanelRow {
+  label: string
+  value: string
+}
+
+interface HoverPanelContent {
+  name: string
+  subtitle?: string
+  badge?: string
+  color?: string
+  rows: HoverPanelRow[]
+}
+
+const hoverPanel = ref<{ show: boolean; props?: HoverPanelContent }>({ show: false })
+
 // 地图上用于渲染的 source/layer id
 const LINE_SOURCE_ID = 'mengyuan-selected-line'
 const LINE_LAYER_ID = 'mengyuan-selected-line-layer'
 const POINT_SOURCE_ID = 'mengyuan-selected-points'
 const POINT_LAYER_ID = 'mengyuan-selected-points-layer'
 let pointHandlersAttached = false
+let lineHandlersAttached = false
 
 async function fetchArrayBuffer(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url)
@@ -273,6 +313,12 @@ function addOrUpdateLineLayer(features: GeoJSON.Feature[]) {
   } else {
     map.addSource(LINE_SOURCE_ID, { type: 'geojson', data: fc })
     map.addLayer({ id: LINE_LAYER_ID, type: 'line', source: LINE_SOURCE_ID, paint: { 'line-color': '#ff5e57', 'line-width': 2 } })
+    // 绑定鼠标事件用于显示路线悬浮面板
+    if (!lineHandlersAttached) {
+      lineHandlersAttached = true
+      try { map.on('mousemove', LINE_LAYER_ID, handleLineMove) } catch (e) {}
+      try { map.on('mouseleave', LINE_LAYER_ID, handleLineLeave) } catch (e) {}
+    }
   }
   // 缩放至要素范围
   try {
@@ -298,6 +344,138 @@ function escapeHtml(input: any) {
   if (input === null || input === undefined) return ''
   const s = String(input)
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function handlePointMove(e: any) {
+  if (!map) return
+  const feature = e.features && e.features[0]
+  if (!feature) return
+  const props = feature.properties
+  if (!props) return
+  
+  hoverPanel.value = { show: true, props: buildPointHoverContent(props) }
+  try { map.getCanvas().style.cursor = 'pointer' } catch (_) {}
+}
+
+function handlePointLeave() {
+  hoverPanel.value = { show: false }
+  try { map.getCanvas().style.cursor = '' } catch (_) {}
+}
+
+function handleLineMove(e: any) {
+  if (!map) return
+  const feature = e.features && e.features[0]
+  if (!feature) return
+  const props = feature.properties
+  if (!props) return
+
+  hoverPanel.value = { show: true, props: buildLineHoverContent(props) }
+  try { map.getCanvas().style.cursor = 'pointer' } catch (_) {}
+}
+
+function handleLineLeave() {
+  hoverPanel.value = { show: false }
+  try { map.getCanvas().style.cursor = '' } catch (_) {}
+}
+
+function buildLineHoverContent(props: Record<string, any>): HoverPanelContent {
+  const pick = (cands: string[]) => {
+    for (const k of cands) {
+      if (Object.prototype.hasOwnProperty.call(props, k) && props[k] != null && String(props[k]).trim() !== '') return String(props[k])
+    }
+    return ''
+  }
+
+  // 表 6 字段候选名
+  const nature = pick(['性质','nature','property'])
+  const name = pick(['Name','名称','name','NAME','RouteName','route_name']) || '未命名路线'
+  const beginTime = pick(['Begin_Time','begin_time','BeginTime','StartYear','begin','start_year'])
+  const endTime = pick(['End_Time','end_time','EndTime','EndYear','end','finish_year'])
+  const beginPlace = pick(['Begin_Place','begin_place','StartPlace','起点','from','start_place'])
+  const endPlace = pick(['End_Place','end_place','EndPlace','终点','to','end_place'])
+  const tourist = pick(['Tourist','traveler','Traveler','旅行家','traveller'])
+  const clazz = pick(['Class','class','分类','TYPE','type'])
+  const code = pick(['Code','code','编码','ID','id'])
+  const reference = pick(['Reference','reference','参考','参考资料','ref','source'])
+
+  const rows: HoverPanelRow[] = []
+  if (nature) rows.push({ label: '性质', value: nature })
+  if (beginTime) rows.push({ label: '开始时间', value: beginTime })
+  if (endTime) rows.push({ label: '结束时间', value: endTime })
+  if (beginPlace) rows.push({ label: '开始地点', value: beginPlace })
+  if (endPlace) rows.push({ label: '结束地点', value: endPlace })
+  if (tourist) rows.push({ label: '旅行家', value: tourist })
+  if (clazz) rows.push({ label: '分类', value: clazz })
+  if (code) rows.push({ label: '编码', value: code })
+  if (reference) rows.push({ label: '参考资料', value: reference })
+
+  // 弹窗标题优先显示旅行家名 + '路线'，若无则使用路线名 + '路线'
+  const displayName = tourist ? `${tourist} 路线` : `${name} 路线`
+  return {
+    name: displayName,
+    subtitle: tourist ? name : '蒙元路线',
+    badge: '路线',
+    color: '#ff5e57',
+    rows
+  }
+}
+
+function buildPointHoverContent(props: any): HoverPanelContent {
+  // Helper to pick property
+  const pick = (candidates: string[]) => {
+    for (const k of candidates) {
+      if (Object.prototype.hasOwnProperty.call(props, k) && props[k] != null && String(props[k]).trim() !== '') return String(props[k])
+    }
+    return ''
+  }
+
+  const name = pick(['名称','Name','name','NAME','Name_E','Name_E','name_en','英文名','Name _E','NAME_EN']) || pick(['Site','site','地点']) || '未命名节点'
+  const nameEn = pick(['Name_E','name_e','name_en','english_name','英文名'])
+  const mtype = props.mtype || '其他'
+  
+  const rows: HoverPanelRow[] = []
+  
+  const year = pick(['Year','year','YEAR','YearFirstVisit','旅行家首次抵达年','YearArrived'])
+  if (year) rows.push({ label: '年份', value: year })
+  
+  if (nameEn && nameEn !== name) rows.push({ label: '英文名', value: nameEn })
+  
+  const country = pick(['Country','country','国家'])
+  if (country) rows.push({ label: '国家', value: country })
+  
+  const province = pick(['Province','province','省','PROVINCE'])
+  if (province) rows.push({ label: '省份', value: province })
+  
+  const city = pick(['City','city','市'])
+  if (city) rows.push({ label: '城市', value: city })
+  
+  const traveler = pick(['Traveler','旅行家','traveller','traveler_name'])
+  if (traveler) rows.push({ label: '旅行家', value: traveler })
+  
+  const typeVal = pick(['Class','class','分类'])
+  if (typeVal) rows.push({ label: '分类', value: typeVal })
+
+  const colorMap: Record<string, string> = {
+    '城镇': '#ff5e57',
+    '农村': '#f7a35c',
+    '遗址': '#b77bff',
+    '关隘': '#ffdf5e',
+    '国家': '#2db7f5',
+    '地区': '#7bd389',
+    '山体': '#8b5a2b',
+    '水体': '#3aa6ff',
+    '沙漠': '#e0c068',
+    '草原': '#86c166',
+    '其他': '#9aa0a6'
+  }
+
+  return {
+    name,
+    subtitle: nameEn,
+    badge: mtype,
+    color: colorMap[mtype] || '#9aa0a6',
+    rows
+  }
 }
 
 function addOrUpdatePointLayer(features: GeoJSON.Feature[]) {
@@ -380,65 +558,15 @@ function addOrUpdatePointLayer(features: GeoJSON.Feature[]) {
   // Attach click handler for popup once
   if (!pointHandlersAttached) {
     pointHandlersAttached = true
-    const popup = new mapboxgl.Popup({ offset: 12 })
+    // const popup = new mapboxgl.Popup({ offset: 12 })
 
-    map.on('mouseenter', POINT_LAYER_ID, () => { try { map.getCanvas().style.cursor = 'pointer' } catch (e) {} })
-    map.on('mouseleave', POINT_LAYER_ID, () => { try { map.getCanvas().style.cursor = '' } catch (e) {} })
+    // map.on('mouseenter', POINT_LAYER_ID, () => { try { map.getCanvas().style.cursor = 'pointer' } catch (e) {} })
+    // map.on('mouseleave', POINT_LAYER_ID, () => { try { map.getCanvas().style.cursor = '' } catch (e) {} })
 
-    map.on('click', POINT_LAYER_ID, (e: any) => {
-      try {
-        const feat = (e.features && e.features[0]) || null
-        if (!feat) return
-        const props = (feat.properties as Record<string, any>) || {}
-        // debug: 打印属性以便开发者查看字段名和值
-        // eslint-disable-next-line no-console
-        console.log('[MengYuan] point clicked props:', props)
-
-        // helper to pick property by candidates
-        const pick = (candidates: string[]) => {
-          for (const k of candidates) {
-            if (Object.prototype.hasOwnProperty.call(props, k) && props[k] != null && String(props[k]).trim() !== '') return String(props[k])
-          }
-          return ''
-        }
-
-        const rows: Array<[string,string]> = []
-        rows.push(['名称 / Name', pick(['名称','Name','name','NAME','Name_E','Name_E','name_en','英文名','Name _E','NAME_EN'])])
-        rows.push(['年份 / Year', pick(['Year','year','YEAR','YearFirstVisit','旅行家首次抵达年','YearArrived'])])
-        rows.push(['英文名', pick(['Name_E','name_e','name_en','english_name','英文名'])])
-        rows.push(['国家 / Country', pick(['Country','country','国家'])])
-        rows.push(['省 / Province', pick(['Province','province','省','PROVINCE'])])
-        rows.push(['市 / City', pick(['City','city','市'])])
-        rows.push(['县 / County', pick(['County','county','县'])])
-        rows.push(['镇 / Town', pick(['Town','town','镇'])])
-        rows.push(['地点 / Site', pick(['Site','site','具体位置','location','place'])])
-        rows.push(['旅行家 / Traveler', pick(['Traveler','旅行家','traveller','traveler_name'])])
-        rows.push(['分类 / Class', pick(['Class','class','分类'])])
-        rows.push(['编码 / Code', pick(['Code','code','编码'])])
-        rows.push(['参考 / Reference', pick(['Reference','reference','参考','参考资料','ref'])])
-
-        // build HTML
-        // Always include a header so popup is never completely blank
-        let html = '<div class="mengyuan-popup" style="font-size:13px;line-height:1.4;color:#111">'
-        html += `<div style="font-weight:700;margin-bottom:6px;color:#111">${escapeHtml(pick(['名称','Name','name','NAME','Name_E','name_en','英文名']) || pick(['Site','site','地点']) || '地点详情')}</div>`
-        html += '<table style="border-collapse:collapse;color:#111">'
-        for (const [k,v] of rows) {
-          if (!v) continue
-          html += `<tr><td style="padding:4px 8px;font-weight:600;vertical-align:top">${escapeHtml(k)}</td><td style="padding:4px 8px;vertical-align:top">${escapeHtml(v)}</td></tr>`
-        }
-        // fallback: show all properties if nothing matched
-        if (rows.every(r => !r[1])) {
-          for (const key of Object.keys(props)) {
-            html += `<tr><td style="padding:4px 8px;font-weight:600;vertical-align:top">${escapeHtml(key)}</td><td style="padding:4px 8px;vertical-align:top">${escapeHtml(props[key])}</td></tr>`
-          }
-        }
-        html += '</table></div>'
-
-        const coords = (feat.geometry && feat.geometry.coordinates) || (e.lngLat && [e.lngLat.lng, e.lngLat.lat])
-        if (!coords) return
-        popup.setLngLat(coords).setHTML(html).addTo(map)
-      } catch (ex) { console.warn('[MengYuan] point popup error', ex) }
-    })
+    map.on('mousemove', POINT_LAYER_ID, handlePointMove)
+    map.on('mouseleave', POINT_LAYER_ID, handlePointLeave)
+    
+    // Click handler removed in favor of hover panel
   }
 }
 
@@ -450,7 +578,7 @@ async function reloadManifest() {
     const r = await fetch('/data/mengyuan/manifest.json')
     if (!r.ok) throw new Error(`manifest fetch failed: ${r.status}`)
     const mj = await r.json()
-    routes.value = (mj.routes || []).map((it: any) => ({ id: String(it.id), base: String(it.base) }))
+    routes.value = (mj.routes || []).map((it: any) => ({ id: String(it.id), base: String(it.base), label: it.label ? String(it.label) : undefined }))
     console.log('[MengYuan] manifest loaded, routes:', routes.value.length)
     if (!selectedRouteId.value && routes.value.length) selectedRouteId.value = routes.value[0].id
   } catch (e) {
@@ -922,4 +1050,132 @@ onUnmounted(() => {
 .route-hint { margin-top:6px; font-size:12px; color:#9aa }
 .route-error { margin-top:6px; font-size:12px; color:#ff7b7b }
 .route-select button { margin-top:8px; padding:8px 10px; border-radius:8px; background:#222; color:#fff; border:1px solid rgba(255,255,255,0.06); cursor:pointer }
+
+.hover-panel {
+  position: absolute;
+  left: 24px;
+  top: 72px;
+  width: 260px; /* 再次缩窄面板宽度 */
+  padding: 16px; /* 轻微减小内边距以节省空间 */
+  background: rgba(6, 9, 16, 0.88);
+  border-radius: 14px;
+  color: #f2f6ff;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  z-index: 3000;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+.hover-panel.compact {
+  width: 260px; /* 再次缩窄面板宽度（紧凑模式） */
+  padding: 10px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(8, 12, 18, 0.92), rgba(6, 9, 16, 0.86));
+  backdrop-filter: blur(6px) saturate(120%);
+}
+
+.hover-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 6px 18px rgba(2, 6, 12, 0.5);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.08));
+}
+
+.icon-core {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.hover-title .title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.1;
+  max-width: 120px; /* 随着面板再缩窄，进一步限制标题宽度 */
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.hover-title .subtitle {
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  max-width: 120px; /* 与标题一致 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  margin-left: auto;
+}
+
+.badge.small {
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  color: #06101d;
+  font-weight: 700;
+}
+
+.hover-body {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.label {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+}
+
+.value {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  text-align: right;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slide-enter-active,
+.slide-leave-active {
+  transition: transform 220ms cubic-bezier(.2, .9, .2, 1), opacity 180ms ease;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  transform: translateX(-12px);
+  opacity: 0;
+}
+
+.slide-enter-to,
+.slide-leave-from {
+  transform: translateX(0);
+  opacity: 1;
+}
 </style>
