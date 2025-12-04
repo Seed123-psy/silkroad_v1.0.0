@@ -78,3 +78,13 @@ npm run format    # Prettier格式化src目录
 - **数据约定**：所有公开数据需在对应 `public/data/<dataset>/README.md` 中说明来源、格式与许可，并在 `DATA_LICENSES.md` 做全局登记。
 
 如需进一步了解业务模块，请结合 `docs/` 下的说明以及 `README_en.md` 展开阅读。
+
+## 文档导航
+
+- [README.md](README.md) — 项目总览与快速启动。
+- [README_zh.md](README_zh.md) — 中文项目说明。
+- [README_en.md](README_en.md) — English project documentation.
+- [DATA_LICENSES.md](DATA_LICENSES.md) — 数据许可与来源说明。
+- [REFERENCES.md](REFERENCES.md) — 项目参考文献汇总。
+- [CONTRIBUTORS.md](CONTRIBUTORS.md) — 贡献者名单与联系信息。
+- [public/data/](public/data/) — 数据目录（各子目录含 `README.md`）。

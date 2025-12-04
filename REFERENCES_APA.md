@@ -8,4 +8,14 @@
 
 [4] 胡宇蒙, 晏波, & 张萍. (2018). 两汉丝绸之路交通数据集. 中国科学数据(中英文网络版), 3(03), 37-44.
 
-注：条目使用中文姓名与 APA 风格标点；如需英文转写或 DOI/URL 信息，请提供或允许我检索元数据并补充。
+## Documentation Navigation
+
+- [README.md](README.md) — Project overview and quick start.
+- [README_en.md](README_en.md) — English project documentation.
+- [README_zh.md](README_zh.md) — 中文项目说明。
+- [REFERENCES.md](REFERENCES.md) — References (GB/T 7714-2015).
+- [references.bib](references.bib) — BibTeX file for citations.
+- [DATA_LICENSES.md](DATA_LICENSES.md) — Data sources and license mapping.
+- [CONTRIBUTORS.md](CONTRIBUTORS.md) — Contributors and contact info.
+
+

@@ -10,10 +10,20 @@
 
 [4] 胡宇蒙, 晏波, 张萍. 两汉丝绸之路交通数据集[J]. 中国科学数据(中英文网络版), 2018, 3(03): 37-44.
 
-注：若需其他格式（APA、MLA 或 BibTeX），请提出，我可以添加对应格式条目或生成单独的机器可读文件（如 `references.bib`）。
+
 
 附加格式文件：
 
 - BibTeX: `references.bib`
 - APA: `REFERENCES_APA.md`
+
+## 文档导航
+
+- [README.md](README.md) — 项目总览与快速启动。
+- [README_zh.md](README_zh.md) — 中文项目说明。
+- [README_en.md](README_en.md) — English project documentation.
+- [REFERENCES_APA.md](REFERENCES_APA.md) — 参考文献（APA）。
+- [references.bib](references.bib) — BibTeX 格式引用文件。
+- [DATA_LICENSES.md](DATA_LICENSES.md) — 数据许可与来源说明。
+- [CONTRIBUTORS.md](CONTRIBUTORS.md) — 贡献者列表。
 
