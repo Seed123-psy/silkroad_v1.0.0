@@ -7,22 +7,22 @@
       </div>
       <div class="panel-actions">
         <div class="metric-toggle" role="group" aria-label="指标维度切换">
-        <button
-          type="button"
-          class="metric-btn"
-          :class="{ active: activeMetric === 'value' }"
-          @click="setMetric('value')"
-        >
-          以价值观察
-        </button>
-        <button
-          type="button"
-          class="metric-btn"
-          :class="{ active: activeMetric === 'volume' }"
-          @click="setMetric('volume')"
-        >
-          以数量观察
-        </button>
+          <button
+            type="button"
+            class="metric-btn"
+            :class="{ active: activeMetric === 'value' }"
+            @click="setMetric('value')"
+          >
+            以价值观察
+          </button>
+          <button
+            type="button"
+            class="metric-btn"
+            :class="{ active: activeMetric === 'volume' }"
+            @click="setMetric('volume')"
+          >
+            以数量观察
+          </button>
         </div>
 
         <div class="chart-controls" role="group" aria-label="图表视图切换">
@@ -30,8 +30,8 @@
             type="button"
             class="control-btn"
             :class="{ active: timelineMode === 'line' }"
-            @click="timelineMode = 'line'"
             title="折线"
+            @click="timelineMode = 'line'"
           >
             折线
           </button>
@@ -39,8 +39,8 @@
             type="button"
             class="control-btn"
             :class="{ active: timelineMode === 'area' }"
-            @click="timelineMode = 'area'"
             title="面积图"
+            @click="timelineMode = 'area'"
           >
             面积
           </button>
@@ -48,12 +48,14 @@
             type="button"
             class="control-btn"
             :class="{ active: timelineMode === 'bar' }"
-            @click="timelineMode = 'bar'"
             title="柱状图"
+            @click="timelineMode = 'bar'"
           >
             柱状
           </button>
-          <button type="button" class="control-btn" @click="exportTimelineImage" title="导出为图片">导出</button>
+          <button type="button" class="control-btn" title="导出为图片" @click="exportTimelineImage">
+            导出
+          </button>
         </div>
       </div>
     </header>
@@ -182,7 +184,11 @@ const exportTimelineImage = () => {
   try {
     const echartsInstance = timelineChart.value?.getEchartsInstance?.() || timelineChart.value
     if (!echartsInstance) return
-    const url = echartsInstance.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#0b1220' })
+    const url = echartsInstance.getDataURL({
+      type: 'png',
+      pixelRatio: 2,
+      backgroundColor: '#0b1220',
+    })
     const link = document.createElement('a')
     link.href = url
     link.download = `${props.title || 'trade-chart'}.png`
@@ -212,7 +218,9 @@ const sparkOptions = (key: MetricKey): EChartsOption => {
         smooth: true,
         showSymbol: false,
         lineStyle: { width: 2, color: key === 'value' ? '#e2c792' : '#8b949e' },
-        areaStyle: { color: key === 'value' ? 'rgba(226, 199, 146, 0.12)' : 'rgba(139, 148, 158, 0.08)' },
+        areaStyle: {
+          color: key === 'value' ? 'rgba(226, 199, 146, 0.12)' : 'rgba(139, 148, 158, 0.08)',
+        },
       },
     ],
     tooltip: { show: false },
@@ -347,7 +355,10 @@ const periodSeries = computed(() => {
 })
 
 const flowDataset = computed(() => {
-  const flowMap = new Map<string, { source: string; target: string; value: number; volume: number }>()
+  const flowMap = new Map<
+    string,
+    { source: string; target: string; value: number; volume: number }
+  >()
   filteredData.value.forEach(record => {
     const key = `${record.fromCity}->${record.toCity}`
     const entry = flowMap.get(key) || {

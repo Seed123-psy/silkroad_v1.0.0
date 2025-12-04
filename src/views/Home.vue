@@ -12,11 +12,11 @@
 
     <!-- 手势控制 UI -->
     <div class="gesture-controls">
-      <button class="gesture-btn" @click="toggleCamera" :class="{ active: isCameraOpen }">
+      <button class="gesture-btn" :class="{ active: isCameraOpen }" @click="toggleCamera">
         <span class="icon">📷</span>
         {{ isCameraOpen ? '关闭手势控制' : '开启手势控制' }}
       </button>
-      
+
       <div v-show="isCameraOpen" class="camera-wrapper">
         <video ref="videoRef" class="input_video" autoplay playsinline></video>
         <canvas ref="canvasRef" class="output_canvas"></canvas>
@@ -46,14 +46,8 @@ const isNodeHovered = ref(false)
 let hoverResetTimer: number | null = null
 
 // --- 手势控制逻辑 ---
-const { 
-  isCameraOpen, 
-  videoRef, 
-  canvasRef, 
-  gestureStatus, 
-  toggleCamera, 
-  setCallbacks 
-} = useGestureControl()
+const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallbacks } =
+  useGestureControl()
 
 // 设置手势回调
 setCallbacks(
@@ -62,7 +56,7 @@ setCallbacks(
       globeRef.value.handleGestureRotate(deltaX, deltaY)
     }
   },
-  (zoomFactor) => {
+  zoomFactor => {
     if (globeRef.value) {
       globeRef.value.handleGestureZoom(zoomFactor)
     }
@@ -183,7 +177,7 @@ updateAutoRotate()
     border: 2px solid #333;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 
     .input_video {
       position: absolute;
@@ -209,7 +203,7 @@ updateAutoRotate()
       bottom: 0;
       left: 0;
       width: 100%;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0, 0, 0, 0.7);
       color: #fff;
       padding: 8px;
       text-align: center;

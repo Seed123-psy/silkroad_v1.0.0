@@ -1,13 +1,14 @@
 import fs from 'node:fs/promises'
 import { unzipSync } from 'fflate'
 import { open as openShapefile } from 'shapefile'
+// SPDX-License-Identifier: MIT
 
 async function inspect(zipPath, label) {
   const file = await fs.readFile(zipPath)
   const archive = unzipSync(new Uint8Array(file))
   const entries = Object.keys(archive)
-  const shpName = entries.find((name) => name.toLowerCase().endsWith('.shp'))
-  const dbfName = entries.find((name) => name.toLowerCase().endsWith('.dbf'))
+  const shpName = entries.find(name => name.toLowerCase().endsWith('.shp'))
+  const dbfName = entries.find(name => name.toLowerCase().endsWith('.dbf'))
   if (!shpName || !dbfName) {
     throw new Error(`${label} 缺少 shp/dbf 文件`)
   }

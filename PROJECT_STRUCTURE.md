@@ -1,129 +1,80 @@
 # 丝绸之路可视化系统 - 项目结构
 
-## 目录结构
+## 目录结构速览
 
 ```
 silkroad_v1.0.0/
-├── public/              # 公共静态资源
-│   ├── data/            # GIS数据 (Shapefiles, GeoJSON)
-│   ├── images/          # 图片资源
-│   └── textures/        # 3D纹理资源
-├── scripts/             # 脚本工具
-│   └── checkTangData.mjs # 数据检查脚本
-├── src/
-│   ├── assets/          # 静态资源
-│   │   ├── data/        # 本地JSON数据
-│   │   └── styles/      # 组件样式
-│   ├── components/      # Vue组件
-│   │   ├── layout/      # 布局组件 (ToolSidebar)
+├── docs/                     # 文档与资料页
+├── public/                   # 静态资源（随Vite直接发布）
+│   ├── data/                 # GIS、历史路线等数据集（含子目录README）
+│   ├── images/               # UI与宣传图片资源
+│   ├── models/               # Three.js使用的模型与权重
+│   ├── textures/             # 3D纹理
+│   └── wasm/                 # Mediapipe等WebAssembly构件
+├── scripts/                  # 辅助脚本
+│   ├── checkTangData.mjs     # 唐代数据质量检查
+│   ├── convertLiangHanXlsx.mjs
+│   ├── extract_pdf_metadata.cjs
+│   ├── generate_trades.mjs
+│   └── inspectLiangHan.mjs
+├── src/                      # 前端源码
+│   ├── assets/               # 打包静态资源
+│   │   ├── data/             # 内嵌JSON/GeoJSON等小型数据
+│   │   └── styles/           # 组件局部样式
+│   ├── components/           # Vue组件
+│   │   ├── icons/            # 图标组件（按朝代划分）
+│   │   ├── layout/           # 布局组件（ToolSidebar等）
 │   │   ├── CityInfoPanel.vue
 │   │   ├── Globe3D.vue
+│   │   ├── HanFeaturePanel.vue
 │   │   ├── MapControls.vue
 │   │   └── TradeVolumeChart.vue
-│   ├── composables/     # 组合式API (Hooks)
-│   │   └── useGestureControl.ts
-│   ├── router/          # 路由配置
-│   ├── services/        # 业务服务
-│   │   ├── dataService.ts
-│   │   ├── exportService.ts
-│   │   └── modelLoaderService.ts
-│   ├── stores/          # Pinia状态管理
-│   │   ├── app.ts
-│   │   └── chartStore.ts
-│   ├── styles/          # 全局样式
-│   │   ├── global.scss
-│   │   └── variables.scss
-│   ├── types/           # TypeScript类型定义
-│   │   ├── artifact.ts
-│   │   ├── city.ts
-│   │   ├── display.ts
-│   │   ├── event.ts
-│   │   ├── mapbox-gl.d.ts
-│   │   ├── shapefile.d.ts
-│   │   └── trade.ts
-│   ├── utils/           # 工具函数
-│   │   ├── coordinateUtils.ts
-│   │   ├── dataProcessor.ts
-│   │   └── threeHelpers.ts
-│   ├── views/           # 页面视图
-│   │   ├── DamingPalace.vue
-│   │   ├── Home.vue
-│   │   ├── MingQing.vue
-│   │   ├── SilkRoad.vue
-│   │   ├── Trade.vue
-│   │   └── Transport.vue
-│   ├── App.vue          # 根组件
-│   ├── main.ts          # 入口文件
-│   ├── vite-env.d.ts    # Vite环境变量类型
-│   └── shims-vue.d.ts   # Vue组件类型声明
-├── eslint.config.js     # ESLint配置
-├── index.html           # HTML入口
-├── package.json         # 项目依赖
-├── tsconfig.json        # TypeScript配置
-├── vite.config.ts       # Vite配置
-└── README.md            # 项目说明
+│   ├── composables/          # 组合式API hooks（例如useGestureControl）
+│   ├── constants/            # 可视化颜色等常量
+│   ├── services/             # 数据加载、模型、导出服务
+│   ├── stores/               # Pinia状态（app、chartStore等）
+│   ├── styles/               # 全局样式（global/variables）
+│   ├── types/                # TypeScript定义（artifact、city、event等）
+│   ├── utils/                # 工具函数（坐标、Three.js辅助、数据处理）
+│   ├── views/                # 页面视图（Home、LiangHan、MengYuanRoutes、MengYuanTravel、MingQing、Trade、Transport）
+│   ├── App.vue               # 根组件
+│   ├── main.ts               # 入口文件
+│   ├── shims-vue.d.ts        # Vue SFC声明
+│   └── vite-env.d.ts         # Vite环境类型
+├── eslint.config.js          # ESLint 扩展配置（兼容 .eslintrc.cjs）
+├── historicalData.js         # 历史数据索引或汇总
+├── index.html                # Vite入口模板
+├── package.json              # 依赖与脚本
+├── tsconfig*.json            # TypeScript配置
+├── vite.config.ts            # Vite配置
+├── README*.md                # 多语言项目说明
+└── DATA_LICENSES.md 等       # 许可证、参考文献、贡献者列表
 ```
 
-## 已安装的核心依赖
+## 关键依赖
 
-### 生产依赖 (dependencies)
-- **vue**: ^3.5.24 - Vue 3框架
-- **vue-router**: 路由管理
-- **pinia**: 状态管理
-- **three**: Three.js 3D库
-- **mapbox-gl**: Mapbox GL JS 地图库
-- **echarts**: ECharts图表库
-- **vue-echarts**: ECharts Vue封装
-- **gsap**: GSAP动画库
-- **@mediapipe/tasks-vision**: 计算机视觉(手势识别)
-- **shapefile / shpjs**: GIS数据解析
-- **@headlessui/vue**: 无样式UI组件
-- **@heroicons/vue**: 图标库
+- **核心框架**：Vue 3、Vue Router、Pinia
+- **三维与地理**：Three.js、Mapbox GL JS、fflate（压缩）、shapefile/shpjs（矢量数据解析）
+- **可视化**：ECharts、ECharts-GL、Vue-ECharts
+- **交互与动画**：GSAP、@headlessui/vue、@heroicons/vue
+- **手势识别**：@mediapipe/tasks-vision（需配套`public/wasm`资源）
+- **类型支持**：TypeScript、@types/three、@types/mapbox-gl 等
 
-### 开发依赖 (devDependencies)
-- **vite**: 构建工具
-- **typescript**: TypeScript支持
-- **sass**: Sass预处理器
-- **eslint**: 代码检查
-- **prettier**: 代码格式化
-- **vue-tsc**: Vue类型检查
-
-## 可用脚本
+## NPM脚本
 
 ```bash
-# 启动开发服务器
-npm run dev
-
-# 构建生产版本
-npm run build
-
-# 预览生产构建
-npm run preview
-
-# 代码检查和修复
-npm run lint
-
-# 代码格式化
-npm run format
+npm run dev       # 启动开发服务器
+npm run build     # 类型检查并构建生产包
+npm run preview   # 预览构建产物
+npm run lint      # ESLint检查（自动修复常见问题）
+npm run format    # Prettier格式化src目录
 ```
 
-## 配置说明
+## 配置与约定
 
-### 路径别名
-项目配置了 `@` 别名指向 `src` 目录，可以使用：
-```typescript
-import Component from '@/components/Component.vue'
-```
+- **路径别名**：`@` → `src`，用于简化导入路径。
+- **全局样式**：`src/styles/variables.scss` 中声明的变量在整个项目中可直接使用。
+- **环境变量**：`.env*` 文件提供多环境配置，通过 `import.meta.env` 访问（例如 `import.meta.env.VITE_MAPBOX_TOKEN`）。
+- **数据约定**：所有公开数据需在对应 `public/data/<dataset>/README.md` 中说明来源、格式与许可，并在 `DATA_LICENSES.md` 做全局登记。
 
-### SCSS全局变量
-在 `src/styles/variables.scss` 中定义了全局SCSS变量，所有组件中可直接使用。
-
-### 环境变量
-- `.env`: 通用环境变量
-- `.env.development`: 开发环境变量
-- `.env.production`: 生产环境变量
-
-使用方式：
-```typescript
-const apiUrl = import.meta.env.VITE_APP_BASE_API
-```
+如需进一步了解业务模块，请结合 `docs/` 下的说明以及 `README_en.md` 展开阅读。

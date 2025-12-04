@@ -1,12 +1,9 @@
+// SPDX-License-Identifier: MIT
 import fs from 'node:fs'
 import path from 'node:path'
 import shp from 'shpjs'
 
-const targets = [
-  'eastern_han_points.zip',
-  'western_han_points.zip',
-  'han_silk_road.zip'
-]
+const targets = ['eastern_han_points.zip', 'western_han_points.zip', 'han_silk_road.zip']
 
 async function inspect() {
   const root = new URL('../public/data/lianghan/', import.meta.url)
@@ -17,8 +14,8 @@ async function inspect() {
     const collections = Array.isArray(geojson) ? geojson : [geojson]
     const features = collections.flatMap(item => item?.features ?? [])
     const keys = new Set()
-    features.forEach((feature) => {
-      Object.keys(feature?.properties ?? {}).forEach((key) => keys.add(key))
+    features.forEach(feature => {
+      Object.keys(feature?.properties ?? {}).forEach(key => keys.add(key))
     })
     console.log(`\n${file}`)
     console.log('  Feature count:', features.length)

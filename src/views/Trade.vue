@@ -25,12 +25,12 @@
         <!-- 筛选器 -->
         <div class="control-box">
           <h3 class="panel-title">筛选条件</h3>
-          
+
           <div class="filter-group">
             <label>历史时期</label>
             <div class="filter-options">
-              <button 
-                v-for="p in periods" 
+              <button
+                v-for="p in periods"
                 :key="p.value"
                 :class="['filter-btn', { active: selectedPeriod === p.value }]"
                 @click="selectedPeriod = p.value"
@@ -81,10 +81,10 @@
 
           <div class="filter-group">
             <label>搜索城市/商品</label>
-            <input 
-              v-model="searchQuery" 
-              type="text" 
-              placeholder="输入城市或商品名称..." 
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="输入城市或商品名称..."
               class="search-input"
             />
           </div>
@@ -100,26 +100,26 @@
       <!-- 中间面板：数据列表 (取代原来的地球) -->
       <div class="panel center-panel">
         <div class="panel-tabs">
-          <button 
-            :class="['tab-btn', { active: currentView === 'list' }]" 
+          <button
+            :class="['tab-btn', { active: currentView === 'list' }]"
             @click="currentView = 'list'"
           >
             数据列表
           </button>
-          <button 
-            :class="['tab-btn', { active: currentView === 'map' }]" 
+          <button
+            :class="['tab-btn', { active: currentView === 'map' }]"
             @click="currentView = 'map'"
           >
             3D 贸易流向
           </button>
-          <button 
-            :class="['tab-btn', { active: currentView === 'network' }]" 
+          <button
+            :class="['tab-btn', { active: currentView === 'network' }]"
             @click="currentView = 'network'"
           >
             贸易网络关系
           </button>
-          <button 
-            :class="['tab-btn', { active: currentView === 'goods-network' }]" 
+          <button
+            :class="['tab-btn', { active: currentView === 'goods-network' }]"
             @click="currentView = 'goods-network'"
           >
             商品产地网络
@@ -134,21 +134,33 @@
             <div class="col col-goods">商品</div>
             <div class="col col-amount sortable" @click="toggleSort('volume')">
               <span>数量</span>
-              <span class="sort-icon" :class="{ active: sortKey === 'volume', asc: sortKey === 'volume' && sortOrder === 'asc' }"></span>
+              <span
+                class="sort-icon"
+                :class="{
+                  active: sortKey === 'volume',
+                  asc: sortKey === 'volume' && sortOrder === 'asc',
+                }"
+              ></span>
             </div>
             <div class="col col-value sortable" @click="toggleSort('value')">
               <span>价值</span>
-              <span class="sort-icon" :class="{ active: sortKey === 'value', asc: sortKey === 'value' && sortOrder === 'asc' }"></span>
+              <span
+                class="sort-icon"
+                :class="{
+                  active: sortKey === 'value',
+                  asc: sortKey === 'value' && sortOrder === 'asc',
+                }"
+              ></span>
             </div>
           </div>
-          
+
           <div class="list-body custom-scrollbar">
-            <div 
-              v-for="record in paginatedRecords" 
-              :key="record.id" 
+            <div
+              v-for="record in paginatedRecords"
+              :key="record.id"
               class="list-row"
-              @click="selectRecord(record)"
               :class="{ active: currentRecord?.id === record.id }"
+              @click="selectRecord(record)"
             >
               <div class="col col-id">{{ record.id }}</div>
               <div class="col col-period">
@@ -170,20 +182,48 @@
               <div class="col col-amount">{{ record.volume }}</div>
               <div class="col col-value">{{ formatMoney(record.value) }}</div>
             </div>
-            
+
             <div v-if="filteredRecords.length === 0" class="no-data">
               <div class="empty-state-card">
                 <div class="empty-illustration">
                   <!-- 简洁的放大镜图标 + 金色环 -->
-                  <svg width="88" height="88" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                    <circle cx="12" cy="12" r="11" stroke="#2a2a2a" stroke-width="1" fill="#0a0a0a" />
-                    <circle cx="12" cy="10" r="6" stroke="#e2c792" stroke-width="2" fill="rgba(226, 199, 146,0.06)" />
-                    <path d="M16.5 16.5L21 21" stroke="#e2c792" stroke-width="1.5" stroke-linecap="round" />
+                  <svg
+                    width="88"
+                    height="88"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="11"
+                      stroke="#2a2a2a"
+                      stroke-width="1"
+                      fill="#0a0a0a"
+                    />
+                    <circle
+                      cx="12"
+                      cy="10"
+                      r="6"
+                      stroke="#e2c792"
+                      stroke-width="2"
+                      fill="rgba(226, 199, 146,0.06)"
+                    />
+                    <path
+                      d="M16.5 16.5L21 21"
+                      stroke="#e2c792"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                    />
                   </svg>
                 </div>
                 <div class="empty-texts">
                   <h3 class="empty-title">未找到匹配的记录</h3>
-                  <p class="empty-desc">尝试调整筛选条件或清除关键词以显示更多结果。你也可以查看所有记录或导出样例以便离线分析。</p>
+                  <p class="empty-desc">
+                    尝试调整筛选条件或清除关键词以显示更多结果。你也可以查看所有记录或导出样例以便离线分析。
+                  </p>
 
                   <div class="empty-actions">
                     <button class="btn btn-secondary" @click="resetFilters">重置筛选</button>
@@ -197,7 +237,9 @@
 
           <div class="pagination-bar">
             <button :disabled="currentPage === 1" @click="currentPage--">上一页</button>
-            <span>第 {{ currentPage }} / {{ totalPages }} 页 (共 {{ filteredRecords.length }} 条)</span>
+            <span
+              >第 {{ currentPage }} / {{ totalPages }} 页 (共 {{ filteredRecords.length }} 条)</span
+            >
             <button :disabled="currentPage === totalPages" @click="currentPage++">下一页</button>
           </div>
         </div>
@@ -220,12 +262,12 @@
                 <span class="value">{{ globeAlpha }}°</span>
               </div>
               <input
+                v-model.number="globeAlpha"
                 class="map-slider"
                 type="range"
                 :min="pitchRange.min"
                 :max="pitchRange.max"
                 step="1"
-                v-model.number="globeAlpha"
               />
             </div>
           </div>
@@ -244,14 +286,16 @@
       <!-- 右侧面板：详情与统计 -->
       <div class="panel right-panel">
         <!-- 选中记录详情 -->
-        <div class="detail-box" v-if="currentRecord">
+        <div v-if="currentRecord" class="detail-box">
           <h3 class="panel-title">交易详情</h3>
           <div class="detail-card">
             <div class="detail-header">
               <span class="detail-id">{{ currentRecord.id }}</span>
-              <span :class="['tag', currentRecord.period]">{{ getPeriodLabel(currentRecord.period) }}</span>
+              <span :class="['tag', currentRecord.period]">{{
+                getPeriodLabel(currentRecord.period)
+              }}</span>
             </div>
-            
+
             <div class="detail-route">
               <div class="city-node from">
                 <div class="city-name">{{ currentRecord.fromCity }}</div>
@@ -284,7 +328,7 @@
             </div>
           </div>
         </div>
-        <div class="detail-box empty" v-else>
+        <div v-else class="detail-box empty">
           <p>点击列表查看详情</p>
         </div>
 
@@ -299,49 +343,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue';
-import * as echarts from 'echarts';
-import 'echarts-gl';
-import tradeDataRaw from '@/assets/data/lushang_trades.json';
-import citiesDataRaw from '@/assets/data/cities.json';
-import exportService from '@/services/exportService';
+import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
+import * as echarts from 'echarts'
+import 'echarts-gl'
+import tradeDataRaw from '@/assets/data/lushang_trades.json'
+import citiesDataRaw from '@/assets/data/cities.json'
+import exportService from '@/services/exportService'
 
 // --- 类型定义 ---
 interface TradeGood {
-  id: string;
-  name: string;
-  category: string;
-  origin: string[];
-  destination: string[];
-  peakPeriod: string;
+  id: string
+  name: string
+  category: string
+  origin: string[]
+  destination: string[]
+  peakPeriod: string
 }
 
 interface TradeRecord {
-  id: string;
-  period: string;
-  fromCity: string;
-  toCity: string;
-  goods: string;
-  volume: number;
-  value: number;
-  route: string;
+  id: string
+  period: string
+  fromCity: string
+  toCity: string
+  goods: string
+  volume: number
+  value: number
+  route: string
 }
 
 interface City {
-  id: string;
-  name: string;
-  lat: number;
-  lng: number;
+  id: string
+  name: string
+  lat: number
+  lng: number
 }
 
 // --- 数据准备 ---
-const tradeGoods = ref<TradeGood[]>(tradeDataRaw.tradeGoods as TradeGood[]);
+const tradeGoods = ref<TradeGood[]>(tradeDataRaw.tradeGoods as TradeGood[])
 // @ts-ignore - JSON 类型推断可能不包含 tradeRecords，但实际文件中有
-const tradeRecords = ref<TradeRecord[]>(tradeDataRaw.tradeRecords || []);
-const cities = ref<City[]>(citiesDataRaw.cities as City[]);
+const tradeRecords = ref<TradeRecord[]>(tradeDataRaw.tradeRecords || [])
+const cities = ref<City[]>(citiesDataRaw.cities as City[])
 
 // 映射表
-const goodsMap = new Map(tradeGoods.value.map(g => [g.id, g]));
+const goodsMap = new Map(tradeGoods.value.map(g => [g.id, g]))
 const categoryMap: Record<string, string> = {
   textile: '纺织品',
   ceramic: '陶瓷',
@@ -354,49 +398,49 @@ const categoryMap: Record<string, string> = {
   material: '原材料',
   livestock: '牲畜',
   luxury: '奢侈品',
-  military: '军需品'
-};
+  military: '军需品',
+}
 
 // 城市坐标映射
-const cityCoords: Record<string, [number, number]> = {};
+const cityCoords: Record<string, [number, number]> = {}
 const cityAliases: Record<string, string> = {
-  "长安": "西安",
-  "中原": "洛阳",
-  "波斯": "巴格达",
-  "大食": "巴格达",
-  "欧洲": "君士坦丁堡",
-  "罗马": "罗马",
-  "天竺": "新德里",
-  "印度": "新德里"
-};
+  长安: '西安',
+  中原: '洛阳',
+  波斯: '巴格达',
+  大食: '巴格达',
+  欧洲: '君士坦丁堡',
+  罗马: '罗马',
+  天竺: '新德里',
+  印度: '新德里',
+}
 
 const initCityCoords = () => {
   cities.value.forEach(city => {
-    cityCoords[city.name] = [city.lng, city.lat];
-  });
+    cityCoords[city.name] = [city.lng, city.lat]
+  })
   // 补充坐标
-  if (!cityCoords['巴格达']) cityCoords['巴格达'] = [44.361488, 33.312805];
-  if (!cityCoords['君士坦丁堡']) cityCoords['君士坦丁堡'] = [28.978359, 41.008238];
-  if (!cityCoords['罗马']) cityCoords['罗马'] = [12.496366, 41.902783];
-  if (!cityCoords['新德里']) cityCoords['新德里'] = [77.209021, 28.613939];
-  if (!cityCoords['洛阳']) cityCoords['洛阳'] = [112.4501, 34.6204];
-  if (!cityCoords['景德镇']) cityCoords['景德镇'] = [117.214664, 29.29256];
-  if (!cityCoords['杭州']) cityCoords['杭州'] = [120.15507, 30.274085];
-  if (!cityCoords['福建']) cityCoords['福建'] = [119.2965, 26.0745];
-  if (!cityCoords['苏州']) cityCoords['苏州'] = [120.585315, 31.298886];
-  if (!cityCoords['江南']) cityCoords['江南'] = [120.15507, 30.274085];
-  if (!cityCoords['和田']) cityCoords['和田'] = [79.922211, 37.114157];
-  if (!cityCoords['缅甸']) cityCoords['缅甸'] = [96.199379, 16.871311];
-  if (!cityCoords['东南亚']) cityCoords['东南亚'] = [100.501765, 13.756331];
-  if (!cityCoords['中亚']) cityCoords['中亚'] = [66.974913, 39.627293];
-  if (!cityCoords['西亚']) cityCoords['西亚'] = [51.3890, 35.6892];
-  if (!cityCoords['各地']) cityCoords['各地'] = [108.939839, 34.343147];
-};
+  if (!cityCoords['巴格达']) cityCoords['巴格达'] = [44.361488, 33.312805]
+  if (!cityCoords['君士坦丁堡']) cityCoords['君士坦丁堡'] = [28.978359, 41.008238]
+  if (!cityCoords['罗马']) cityCoords['罗马'] = [12.496366, 41.902783]
+  if (!cityCoords['新德里']) cityCoords['新德里'] = [77.209021, 28.613939]
+  if (!cityCoords['洛阳']) cityCoords['洛阳'] = [112.4501, 34.6204]
+  if (!cityCoords['景德镇']) cityCoords['景德镇'] = [117.214664, 29.29256]
+  if (!cityCoords['杭州']) cityCoords['杭州'] = [120.15507, 30.274085]
+  if (!cityCoords['福建']) cityCoords['福建'] = [119.2965, 26.0745]
+  if (!cityCoords['苏州']) cityCoords['苏州'] = [120.585315, 31.298886]
+  if (!cityCoords['江南']) cityCoords['江南'] = [120.15507, 30.274085]
+  if (!cityCoords['和田']) cityCoords['和田'] = [79.922211, 37.114157]
+  if (!cityCoords['缅甸']) cityCoords['缅甸'] = [96.199379, 16.871311]
+  if (!cityCoords['东南亚']) cityCoords['东南亚'] = [100.501765, 13.756331]
+  if (!cityCoords['中亚']) cityCoords['中亚'] = [66.974913, 39.627293]
+  if (!cityCoords['西亚']) cityCoords['西亚'] = [51.389, 35.6892]
+  if (!cityCoords['各地']) cityCoords['各地'] = [108.939839, 34.343147]
+}
 
 const getCityCoord = (name: string): [number, number] | null => {
-  const realName = cityAliases[name] || name;
-  return cityCoords[realName] || null;
-};
+  const realName = cityAliases[name] || name
+  return cityCoords[realName] || null
+}
 
 const periods = [
   { label: '全部', value: '' },
@@ -406,9 +450,9 @@ const periods = [
   { label: '元', value: 'yuan' },
   { label: '明', value: 'ming' },
   { label: '清', value: 'qing' },
-];
+]
 
-import { PALETTE, STATIC_CATEGORY_COLORS } from '@/constants/colors';
+import { PALETTE, STATIC_CATEGORY_COLORS } from '@/constants/colors'
 
 const periodColors: Record<string, string> = {
   han: PALETTE[1],
@@ -419,363 +463,371 @@ const periodColors: Record<string, string> = {
   qing: PALETTE[5],
 }
 
-const categories = Object.entries(categoryMap).map(([k, v]) => ({ value: k, label: v }));
+const categories = Object.entries(categoryMap).map(([k, v]) => ({ value: k, label: v }))
 
 // --- 排序状态 ---
-type SortKey = 'volume' | 'value' | null;
-type SortOrder = 'asc' | 'desc';
-const sortKey = ref<SortKey>(null);
-const sortOrder = ref<SortOrder>('desc');
+type SortKey = 'volume' | 'value' | null
+type SortOrder = 'asc' | 'desc'
+const sortKey = ref<SortKey>(null)
+const sortOrder = ref<SortOrder>('desc')
 
 const toggleSort = (key: SortKey) => {
   if (sortKey.value === key) {
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
   } else {
-    sortKey.value = key;
-    sortOrder.value = 'desc';
+    sortKey.value = key
+    sortOrder.value = 'desc'
   }
-};
+}
 
 // --- 状态 ---
-const currentView = ref<'list' | 'map' | 'network' | 'goods-network'>('list');
-const mapLoading = ref(false);
-const mapError = ref(false);
+const currentView = ref<'list' | 'map' | 'network' | 'goods-network'>('list')
+const mapLoading = ref(false)
+const mapError = ref(false)
 
-const zoomRange = { min: 15, max: 200 };
-const pitchRange = { min: 20, max: 80 };
+const zoomRange = { min: 15, max: 200 }
+const pitchRange = { min: 20, max: 80 }
 
 // 移除滑块控制：使用鼠标滚轮/拖拽进行缩放，初始化为中间值
-const globeDistance = ref(60);
-const globeAlpha = ref(40);
+const globeDistance = ref(60)
+const globeAlpha = ref(40)
 
 const retryLoadMap = () => {
-  mapError.value = false;
-  updateGlobeChart();
-};
-const selectedPeriod = ref('');
-const selectedCategory = ref('');
-const selectedFromCity = ref('');
-const selectedToCity = ref('');
-const minVal = ref<number | null>(null);
-const maxVal = ref<number | null>(null);
-const searchQuery = ref('');
-const currentPage = ref(1);
-const pageSize = 20;
-const currentRecord = ref<TradeRecord | null>(null);
+  mapError.value = false
+  updateGlobeChart()
+}
+const selectedPeriod = ref('')
+const selectedCategory = ref('')
+const selectedFromCity = ref('')
+const selectedToCity = ref('')
+const minVal = ref<number | null>(null)
+const maxVal = ref<number | null>(null)
+const searchQuery = ref('')
+const currentPage = ref(1)
+const pageSize = 20
+const currentRecord = ref<TradeRecord | null>(null)
 
 // Refs for charts
-const categoryChartRef = ref<HTMLElement | null>(null);
-const topGoodsChartRef = ref<HTMLElement | null>(null);
-const globeChartRef = ref<HTMLElement | null>(null);
-const networkChartRef = ref<HTMLElement | null>(null);
-const goodsNetworkChartRef = ref<HTMLElement | null>(null);
+const categoryChartRef = ref<HTMLElement | null>(null)
+const topGoodsChartRef = ref<HTMLElement | null>(null)
+const globeChartRef = ref<HTMLElement | null>(null)
+const networkChartRef = ref<HTMLElement | null>(null)
+const goodsNetworkChartRef = ref<HTMLElement | null>(null)
 
-let categoryChart: echarts.ECharts | null = null;
-let topGoodsChart: echarts.ECharts | null = null;
-let globeChart: echarts.ECharts | null = null;
-let networkChart: echarts.ECharts | null = null;
-let goodsNetworkChart: echarts.ECharts | null = null;
+let categoryChart: echarts.ECharts | null = null
+let topGoodsChart: echarts.ECharts | null = null
+let globeChart: echarts.ECharts | null = null
+let networkChart: echarts.ECharts | null = null
+let goodsNetworkChart: echarts.ECharts | null = null
 
 const applyGlobeViewControl = () => {
-  if (!globeChart) return;
+  if (!globeChart) return
   globeChart.setOption({
     geo3D: {
       viewControl: {
         distance: globeDistance.value,
-        alpha: globeAlpha.value
-      }
-    }
-  });
-};
+        alpha: globeAlpha.value,
+      },
+    },
+  })
+}
 
 // --- 计算属性 ---
 
 // 城市列表
-const fromCities = computed(() => [...new Set(tradeRecords.value.map(r => r.fromCity))].sort());
-const toCities = computed(() => [...new Set(tradeRecords.value.map(r => r.toCity))].sort());
+const fromCities = computed(() => [...new Set(tradeRecords.value.map(r => r.fromCity))].sort())
+const toCities = computed(() => [...new Set(tradeRecords.value.map(r => r.toCity))].sort())
 
 // 过滤后的记录
 const filteredRecords = computed(() => {
-  let result = tradeRecords.value.filter(r => {
-    const matchPeriod = !selectedPeriod.value || r.period === selectedPeriod.value;
-    
-    const good = goodsMap.get(r.goods);
-    const matchCategory = !selectedCategory.value || (good && good.category === selectedCategory.value);
-    
-    const matchFrom = !selectedFromCity.value || r.fromCity === selectedFromCity.value;
-    const matchTo = !selectedToCity.value || r.toCity === selectedToCity.value;
+  const result = tradeRecords.value.filter(r => {
+    const matchPeriod = !selectedPeriod.value || r.period === selectedPeriod.value
 
-    const matchMin = minVal.value === null || r.value >= minVal.value;
-    const matchMax = maxVal.value === null || r.value <= maxVal.value;
+    const good = goodsMap.get(r.goods)
+    const matchCategory =
+      !selectedCategory.value || (good && good.category === selectedCategory.value)
 
-    const query = searchQuery.value.toLowerCase();
-    const goodName = good ? good.name : '';
-    const matchSearch = !query || 
-      r.fromCity.includes(query) || 
-      r.toCity.includes(query) || 
+    const matchFrom = !selectedFromCity.value || r.fromCity === selectedFromCity.value
+    const matchTo = !selectedToCity.value || r.toCity === selectedToCity.value
+
+    const matchMin = minVal.value === null || r.value >= minVal.value
+    const matchMax = maxVal.value === null || r.value <= maxVal.value
+
+    const query = searchQuery.value.toLowerCase()
+    const goodName = good ? good.name : ''
+    const matchSearch =
+      !query ||
+      r.fromCity.includes(query) ||
+      r.toCity.includes(query) ||
       goodName.includes(query) ||
-      r.id.toLowerCase().includes(query);
+      r.id.toLowerCase().includes(query)
 
-    return matchPeriod && matchCategory && matchFrom && matchTo && matchMin && matchMax && matchSearch;
-  });
+    return (
+      matchPeriod && matchCategory && matchFrom && matchTo && matchMin && matchMax && matchSearch
+    )
+  })
 
   if (sortKey.value) {
     result.sort((a, b) => {
-      const valA = a[sortKey.value!];
-      const valB = b[sortKey.value!];
-      return sortOrder.value === 'asc' ? valA - valB : valB - valA;
-    });
+      const valA = a[sortKey.value!]
+      const valB = b[sortKey.value!]
+      return sortOrder.value === 'asc' ? valA - valB : valB - valA
+    })
   }
 
-  return result;
-});
+  return result
+})
 
 // 分页
-const totalPages = computed(() => Math.ceil(filteredRecords.value.length / pageSize));
+const totalPages = computed(() => Math.ceil(filteredRecords.value.length / pageSize))
 const paginatedRecords = computed(() => {
-  const start = (currentPage.value - 1) * pageSize;
-  return filteredRecords.value.slice(start, start + pageSize);
-});
+  const start = (currentPage.value - 1) * pageSize
+  return filteredRecords.value.slice(start, start + pageSize)
+})
 
 // 统计
-const totalRecords = computed(() => tradeRecords.value.length);
-const totalValue = computed(() => filteredRecords.value.reduce((sum, r) => sum + r.value, 0));
-const totalVolume = computed(() => filteredRecords.value.reduce((sum, r) => sum + r.volume, 0));
+const totalRecords = computed(() => tradeRecords.value.length)
+const totalValue = computed(() => filteredRecords.value.reduce((sum, r) => sum + r.value, 0))
+const totalVolume = computed(() => filteredRecords.value.reduce((sum, r) => sum + r.volume, 0))
 
 // --- 辅助函数 ---
-const getGoodsName = (id: string) => goodsMap.get(id)?.name || id;
+const getGoodsName = (id: string) => goodsMap.get(id)?.name || id
 const getGoodsCategoryLabel = (id: string) => {
-  const cat = goodsMap.get(id)?.category;
-  return cat ? (categoryMap[cat] || cat) : '未知';
-};
-const getPeriodLabel = (val: string) => periods.find(p => p.value === val)?.label || val;
+  const cat = goodsMap.get(id)?.category
+  return cat ? categoryMap[cat] || cat : '未知'
+}
+const getPeriodLabel = (val: string) => periods.find(p => p.value === val)?.label || val
 const formatNumber = (num: number | null) => {
-  if (num === null) return '-';
-  return new Intl.NumberFormat('zh-CN').format(num);
-};
-const formatMoney = (num: number) => `🪙 ${new Intl.NumberFormat('zh-CN').format(num)}`;
+  if (num === null) return '-'
+  return new Intl.NumberFormat('zh-CN').format(num)
+}
+const formatMoney = (num: number) => `🪙 ${new Intl.NumberFormat('zh-CN').format(num)}`
 
 const selectRecord = (record: TradeRecord) => {
-  currentRecord.value = record;
-};
+  currentRecord.value = record
+}
 
 // 重置筛选到默认值
 const resetFilters = () => {
-  selectedPeriod.value = '';
-  selectedCategory.value = '';
-  selectedFromCity.value = '';
-  selectedToCity.value = '';
-  minVal.value = null;
-  maxVal.value = null;
-  searchQuery.value = '';
-  currentPage.value = 1;
-  currentRecord.value = null;
-  updateCharts();
-};
+  selectedPeriod.value = ''
+  selectedCategory.value = ''
+  selectedFromCity.value = ''
+  selectedToCity.value = ''
+  minVal.value = null
+  maxVal.value = null
+  searchQuery.value = ''
+  currentPage.value = 1
+  currentRecord.value = null
+  updateCharts()
+}
 
 // 显示所有记录（清空筛选并切换到列表）
 const showAllRecords = () => {
-  resetFilters();
-  currentView.value = 'list';
-};
+  resetFilters()
+  currentView.value = 'list'
+}
 
 // 导出示例数据（JSON）——导出前 50 条原始记录，方便用户离线查看结构
 const exportSample = () => {
   try {
-    const sample = tradeRecords.value.slice(0, 50);
-    exportService.exportToJSON(sample, 'trade_sample');
+    const sample = tradeRecords.value.slice(0, 50)
+    exportService.exportToJSON(sample, 'trade_sample')
   } catch (e) {
-    console.error('导出样例失败', e);
-    alert('导出样例失败，请稍后重试');
+    console.error('导出样例失败', e)
+    alert('导出样例失败，请稍后重试')
   }
-};
+}
 
 // --- 图表逻辑 ---
 
 const updateCharts = () => {
-  if (!categoryChart || !topGoodsChart) return;
+  if (!categoryChart || !topGoodsChart) return
 
   // 1. 类别占比 (基于当前过滤结果)
-  const catCounts: Record<string, number> = {};
+  const catCounts: Record<string, number> = {}
   filteredRecords.value.forEach(r => {
-    const good = goodsMap.get(r.goods);
+    const good = goodsMap.get(r.goods)
     if (good) {
-      const catName = categoryMap[good.category] || good.category;
-      catCounts[catName] = (catCounts[catName] || 0) + r.value; // 按价值统计
+      const catName = categoryMap[good.category] || good.category
+      catCounts[catName] = (catCounts[catName] || 0) + r.value // 按价值统计
     }
-  });
-  
+  })
+
   const catData = Object.entries(catCounts)
     .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b.value - a.value)
 
   // 使用共享的静态类别颜色映射（从 constants 导入）
 
   // 反向映射：中文类别名 -> 类别 code（用于把饼图中的中文名映射到静态颜色）
-  const labelToCode: Record<string, string> = {};
+  const labelToCode: Record<string, string> = {}
   Object.entries(categoryMap).forEach(([code, label]) => {
-    labelToCode[label] = code;
-  });
+    labelToCode[label] = code
+  })
 
-  const categoryColorMap: Record<string, string> = {};
-  catData.forEach((c) => {
-    const code = labelToCode[c.name] || 'other';
-    categoryColorMap[c.name] = STATIC_CATEGORY_COLORS[code] || PALETTE[0];
-  });
+  const categoryColorMap: Record<string, string> = {}
+  catData.forEach(c => {
+    const code = labelToCode[c.name] || 'other'
+    categoryColorMap[c.name] = STATIC_CATEGORY_COLORS[code] || PALETTE[0]
+  })
 
   categoryChart.setOption({
     backgroundColor: 'transparent',
-    tooltip: { 
-      trigger: 'item', 
+    tooltip: {
+      trigger: 'item',
       formatter: '{b}: {c} ({d}%)',
       confine: true,
       backgroundColor: 'rgba(0, 0, 0, 0.9)',
       borderColor: '#333',
-      textStyle: { color: '#e5e5e5' }
+      textStyle: { color: '#e5e5e5' },
     },
-    series: [{
-      type: 'pie',
-      radius: ['40%', '70%'],
-      center: ['50%', '50%'],
-      itemStyle: { borderRadius: 5, borderColor: '#141414', borderWidth: 2 },
-      label: { show: false },
-      data: catData,
-      color: [
-        PALETTE[0], PALETTE[1], PALETTE[2], PALETTE[3], PALETTE[4], PALETTE[5]
-      ]
-    }]
-  });
+    series: [
+      {
+        type: 'pie',
+        radius: ['40%', '70%'],
+        center: ['50%', '50%'],
+        itemStyle: { borderRadius: 5, borderColor: '#141414', borderWidth: 2 },
+        label: { show: false },
+        data: catData,
+        color: [PALETTE[0], PALETTE[1], PALETTE[2], PALETTE[3], PALETTE[4], PALETTE[5]],
+      },
+    ],
+  })
 
   // 2. 热门商品 (基于当前过滤结果)
-  const goodCounts: Record<string, number> = {};
+  const goodCounts: Record<string, number> = {}
   // 聚合时同时记录商品所属类别，用于给每条柱子着色
-  const goodAgg: Array<{ name: string; value: number; category: string }> = [];
-  const tempMap = new Map<string, { value: number; categoryCode: string }>();
+  const goodAgg: Array<{ name: string; value: number; category: string }> = []
+  const tempMap = new Map<string, { value: number; categoryCode: string }>()
   filteredRecords.value.forEach(r => {
-    const goods = goodsMap.get(r.goods);
-    const name = goods ? goods.name : r.goods;
-    const catCode = goods ? (goods.category || 'other') : 'other';
-    const entry = tempMap.get(name) || { value: 0, categoryCode: catCode };
-    entry.value += r.volume;
-    tempMap.set(name, entry);
-  });
+    const goods = goodsMap.get(r.goods)
+    const name = goods ? goods.name : r.goods
+    const catCode = goods ? goods.category || 'other' : 'other'
+    const entry = tempMap.get(name) || { value: 0, categoryCode: catCode }
+    entry.value += r.volume
+    tempMap.set(name, entry)
+  })
 
   tempMap.forEach((v, k) => {
-    const label = categoryMap[v.categoryCode] || v.categoryCode;
-    goodAgg.push({ name: k, value: v.value, category: label });
-  });
+    const label = categoryMap[v.categoryCode] || v.categoryCode
+    goodAgg.push({ name: k, value: v.value, category: label })
+  })
 
-  const topGoods = goodAgg.sort((a, b) => b.value - a.value).slice(0, 10);
+  const topGoods = goodAgg.sort((a, b) => b.value - a.value).slice(0, 10)
 
   topGoodsChart.setOption({
     backgroundColor: 'transparent',
-    tooltip: { 
+    tooltip: {
       trigger: 'axis',
       confine: true,
       backgroundColor: 'rgba(0, 0, 0, 0.9)',
       borderColor: '#333',
-      textStyle: { color: '#e5e5e5' }
+      textStyle: { color: '#e5e5e5' },
     },
     grid: { left: '3%', right: '24%', bottom: '3%', top: '3%', containLabel: true },
     xAxis: { type: 'value', splitLine: { show: false }, axisLabel: { show: false } },
-    yAxis: { 
-      type: 'category', 
+    yAxis: {
+      type: 'category',
       data: topGoods.map(i => i.name).reverse(),
       axisLabel: { color: '#a3a3a3' },
       axisLine: { show: false },
-      axisTick: { show: false }
+      axisTick: { show: false },
     },
-    series: [{
-      type: 'bar',
-      data: topGoods.map(i => ({
-        value: i.value,
-        itemStyle: { color: categoryColorMap[i.category] || PALETTE[0] }
-      })).reverse(),
-      itemStyle: { borderRadius: [0, 6, 6, 0] },
-      label: {
-        show: true,
-        position: 'right',
-        color: '#0b0b0b',
-        backgroundColor: '#e2c792',
-        padding: [4, 10],
-        borderRadius: 12,
-        distance: 8,
-      }
-    }]
-  });
+    series: [
+      {
+        type: 'bar',
+        data: topGoods
+          .map(i => ({
+            value: i.value,
+            itemStyle: { color: categoryColorMap[i.category] || PALETTE[0] },
+          }))
+          .reverse(),
+        itemStyle: { borderRadius: [0, 6, 6, 0] },
+        label: {
+          show: true,
+          position: 'right',
+          color: '#0b0b0b',
+          backgroundColor: '#e2c792',
+          padding: [4, 10],
+          borderRadius: 12,
+          distance: 8,
+        },
+      },
+    ],
+  })
 
   // 3. 3D 地球 (如果可见)
   if (currentView.value === 'map' && globeChart) {
-    updateGlobeChart();
+    updateGlobeChart()
   }
 
   // 4. 关系网络 (如果可见)
   if (currentView.value === 'network' && networkChart) {
-    updateNetworkChart();
+    updateNetworkChart()
   }
 
   // 5. 商品产地网络 (如果可见)
   if (currentView.value === 'goods-network' && goodsNetworkChart) {
-    updateGoodsNetworkChart();
+    updateGoodsNetworkChart()
   }
-};
+}
 
 const updateGlobeChart = async () => {
-  if (!globeChart) return;
+  if (!globeChart) return
 
   // 检查是否已注册地图数据，如果没有则加载
   // @ts-ignore
   if (!echarts.getMap('world')) {
     try {
-      mapLoading.value = true;
-      mapError.value = false;
+      mapLoading.value = true
+      mapError.value = false
       // 使用更稳定的 CDN
-      const res = await fetch('https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/world.json');
-      if (!res.ok) throw new Error('Network response was not ok');
-      const worldJson = await res.json();
-      echarts.registerMap('world', worldJson);
-      mapLoading.value = false;
+      const res = await fetch('https://cdn.jsdelivr.net/npm/echarts@4.9.0/map/json/world.json')
+      if (!res.ok) throw new Error('Network response was not ok')
+      const worldJson = await res.json()
+      echarts.registerMap('world', worldJson)
+      mapLoading.value = false
     } catch (e) {
-      console.error('Failed to load world map data', e);
-      mapLoading.value = false;
-      mapError.value = true;
-      return;
+      console.error('Failed to load world map data', e)
+      mapLoading.value = false
+      mapError.value = true
+      return
     }
   }
-  
-  const linesData: any[] = [];
-  const scatterData: any[] = [];
-  const addedCities = new Set<string>();
-  const MAP_HEIGHT = 0.4; // 地图厚度（减小以匹配视觉比例）
+
+  const linesData: any[] = []
+  const scatterData: any[] = []
+  const addedCities = new Set<string>()
+  const MAP_HEIGHT = 0.4 // 地图厚度（减小以匹配视觉比例）
 
   filteredRecords.value.forEach(r => {
-    const fromCoord = getCityCoord(r.fromCity);
-    const toCoord = getCityCoord(r.toCity);
+    const fromCoord = getCityCoord(r.fromCity)
+    const toCoord = getCityCoord(r.toCity)
 
     if (fromCoord && toCoord) {
       if (!addedCities.has(r.fromCity)) {
         // 节点坐标增加高度信息，紧贴地图表面（更微小的偏移）
-        scatterData.push({ name: r.fromCity, value: [...fromCoord, MAP_HEIGHT + 0.0001] });
-        addedCities.add(r.fromCity);
+        scatterData.push({ name: r.fromCity, value: [...fromCoord, MAP_HEIGHT + 0.0001] })
+        addedCities.add(r.fromCity)
       }
       if (!addedCities.has(r.toCity)) {
-        scatterData.push({ name: r.toCity, value: [...toCoord, MAP_HEIGHT + 0.0001] });
-        addedCities.add(r.toCity);
+        scatterData.push({ name: r.toCity, value: [...toCoord, MAP_HEIGHT + 0.0001] })
+        addedCities.add(r.toCity)
       }
 
       // 连线坐标增加高度信息
       linesData.push({
         coords: [
-          [...fromCoord, MAP_HEIGHT + 0.0001], 
-          [...toCoord, MAP_HEIGHT + 0.0001]
+          [...fromCoord, MAP_HEIGHT + 0.0001],
+          [...toCoord, MAP_HEIGHT + 0.0001],
         ],
         lineStyle: {
           color: periodColors[r.period] || PALETTE[0],
-          curveness: 0
-        }
-      });
+          curveness: 0,
+        },
+      })
     }
-  });
+  })
 
   globeChart.setOption({
     backgroundColor: 'transparent',
@@ -785,32 +837,32 @@ const updateGlobeChart = async () => {
       regionHeight: MAP_HEIGHT,
       boxHeight: 1,
       environment: '#000000', // 背景环境色设为黑色
-      
+
       itemStyle: {
         color: '#141414',
         opacity: 1,
         borderWidth: 0.5,
-        borderColor: '#333'
+        borderColor: '#333',
       },
-      
+
       groundPlane: {
         show: false,
-        color: '#000000'
+        color: '#000000',
       },
-      
+
       light: {
         main: {
           intensity: 0.8, // 降低主光强度
           shadow: true,
           shadowQuality: 'high',
           alpha: 30,
-          beta: 30
+          beta: 30,
         },
         ambient: {
-          intensity: 0.2 // 降低环境光
-        }
+          intensity: 0.2, // 降低环境光
+        },
       },
-      
+
       viewControl: {
         distance: globeDistance.value,
         alpha: globeAlpha.value,
@@ -822,21 +874,21 @@ const updateGlobeChart = async () => {
         panMouseButton: 'left',
         rotateMouseButton: 'right',
         center: [10, 0, 0],
-        zoomSensitivity: 2
+        zoomSensitivity: 2,
       },
 
       postEffect: {
         enable: true,
         bloom: {
           enable: false,
-          bloomIntensity: 0
+          bloomIntensity: 0,
         },
         SSAO: {
           enable: true,
           radius: 1.2,
-          intensity: 0.5
-        }
-      }
+          intensity: 0.5,
+        },
+      },
     },
     series: [
       {
@@ -849,7 +901,7 @@ const updateGlobeChart = async () => {
           trailLength: 0.25,
           trailOpacity: 0.18,
           // 使用更柔和的淡金色半透明以减弱亮度
-          trailColor: 'rgba(226, 199, 146, 0.12)'
+          trailColor: 'rgba(226, 199, 146, 0.12)',
         },
         // 取消叠加混合，避免亮度叠加
         blendMode: 'normal',
@@ -857,9 +909,9 @@ const updateGlobeChart = async () => {
           width: 1,
           // 适度提高线条可见性但仍保持柔和
           opacity: 0.45,
-          curveness: 0
+          curveness: 0,
         },
-        data: linesData
+        data: linesData,
       },
       {
         type: 'scatter3D',
@@ -868,7 +920,7 @@ const updateGlobeChart = async () => {
         symbolSize: 8,
         itemStyle: {
           color: PALETTE[0],
-          opacity: 1
+          opacity: 1,
         },
         label: {
           show: true,
@@ -880,60 +932,63 @@ const updateGlobeChart = async () => {
             fontSize: 12,
             backgroundColor: 'rgba(0,0,0,0.6)',
             padding: [2, 4],
-            borderRadius: 2
-          }
+            borderRadius: 2,
+          },
         },
-        data: scatterData
-      }
-    ]
-  });
-  
+        data: scatterData,
+      },
+    ],
+  })
+
   // 清除可能存在的 globe 配置
   // @ts-ignore
-  globeChart.setOption({ globe: null }, { replaceMerge: ['globe'] });
-};
+  globeChart.setOption({ globe: null }, { replaceMerge: ['globe'] })
+}
 
 const updateNetworkChart = () => {
-  if (!networkChart) return;
+  if (!networkChart) return
 
-  const nodes: any[] = [];
-  const links: any[] = [];
-  const nodeSet = new Set<string>();
-  const linkMap = new Map<string, number>();
+  const nodes: any[] = []
+  const links: any[] = []
+  const nodeSet = new Set<string>()
+  const linkMap = new Map<string, number>()
   // 聚合数据：城市 -> 城市 的贸易量，并收集节点集合
   filteredRecords.value.forEach(r => {
-    nodeSet.add(r.fromCity);
-    nodeSet.add(r.toCity);
-    const linkKey = `${r.fromCity}-${r.toCity}`;
-    linkMap.set(linkKey, (linkMap.get(linkKey) || 0) + r.volume);
-  });
+    nodeSet.add(r.fromCity)
+    nodeSet.add(r.toCity)
+    const linkKey = `${r.fromCity}-${r.toCity}`
+    linkMap.set(linkKey, (linkMap.get(linkKey) || 0) + r.volume)
+  })
 
   // 生成 Links
   linkMap.forEach((vol, key) => {
-    const [source, target] = key.split('-');
-    links.push({ source, target, value: vol, lineStyle: { width: Math.min(vol / 100, 5) } });
-  });
+    const [source, target] = key.split('-')
+    links.push({ source, target, value: vol, lineStyle: { width: Math.min(vol / 100, 5) } })
+  })
 
   // 计算每个节点的连接数（degree）
-  const degreeMap = new Map<string, number>();
+  const degreeMap = new Map<string, number>()
   links.forEach(l => {
-    degreeMap.set(l.source, (degreeMap.get(l.source) || 0) + 1);
-    degreeMap.set(l.target, (degreeMap.get(l.target) || 0) + 1);
-  });
+    degreeMap.set(l.source, (degreeMap.get(l.source) || 0) + 1)
+    degreeMap.set(l.target, (degreeMap.get(l.target) || 0) + 1)
+  })
 
   // 生成节点数组并设置 value 为连接数，symbolSize 根据连接数调整
   nodeSet.forEach(name => {
-    const degree = degreeMap.get(name) || 0;
-    const size = 10 + degree * 2; // 保持原先的视觉比例
-    nodes.push({ name, category: 0, symbolSize: Math.max(8, size), value: degree });
-  });
+    const degree = degreeMap.get(name) || 0
+    const size = 10 + degree * 2 // 保持原先的视觉比例
+    nodes.push({ name, category: 0, symbolSize: Math.max(8, size), value: degree })
+  })
 
   networkChart.setOption({
     backgroundColor: 'transparent',
-    tooltip: { formatter: function (params: any) {
-      if (params.dataType === 'edge') return `${params.data.source} → ${params.data.target}: ${params.data.value}`;
-      return `${params.data.name}: 连接数 ${params.data.value}`;
-    } },
+    tooltip: {
+      formatter: function (params: any) {
+        if (params.dataType === 'edge')
+          return `${params.data.source} → ${params.data.target}: ${params.data.value}`
+        return `${params.data.name}: 连接数 ${params.data.value}`
+      },
+    },
     series: [
       {
         type: 'graph',
@@ -944,33 +999,34 @@ const updateNetworkChart = () => {
         label: { show: true, position: 'right', color: PALETTE[3] },
         force: { repulsion: 200, edgeLength: 100 },
         lineStyle: { color: PALETTE[0], curveness: 0.2, opacity: 0.6 },
-        itemStyle: { color: PALETTE[1] }
-      }
-    ]
-  });
-};
+        itemStyle: { color: PALETTE[1] },
+      },
+    ],
+  })
+}
 
 const updateGoodsNetworkChart = () => {
-  if (!goodsNetworkChart) return;
+  if (!goodsNetworkChart) return
 
-  const nodes: any[] = [];
-  const links: any[] = [];
-  const addedNodes = new Set<string>();
+  const nodes: any[] = []
+  const links: any[] = []
+  const addedNodes = new Set<string>()
 
   // 筛选商品
   const goodsToShow = tradeGoods.value.filter(g => {
-    const matchCategory = !selectedCategory.value || g.category === selectedCategory.value;
-    const query = searchQuery.value.toLowerCase();
-    const matchSearch = !query || 
-      g.name.includes(query) || 
-      g.origin.some(o => o.includes(query)) || 
-      g.destination.some(d => d.includes(query));
-    return matchCategory && matchSearch;
-  });
+    const matchCategory = !selectedCategory.value || g.category === selectedCategory.value
+    const query = searchQuery.value.toLowerCase()
+    const matchSearch =
+      !query ||
+      g.name.includes(query) ||
+      g.origin.some(o => o.includes(query)) ||
+      g.destination.some(d => d.includes(query))
+    return matchCategory && matchSearch
+  })
 
   goodsToShow.forEach(g => {
     // 商品节点
-    const goodId = `good-${g.id}`;
+    const goodId = `good-${g.id}`
     if (!addedNodes.has(goodId)) {
       nodes.push({
         id: goodId,
@@ -979,14 +1035,14 @@ const updateGoodsNetworkChart = () => {
         symbol: 'diamond',
         symbolSize: 20,
         itemStyle: { color: PALETTE[0] },
-        value: g.category
-      });
-      addedNodes.add(goodId);
+        value: g.category,
+      })
+      addedNodes.add(goodId)
     }
 
     // 产地节点与连线
     g.origin.forEach(city => {
-      const cityId = `city-${city}`;
+      const cityId = `city-${city}`
       if (!addedNodes.has(cityId)) {
         nodes.push({
           id: cityId,
@@ -994,21 +1050,21 @@ const updateGoodsNetworkChart = () => {
           category: 0, // 城市
           symbol: 'circle',
           symbolSize: 15,
-          itemStyle: { color: PALETTE[3] }
-        });
-        addedNodes.add(cityId);
+          itemStyle: { color: PALETTE[3] },
+        })
+        addedNodes.add(cityId)
       }
       links.push({
         source: cityId,
         target: goodId,
         value: '产出',
-        lineStyle: { color: PALETTE[4], curveness: 0.1 }
-      });
-    });
+        lineStyle: { color: PALETTE[4], curveness: 0.1 },
+      })
+    })
 
     // 目的地节点与连线
     g.destination.forEach(city => {
-      const cityId = `city-${city}`;
+      const cityId = `city-${city}`
       if (!addedNodes.has(cityId)) {
         nodes.push({
           id: cityId,
@@ -1016,33 +1072,33 @@ const updateGoodsNetworkChart = () => {
           category: 0, // 城市
           symbol: 'circle',
           symbolSize: 15,
-          itemStyle: { color: PALETTE[3] }
-        });
-        addedNodes.add(cityId);
+          itemStyle: { color: PALETTE[3] },
+        })
+        addedNodes.add(cityId)
       }
       links.push({
         source: goodId,
         target: cityId,
         value: '销往',
-        lineStyle: { color: PALETTE[5], curveness: 0.1 }
-      });
-    });
-  });
+        lineStyle: { color: PALETTE[5], curveness: 0.1 },
+      })
+    })
+  })
 
   goodsNetworkChart.setOption({
     backgroundColor: 'transparent',
     tooltip: {
       formatter: function (params: any) {
         if (params.dataType === 'edge') {
-          return `${params.data.source.replace('city-', '').replace('good-', '')} ${params.data.value} ${params.data.target.replace('city-', '').replace('good-', '')}`;
+          return `${params.data.source.replace('city-', '').replace('good-', '')} ${params.data.value} ${params.data.target.replace('city-', '').replace('good-', '')}`
         }
-        return `${params.data.name}`;
-      }
+        return `${params.data.name}`
+      },
     },
     legend: {
       data: ['城市', '商品'],
       textStyle: { color: '#e5e5e5' },
-      top: 10
+      top: 10,
     },
     series: [
       {
@@ -1056,80 +1112,83 @@ const updateGoodsNetworkChart = () => {
         force: {
           repulsion: 300,
           edgeLength: 120,
-          gravity: 0.1
+          gravity: 0.1,
         },
         lineStyle: {
           width: 1,
-          opacity: 0.6
+          opacity: 0.6,
         },
         edgeSymbol: ['none', 'arrow'],
-        edgeSymbolSize: 6
-      }
-    ]
-  });
-};
+        edgeSymbolSize: 6,
+      },
+    ],
+  })
+}
 
 // --- 生命周期 ---
 watch([globeDistance, globeAlpha], () => {
-  applyGlobeViewControl();
-});
+  applyGlobeViewControl()
+})
 
-watch([selectedPeriod, selectedCategory, selectedFromCity, selectedToCity, minVal, maxVal, searchQuery], () => {
-  currentPage.value = 1;
-  updateCharts();
-});
+watch(
+  [selectedPeriod, selectedCategory, selectedFromCity, selectedToCity, minVal, maxVal, searchQuery],
+  () => {
+    currentPage.value = 1
+    updateCharts()
+  }
+)
 
-watch(currentView, async (newView) => {
-  await nextTick();
+watch(currentView, async newView => {
+  await nextTick()
   if (newView === 'map') {
     if (!globeChart && globeChartRef.value) {
-      globeChart = echarts.init(globeChartRef.value, 'dark');
+      globeChart = echarts.init(globeChartRef.value, 'dark')
     }
-    updateGlobeChart();
-    globeChart?.resize();
+    updateGlobeChart()
+    globeChart?.resize()
   } else if (newView === 'network') {
     if (!networkChart && networkChartRef.value) {
-      networkChart = echarts.init(networkChartRef.value, 'dark');
+      networkChart = echarts.init(networkChartRef.value, 'dark')
     }
-    updateNetworkChart();
-    networkChart?.resize();
+    updateNetworkChart()
+    networkChart?.resize()
   } else if (newView === 'goods-network') {
     if (!goodsNetworkChart && goodsNetworkChartRef.value) {
-      goodsNetworkChart = echarts.init(goodsNetworkChartRef.value, 'dark');
+      goodsNetworkChart = echarts.init(goodsNetworkChartRef.value, 'dark')
     }
-    updateGoodsNetworkChart();
-    goodsNetworkChart?.resize();
+    updateGoodsNetworkChart()
+    goodsNetworkChart?.resize()
   }
-});
+})
 
 onMounted(async () => {
-  initCityCoords();
-  await nextTick();
-  
+  initCityCoords()
+  await nextTick()
+
   if (categoryChartRef.value) {
-    categoryChart = echarts.init(categoryChartRef.value, 'dark');
+    categoryChart = echarts.init(categoryChartRef.value, 'dark')
   }
   if (topGoodsChartRef.value) {
-    topGoodsChart = echarts.init(topGoodsChartRef.value, 'dark');
+    topGoodsChart = echarts.init(topGoodsChartRef.value, 'dark')
   }
 
-  updateCharts();
+  updateCharts()
   window.addEventListener('resize', () => {
-    categoryChart?.resize();
-    topGoodsChart?.resize();
-    globeChart?.resize();
-    networkChart?.resize();
-    goodsNetworkChart?.resize();
-  });
-});
+    categoryChart?.resize()
+    topGoodsChart?.resize()
+    globeChart?.resize()
+    networkChart?.resize()
+    goodsNetworkChart?.resize()
+  })
+})
 
 onUnmounted(() => {
-  categoryChart?.dispose();
-  topGoodsChart?.dispose();
-  globeChart?.dispose();
-  networkChart?.dispose();
-  goodsNetworkChart?.dispose();
-});
+  categoryChart?.dispose()
+  topGoodsChart?.dispose()
+  globeChart?.dispose()
+  networkChart?.dispose()
+  goodsNetworkChart?.dispose()
+})
 </script>
 
 <style scoped lang="scss">
@@ -1155,13 +1214,13 @@ onUnmounted(() => {
     justify-content: space-between;
     align-items: center;
   }
-  
+
   h1 {
     margin: 0;
     font-size: 1.5rem;
     color: #e2c792;
   }
-  
+
   .subtitle {
     color: #737373;
     font-size: 0.85rem;
@@ -1182,8 +1241,15 @@ onUnmounted(() => {
     align-items: flex-end;
     border: 1px solid #333;
 
-    .label { font-size: 0.75rem; color: #a3a3a3; }
-    .value { font-size: 1.1rem; font-weight: bold; color: #e2c792; }
+    .label {
+      font-size: 0.75rem;
+      color: #a3a3a3;
+    }
+    .value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #e2c792;
+    }
   }
 }
 
@@ -1224,7 +1290,7 @@ onUnmounted(() => {
 
 .filter-group {
   margin-bottom: 1.25rem;
-  
+
   label {
     display: block;
     font-size: 0.8rem;
@@ -1249,11 +1315,21 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.2s;
 
-  &:hover { background: #333; color: #e5e5e5; }
-  &.active { background: #e2c792; color: #000; border-color: #e2c792; font-weight: bold; }
+  &:hover {
+    background: #333;
+    color: #e5e5e5;
+  }
+  &.active {
+    background: #e2c792;
+    color: #000;
+    border-color: #e2c792;
+    font-weight: bold;
+  }
 }
 
-.filter-select, .search-input, .range-input {
+.filter-select,
+.search-input,
+.range-input {
   width: 100%;
   background: #0a0a0a;
   border: 1px solid #333;
@@ -1261,20 +1337,22 @@ onUnmounted(() => {
   padding: 0.5rem;
   border-radius: 4px;
   outline: none;
-  
-  &:focus { border-color: #e2c792; }
+
+  &:focus {
+    border-color: #e2c792;
+  }
 }
 
 .range-inputs {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  
+
   .range-input {
     width: 100%;
     min-width: 0; // 防止 flex item 溢出
   }
-  
+
   .range-sep {
     color: #737373;
   }
@@ -1324,8 +1402,14 @@ onUnmounted(() => {
   border-bottom: 2px solid transparent;
   transition: all 0.2s;
 
-  &:hover { color: #e5e5e5; }
-  &.active { color: #e2c792; border-bottom-color: #e2c792; font-weight: bold; }
+  &:hover {
+    color: #e5e5e5;
+  }
+  &.active {
+    color: #e2c792;
+    border-bottom-color: #e2c792;
+    font-weight: bold;
+  }
 }
 
 .chart-view-container {
@@ -1428,14 +1512,16 @@ onUnmounted(() => {
   font-size: 0.85rem;
   color: #e2c792;
   border-bottom: 1px solid #333333;
-  
-  .col { padding: 0 0.5rem; }
+
+  .col {
+    padding: 0 0.5rem;
+  }
 }
 
 .list-body {
   flex: 1;
   overflow-y: auto;
-  
+
   .list-row {
     display: flex;
     padding: 0.75rem 1rem;
@@ -1445,8 +1531,13 @@ onUnmounted(() => {
     align-items: center;
     color: #e5e5e5;
 
-    &:hover { background: #1f1f1f; }
-    &.active { background: rgba(226, 199, 146, 0.1); border-left: 3px solid #e2c792; }
+    &:hover {
+      background: #1f1f1f;
+    }
+    &.active {
+      background: rgba(226, 199, 146, 0.1);
+      border-left: 3px solid #e2c792;
+    }
   }
 }
 
@@ -1460,11 +1551,11 @@ onUnmounted(() => {
     display: flex;
     gap: 1.5rem;
     align-items: center;
-    background: linear-gradient(180deg, rgba(20,20,20,0.6), rgba(10,10,10,0.6));
+    background: linear-gradient(180deg, rgba(20, 20, 20, 0.6), rgba(10, 10, 10, 0.6));
     border: 1px solid #222;
     padding: 1.25rem 1.5rem;
     border-radius: 10px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
     width: min(720px, 90%);
   }
 
@@ -1473,9 +1564,9 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(226, 199, 146,0.04);
+    background: rgba(226, 199, 146, 0.04);
     border-radius: 8px;
-    border: 1px solid rgba(226, 199, 146,0.08);
+    border: 1px solid rgba(226, 199, 146, 0.08);
   }
 
   .empty-texts {
@@ -1526,17 +1617,34 @@ onUnmounted(() => {
   .btn-ghost {
     background: transparent;
     color: #a3a3a3;
-    border: 1px dashed rgba(163,163,163,0.15);
+    border: 1px dashed rgba(163, 163, 163, 0.15);
   }
 }
 
 .col {
-  &.col-id { width: 80px; color: #737373; font-size: 0.8rem; }
-  &.col-period { width: 60px; }
-  &.col-route { flex: 2; }
-  &.col-goods { flex: 1.5; }
-  &.col-amount { width: 80px; text-align: right; }
-  &.col-value { width: 100px; text-align: right; color: #e2c792; }
+  &.col-id {
+    width: 80px;
+    color: #737373;
+    font-size: 0.8rem;
+  }
+  &.col-period {
+    width: 60px;
+  }
+  &.col-route {
+    flex: 2;
+  }
+  &.col-goods {
+    flex: 1.5;
+  }
+  &.col-amount {
+    width: 80px;
+    text-align: right;
+  }
+  &.col-value {
+    width: 100px;
+    text-align: right;
+    color: #e2c792;
+  }
 
   &.sortable {
     cursor: pointer;
@@ -1546,7 +1654,7 @@ onUnmounted(() => {
     justify-content: flex-end;
     gap: 4px;
     transition: color 0.2s;
-    
+
     &:hover {
       color: #e2c792;
     }
@@ -1561,12 +1669,14 @@ onUnmounted(() => {
   border-right: 4px solid transparent;
   border-top: 4px solid #737373;
   vertical-align: middle;
-  transition: transform 0.2s, border-top-color 0.2s;
-  
+  transition:
+    transform 0.2s,
+    border-top-color 0.2s;
+
   &.active {
     border-top-color: #e2c792;
   }
-  
+
   &.asc {
     transform: rotate(180deg);
   }
@@ -1579,13 +1689,31 @@ onUnmounted(() => {
   background: #2a2a2a;
   color: #a3a3a3;
   border: 1px solid #444;
-  
-  &.han { border-color: #b8860b; color: #b8860b; }
-  &.tang { border-color: #e2c792; color: #e2c792; }
-  &.song { border-color: #8a6e2f; color: #8a6e2f; }
-  &.yuan { border-color: #e5e5e5; color: #e5e5e5; }
-  &.ming { border-color: #a3a3a3; color: #a3a3a3; }
-  &.qing { border-color: #737373; color: #737373; }
+
+  &.han {
+    border-color: #b8860b;
+    color: #b8860b;
+  }
+  &.tang {
+    border-color: #e2c792;
+    color: #e2c792;
+  }
+  &.song {
+    border-color: #8a6e2f;
+    color: #8a6e2f;
+  }
+  &.yuan {
+    border-color: #e5e5e5;
+    color: #e5e5e5;
+  }
+  &.ming {
+    border-color: #a3a3a3;
+    color: #a3a3a3;
+  }
+  &.qing {
+    border-color: #737373;
+    color: #737373;
+  }
 }
 
 .route-flow {
@@ -1593,14 +1721,21 @@ onUnmounted(() => {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.9rem;
-  .arrow { color: #737373; }
+  .arrow {
+    color: #737373;
+  }
 }
 
 .goods-info {
   display: flex;
   flex-direction: column;
-  .goods-name { font-weight: 500; }
-  .goods-cat { font-size: 0.75rem; color: #737373; }
+  .goods-name {
+    font-weight: 500;
+  }
+  .goods-cat {
+    font-size: 0.75rem;
+    color: #737373;
+  }
 }
 
 .pagination-bar {
@@ -1621,8 +1756,15 @@ onUnmounted(() => {
     padding: 0.25rem 0.75rem;
     border-radius: 4px;
     cursor: pointer;
-    &:disabled { opacity: 0.5; cursor: not-allowed; }
-    &:hover:not(:disabled) { background: #333333; border-color: #e2c792; color: #e2c792; }
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    &:hover:not(:disabled) {
+      background: #333333;
+      border-color: #e2c792;
+      color: #e2c792;
+    }
   }
 }
 
@@ -1631,7 +1773,7 @@ onUnmounted(() => {
   background: #141414;
   padding: 1rem;
   border-radius: 8px;
-  
+
   &.empty {
     display: flex;
     align-items: center;
@@ -1652,7 +1794,10 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   margin-bottom: 1rem;
-  .detail-id { color: #737373; font-family: monospace; }
+  .detail-id {
+    color: #737373;
+    font-family: monospace;
+  }
 }
 
 .detail-route {
@@ -1661,7 +1806,7 @@ onUnmounted(() => {
   align-items: center;
   margin-bottom: 1.5rem;
   position: relative;
-  
+
   .route-line {
     flex: 1;
     height: 2px;
@@ -1683,8 +1828,15 @@ onUnmounted(() => {
 
 .city-node {
   text-align: center;
-  .city-name { font-size: 1.1rem; font-weight: bold; color: #e2c792; }
-  .city-label { font-size: 0.75rem; color: #737373; }
+  .city-name {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #e2c792;
+  }
+  .city-label {
+    font-size: 0.75rem;
+    color: #737373;
+  }
 }
 
 .detail-grid {
@@ -1694,21 +1846,44 @@ onUnmounted(() => {
 }
 
 .detail-item {
-  .value { font-size: 1rem; color: #e5e5e5; }
-  .value.highlight { color: #e2c792; font-weight: bold; }
-  .value.money { color: #e2c792; }
-  label { font-size: 0.75rem; color: #737373; display: block; margin-bottom: 0.25rem; }
+  .value {
+    font-size: 1rem;
+    color: #e5e5e5;
+  }
+  .value.highlight {
+    color: #e2c792;
+    font-weight: bold;
+  }
+  .value.money {
+    color: #e2c792;
+  }
+  label {
+    font-size: 0.75rem;
+    color: #737373;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
 }
 
 // Scrollbar
 .custom-scrollbar {
-  &::-webkit-scrollbar { width: 6px; }
-  &::-webkit-scrollbar-track { background: #141414; }
-  &::-webkit-scrollbar-thumb { background: #333333; border-radius: 3px; }
-  &::-webkit-scrollbar-thumb:hover { background: #e2c792; }
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #141414;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #333333;
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #e2c792;
+  }
 }
 
-.loading-overlay, .error-overlay {
+.loading-overlay,
+.error-overlay {
   position: absolute;
   top: 0;
   left: 0;
@@ -1740,12 +1915,16 @@ onUnmounted(() => {
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
-    &:hover { background: #b8860b; }
+    &:hover {
+      background: #b8860b;
+    }
   }
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 1200px) {
@@ -1757,13 +1936,20 @@ onUnmounted(() => {
     grid-column: 1 / -1;
     flex-direction: row;
     height: auto;
-    .detail-box, .chart-box { flex: 1; }
+    .detail-box,
+    .chart-box {
+      flex: 1;
+    }
   }
 }
 
 @media (max-width: 768px) {
-  .dashboard-grid { grid-template-columns: 1fr; }
-  .right-panel { flex-direction: column; }
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .right-panel {
+    flex-direction: column;
+  }
   .map-control-panel {
     width: calc(100% - 2rem);
     left: 1rem;

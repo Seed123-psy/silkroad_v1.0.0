@@ -4,31 +4,40 @@
 
     <!-- 地图模式和样式切换控件（3x8） -->
     <MapControls
-      v-model:modelMode="selectedMode"
-      v-model:modelStyle="selectedStyle"
+      v-model:model-mode="selectedMode"
+      v-model:model-style="selectedStyle"
       :modes="MAP_MODES"
       :styles="MAP_STYLES"
-      modePlaceholder="选择显示模式"
-      stylePlaceholder="选择地图样式"
+      mode-placeholder="选择显示模式"
+      style-placeholder="选择地图样式"
     />
 
     <transition name="slide">
-      <div class="hover-panel compact" v-if="hoverPanel.show">
+      <div v-if="hoverPanel.show" class="hover-panel compact">
         <div class="hover-top">
           <div class="icon-wrap" :style="{ borderColor: hoverPanel.props?.color || '#e67e22' }">
-            <div class="icon-core" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }" />
+            <div
+              class="icon-core"
+              :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }"
+            />
           </div>
           <div class="hover-title">
             <h4 class="title">{{ hoverPanel.props?.name }}</h4>
-            <div v-if="hoverPanel.props?.subtitle" class="subtitle">{{ hoverPanel.props?.subtitle }}</div>
+            <div v-if="hoverPanel.props?.subtitle" class="subtitle">
+              {{ hoverPanel.props?.subtitle }}
+            </div>
           </div>
-          <div class="meta" v-if="hoverPanel.props?.badge">
-            <span class="badge small" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }">{{ hoverPanel.props?.badge }}</span>
+          <div v-if="hoverPanel.props?.badge" class="meta">
+            <span
+              class="badge small"
+              :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }"
+              >{{ hoverPanel.props?.badge }}</span
+            >
           </div>
         </div>
 
         <div class="hover-body">
-          <div class="row" v-for="row in hoverPanel.props?.rows || []" :key="row.label">
+          <div v-for="row in hoverPanel.props?.rows || []" :key="row.label" class="row">
             <div class="label">{{ row.label }}</div>
             <div class="value">{{ row.value }}</div>
           </div>
@@ -36,24 +45,23 @@
       </div>
     </transition>
 
-      <!-- 路线选择下拉（浮动在地图上） -->
-      <div class="route-select" role="region" aria-label="路线选择">
-        <label for="routeSelect">选择路线编号：</label>
-          <select id="routeSelect" v-model="selectedRouteId" :disabled="manifestLoading">
-            <option value="">-- 请选择 --</option>
-              <option v-for="r in routes" :key="r.id" :value="r.id">{{ r.label || r.id }}</option>
-          </select>
-          <div class="route-hint" v-if="manifestLoading">清单加载中…</div>
-          <div class="route-hint" v-else>共 {{ routes.length }} 条路线</div>
-          <div class="route-hint" v-if="loadingRoute">路线加载中…</div>
-          <div class="route-error" v-if="manifestError">清单加载失败：{{ manifestError }}</div>
-          <div class="route-error" v-if="routeError">路线加载失败：{{ routeError }}</div>
-          
-      </div>
+    <!-- 路线选择下拉（浮动在地图上） -->
+    <div class="route-select" role="region" aria-label="路线选择">
+      <label for="routeSelect">选择路线编号：</label>
+      <select id="routeSelect" v-model="selectedRouteId" :disabled="manifestLoading">
+        <option value="">-- 请选择 --</option>
+        <option v-for="r in routes" :key="r.id" :value="r.id">{{ r.label || r.id }}</option>
+      </select>
+      <div v-if="manifestLoading" class="route-hint">清单加载中…</div>
+      <div v-else class="route-hint">共 {{ routes.length }} 条路线</div>
+      <div v-if="loadingRoute" class="route-hint">路线加载中…</div>
+      <div v-if="manifestError" class="route-error">清单加载失败：{{ manifestError }}</div>
+      <div v-if="routeError" class="route-error">路线加载失败：{{ routeError }}</div>
+    </div>
 
     <!-- 手势控制 UI（复用） -->
     <div class="gesture-controls">
-      <button class="gesture-btn" @click="toggleCamera" :class="{ active: isCameraOpen }">
+      <button class="gesture-btn" :class="{ active: isCameraOpen }" @click="toggleCamera">
         <span class="icon">📷</span>
         {{ isCameraOpen ? '关闭手势' : '开启手势' }}
       </button>
@@ -120,7 +128,7 @@ let map: any = null
 const MAP_MODES = [
   { id: 'flat', name: '平面' },
   { id: 'globe', name: '球形' },
-  { id: 'terrain', name: '立体' }
+  { id: 'terrain', name: '立体' },
 ]
 const MAP_STYLES = [
   { id: 'mapbox://styles/mapbox/dark-v10', name: '暗色' },
@@ -130,14 +138,15 @@ const MAP_STYLES = [
   { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: '卫星街道' },
   { id: 'mapbox://styles/mapbox/outdoors-v11', name: '户外' },
   { id: 'mapbox://styles/mapbox/navigation-day-v1', name: '导航（日）' },
-  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: '导航（夜）' }
+  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: '导航（夜）' },
 ]
 
 const selectedMode = ref<string>('flat')
 const selectedStyle = ref<string>(MAP_STYLES[0]?.id || '')
 
 // 手势控制（复用）
-const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallbacks } = useGestureControl()
+const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallbacks } =
+  useGestureControl()
 
 // 路线选择数据
 const routes = ref<Array<{ id: string; base: string }>>([])
@@ -186,7 +195,13 @@ function detectEncodingFromCpg(cpgBuf: ArrayBuffer | null): string {
       console.warn('[MengYuan] cpg looks invalid or is HTML; ignoring and falling back to utf-8')
       return 'utf-8'
     }
-    const NORMALIZED: Record<string,string> = { 'utf-8':'utf-8','utf8':'utf-8','gbk':'gbk','gb2312':'gb2312','gb18030':'gb18030' }
+    const NORMALIZED: Record<string, string> = {
+      'utf-8': 'utf-8',
+      utf8: 'utf-8',
+      gbk: 'gbk',
+      gb2312: 'gb2312',
+      gb18030: 'gb18030',
+    }
     return NORMALIZED[text] || text || 'utf-8'
   } catch (e) {
     console.warn('[MengYuan] detectEncodingFromCpg failed, using utf-8', e)
@@ -222,21 +237,47 @@ function detectBestEncoding(dbfBuf: ArrayBuffer, cpgBuf: ArrayBuffer | null): st
       const hanCount = (txt.match(hanRe) || []).length
       const score = hanCount * 10 - replCount
       // prefer encodings that yield non-garbled strings
-      // eslint-disable-next-line no-console
-      console.log('[MengYuan] detect encoding try', enc, 'han', hanCount, 'repl', replCount, 'score', score)
-      if (score > bestScore) { bestScore = score; best = enc; bestRecoveredEnc = null }
+
+      console.log(
+        '[MengYuan] detect encoding try',
+        enc,
+        'han',
+        hanCount,
+        'repl',
+        replCount,
+        'score',
+        score
+      )
+      if (score > bestScore) {
+        bestScore = score
+        best = enc
+        bestRecoveredEnc = null
+      }
       // if the decoded text looks like mojibake (UTF-8 decoded as Latin1/Windows-1252),
       // try recovering by reinterpreting those chars as raw bytes and decoding as UTF-8.
       if (mojibakeRe.test(txt)) {
         try {
-          const bytes = new Uint8Array(Array.from(txt).map(c => c.charCodeAt(0) & 0xFF))
+          const bytes = new Uint8Array(Array.from(txt).map(c => c.charCodeAt(0) & 0xff))
           const recovered = new TextDecoder('utf-8', { fatal: false }).decode(bytes)
           const rRepl = (recovered.match(/�/g) || []).length
           const rHan = (recovered.match(hanRe) || []).length
           const rScore = rHan * 10 - rRepl
-          // eslint-disable-next-line no-console
-          console.log('[MengYuan] mojibake recovery try', enc, '-> utf-8 recover han', rHan, 'repl', rRepl, 'score', rScore)
-          if (rScore > bestScore) { bestScore = rScore; best = 'utf-8'; bestRecoveredEnc = 'utf-8' }
+
+          console.log(
+            '[MengYuan] mojibake recovery try',
+            enc,
+            '-> utf-8 recover han',
+            rHan,
+            'repl',
+            rRepl,
+            'score',
+            rScore
+          )
+          if (rScore > bestScore) {
+            bestScore = rScore
+            best = 'utf-8'
+            bestRecoveredEnc = 'utf-8'
+          }
         } catch (e) {}
       }
     } catch (e) {
@@ -255,21 +296,26 @@ async function loadLineFeatures(basePathNoExt: string): Promise<GeoJSON.Feature[
 
   const [shpBuf, dbfBuf] = await Promise.all([fetchArrayBuffer(shpUrl), fetchArrayBuffer(dbfUrl)])
   let cpgBuf: ArrayBuffer | null = null
-  try { cpgBuf = await fetchArrayBuffer(cpgUrl) } catch (_) { cpgBuf = null }
+  try {
+    cpgBuf = await fetchArrayBuffer(cpgUrl)
+  } catch (_) {
+    cpgBuf = null
+  }
 
   const encoding = detectBestEncoding(dbfBuf, cpgBuf)
   const source: any = await openShapefile(shpBuf.slice(0), dbfBuf.slice(0), { encoding })
   const features: GeoJSON.Feature[] = []
   try {
     while (true) {
-      // eslint-disable-next-line no-await-in-loop
       const r = await source.read()
       if (!r || r.done) break
       if (r.value) features.push(r.value as GeoJSON.Feature)
     }
   } finally {
     if (source && typeof source.cancel === 'function') {
-      try { source.cancel() } catch (_e) {}
+      try {
+        source.cancel()
+      } catch (_e) {}
     }
   }
   // 尝试修复因错误编码解码导致的字段乱码：对每个字符串属性，基于原始单字节码流尝试用多种编码重解码并选出包含最多汉字的结果
@@ -286,7 +332,7 @@ async function loadLineFeatures(basePathNoExt: string): Promise<GeoJSON.Feature[
         // quick check: if already contains Han, skip
         if (hanRe.test(orig)) continue
         // build byte array from char codes (assume single-byte mis-decoding)
-        const bytes = new Uint8Array(Array.from(orig).map(c => c.charCodeAt(0) & 0xFF))
+        const bytes = new Uint8Array(Array.from(orig).map(c => c.charCodeAt(0) & 0xff))
         let bestStr = orig
         let bestScore = (orig.match(hanRe) || []).length - (orig.match(/�/g) || []).length
         for (const dec of tryDecoders) {
@@ -295,13 +341,18 @@ async function loadLineFeatures(basePathNoExt: string): Promise<GeoJSON.Feature[
             const candHan = (cand.match(hanRe) || []).length
             const candRepl = (cand.match(/�/g) || []).length
             const candScore = candHan * 10 - candRepl
-            if (candScore > bestScore) { bestScore = candScore; bestStr = cand }
+            if (candScore > bestScore) {
+              bestScore = candScore
+              bestStr = cand
+            }
           } catch (_) {}
         }
         props[k] = bestStr
       }
     }
-  } catch (e) { console.warn('[MengYuan] property normalization failed', e) }
+  } catch (e) {
+    console.warn('[MengYuan] property normalization failed', e)
+  }
   return features
 }
 
@@ -312,18 +363,27 @@ function addOrUpdateLineLayer(features: GeoJSON.Feature[]) {
     ;(map.getSource(LINE_SOURCE_ID) as any).setData(fc)
   } else {
     map.addSource(LINE_SOURCE_ID, { type: 'geojson', data: fc })
-    map.addLayer({ id: LINE_LAYER_ID, type: 'line', source: LINE_SOURCE_ID, paint: { 'line-color': '#ff5e57', 'line-width': 2 } })
+    map.addLayer({
+      id: LINE_LAYER_ID,
+      type: 'line',
+      source: LINE_SOURCE_ID,
+      paint: { 'line-color': '#ff5e57', 'line-width': 2 },
+    })
     // 绑定鼠标事件用于显示路线悬浮面板
     if (!lineHandlersAttached) {
       lineHandlersAttached = true
-      try { map.on('mousemove', LINE_LAYER_ID, handleLineMove) } catch (e) {}
-      try { map.on('mouseleave', LINE_LAYER_ID, handleLineLeave) } catch (e) {}
+      try {
+        map.on('mousemove', LINE_LAYER_ID, handleLineMove)
+      } catch (e) {}
+      try {
+        map.on('mouseleave', LINE_LAYER_ID, handleLineLeave)
+      } catch (e) {}
     }
   }
   // 缩放至要素范围
   try {
     const coords: number[][] = []
-    features.forEach((f) => {
+    features.forEach(f => {
       if (f.geometry && f.geometry.type === 'LineString') {
         coords.push(...(f.geometry.coordinates as number[][]))
       } else if (f.geometry && f.geometry.type === 'MultiLineString') {
@@ -333,9 +393,17 @@ function addOrUpdateLineLayer(features: GeoJSON.Feature[]) {
     if (coords.length) {
       const lons = coords.map(c => c[0])
       const lats = coords.map(c => c[1])
-      const minLon = Math.min(...lons), maxLon = Math.max(...lons)
-      const minLat = Math.min(...lats), maxLat = Math.max(...lats)
-      map.fitBounds([[minLon, minLat], [maxLon, maxLat]], { padding: 60 })
+      const minLon = Math.min(...lons),
+        maxLon = Math.max(...lons)
+      const minLat = Math.min(...lats),
+        maxLat = Math.max(...lats)
+      map.fitBounds(
+        [
+          [minLon, minLat],
+          [maxLon, maxLat],
+        ],
+        { padding: 60 }
+      )
     }
   } catch (e) {}
 }
@@ -352,14 +420,18 @@ function handlePointMove(e: any) {
   if (!feature) return
   const props = feature.properties
   if (!props) return
-  
+
   hoverPanel.value = { show: true, props: buildPointHoverContent(props) }
-  try { map.getCanvas().style.cursor = 'pointer' } catch (_) {}
+  try {
+    map.getCanvas().style.cursor = 'pointer'
+  } catch (_) {}
 }
 
 function handlePointLeave() {
   hoverPanel.value = { show: false }
-  try { map.getCanvas().style.cursor = '' } catch (_) {}
+  try {
+    map.getCanvas().style.cursor = ''
+  } catch (_) {}
 }
 
 function handleLineMove(e: any) {
@@ -370,33 +442,56 @@ function handleLineMove(e: any) {
   if (!props) return
 
   hoverPanel.value = { show: true, props: buildLineHoverContent(props) }
-  try { map.getCanvas().style.cursor = 'pointer' } catch (_) {}
+  try {
+    map.getCanvas().style.cursor = 'pointer'
+  } catch (_) {}
 }
 
 function handleLineLeave() {
   hoverPanel.value = { show: false }
-  try { map.getCanvas().style.cursor = '' } catch (_) {}
+  try {
+    map.getCanvas().style.cursor = ''
+  } catch (_) {}
 }
 
 function buildLineHoverContent(props: Record<string, any>): HoverPanelContent {
   const pick = (cands: string[]) => {
     for (const k of cands) {
-      if (Object.prototype.hasOwnProperty.call(props, k) && props[k] != null && String(props[k]).trim() !== '') return String(props[k])
+      if (
+        Object.prototype.hasOwnProperty.call(props, k) &&
+        props[k] != null &&
+        String(props[k]).trim() !== ''
+      )
+        return String(props[k])
     }
     return ''
   }
 
   // 表 6 字段候选名
-  const nature = pick(['性质','nature','property'])
-  const name = pick(['Name','名称','name','NAME','RouteName','route_name']) || '未命名路线'
-  const beginTime = pick(['Begin_Time','begin_time','BeginTime','StartYear','begin','start_year'])
-  const endTime = pick(['End_Time','end_time','EndTime','EndYear','end','finish_year'])
-  const beginPlace = pick(['Begin_Place','begin_place','StartPlace','起点','from','start_place'])
-  const endPlace = pick(['End_Place','end_place','EndPlace','终点','to','end_place'])
-  const tourist = pick(['Tourist','traveler','Traveler','旅行家','traveller'])
-  const clazz = pick(['Class','class','分类','TYPE','type'])
-  const code = pick(['Code','code','编码','ID','id'])
-  const reference = pick(['Reference','reference','参考','参考资料','ref','source'])
+  const nature = pick(['性质', 'nature', 'property'])
+  const name = pick(['Name', '名称', 'name', 'NAME', 'RouteName', 'route_name']) || '未命名路线'
+  const beginTime = pick([
+    'Begin_Time',
+    'begin_time',
+    'BeginTime',
+    'StartYear',
+    'begin',
+    'start_year',
+  ])
+  const endTime = pick(['End_Time', 'end_time', 'EndTime', 'EndYear', 'end', 'finish_year'])
+  const beginPlace = pick([
+    'Begin_Place',
+    'begin_place',
+    'StartPlace',
+    '起点',
+    'from',
+    'start_place',
+  ])
+  const endPlace = pick(['End_Place', 'end_place', 'EndPlace', '终点', 'to', 'end_place'])
+  const tourist = pick(['Tourist', 'traveler', 'Traveler', '旅行家', 'traveller'])
+  const clazz = pick(['Class', 'class', '分类', 'TYPE', 'type'])
+  const code = pick(['Code', 'code', '编码', 'ID', 'id'])
+  const reference = pick(['Reference', 'reference', '参考', '参考资料', 'ref', 'source'])
 
   const rows: HoverPanelRow[] = []
   if (nature) rows.push({ label: '性质', value: nature })
@@ -416,7 +511,7 @@ function buildLineHoverContent(props: Record<string, any>): HoverPanelContent {
     subtitle: tourist ? name : '蒙元路线',
     badge: '路线',
     color: '#ff5e57',
-    rows
+    rows,
   }
 }
 
@@ -424,49 +519,68 @@ function buildPointHoverContent(props: any): HoverPanelContent {
   // Helper to pick property
   const pick = (candidates: string[]) => {
     for (const k of candidates) {
-      if (Object.prototype.hasOwnProperty.call(props, k) && props[k] != null && String(props[k]).trim() !== '') return String(props[k])
+      if (
+        Object.prototype.hasOwnProperty.call(props, k) &&
+        props[k] != null &&
+        String(props[k]).trim() !== ''
+      )
+        return String(props[k])
     }
     return ''
   }
 
-  const name = pick(['名称','Name','name','NAME','Name_E','Name_E','name_en','英文名','Name _E','NAME_EN']) || pick(['Site','site','地点']) || '未命名节点'
-  const nameEn = pick(['Name_E','name_e','name_en','english_name','英文名'])
+  const name =
+    pick([
+      '名称',
+      'Name',
+      'name',
+      'NAME',
+      'Name_E',
+      'Name_E',
+      'name_en',
+      '英文名',
+      'Name _E',
+      'NAME_EN',
+    ]) ||
+    pick(['Site', 'site', '地点']) ||
+    '未命名节点'
+  const nameEn = pick(['Name_E', 'name_e', 'name_en', 'english_name', '英文名'])
   const mtype = props.mtype || '其他'
-  
+
   const rows: HoverPanelRow[] = []
-  
-  const year = pick(['Year','year','YEAR','YearFirstVisit','旅行家首次抵达年','YearArrived'])
+
+  const year = pick(['Year', 'year', 'YEAR', 'YearFirstVisit', '旅行家首次抵达年', 'YearArrived'])
   if (year) rows.push({ label: '年份', value: year })
-  
+
   if (nameEn && nameEn !== name) rows.push({ label: '英文名', value: nameEn })
-  
-  const country = pick(['Country','country','国家'])
+
+  const country = pick(['Country', 'country', '国家'])
   if (country) rows.push({ label: '国家', value: country })
-  
-  const province = pick(['Province','province','省','PROVINCE'])
+
+  const province = pick(['Province', 'province', '省', 'PROVINCE'])
   if (province) rows.push({ label: '省份', value: province })
-  
-  const city = pick(['City','city','市'])
+
+  const city = pick(['City', 'city', '市'])
   if (city) rows.push({ label: '城市', value: city })
-  
-  const traveler = pick(['Traveler','旅行家','traveller','traveler_name'])
+
+  const traveler = pick(['Traveler', '旅行家', 'traveller', 'traveler_name'])
   if (traveler) rows.push({ label: '旅行家', value: traveler })
-  
-  const typeVal = pick(['Class','class','分类'])
+
+  const typeVal = pick(['Class', 'class', '分类'])
   if (typeVal) rows.push({ label: '分类', value: typeVal })
 
   const colorMap: Record<string, string> = {
-    '城镇': '#ff5e57',
-    '农村': '#f7a35c',
-    '遗址': '#b77bff',
-    '关隘': '#ffdf5e',
-    '国家': '#2db7f5',
-    '地区': '#7bd389',
-    '山体': '#8b5a2b',
-    '水体': '#3aa6ff',
-    '沙漠': '#e0c068',
-    '草原': '#86c166',
-    '其他': '#9aa0a6'
+    城镇: '#ff5e57',
+    农村: '#f7a35c',
+    遗址: '#b77bff',
+    关隘: '#ffdf5e',
+    国家: '#2db7f5',
+    地区: '#7bd389',
+    山体: '#8b5a2b',
+    水体: '#3aa6ff',
+    沙漠: '#e0c068',
+    草原: '#86c166',
+    其他: '#9aa0a6',
   }
 
   return {
@@ -474,7 +588,7 @@ function buildPointHoverContent(props: any): HoverPanelContent {
     subtitle: nameEn,
     badge: mtype,
     color: colorMap[mtype] || '#9aa0a6',
-    rows
+    rows,
   }
 }
 
@@ -484,15 +598,35 @@ function addOrUpdatePointLayer(features: GeoJSON.Feature[]) {
   // Normalize and derive mtype for coloring
   function normalizeType(props: Record<string, any>): string {
     if (!props) return '其他'
-    const keys = ['类别','类型','type','Type','TYPE','place','kind','class','CATEGORY','属性']
+    const keys = [
+      '类别',
+      '类型',
+      'type',
+      'Type',
+      'TYPE',
+      'place',
+      'kind',
+      'class',
+      'CATEGORY',
+      '属性',
+    ]
     let v = ''
     for (const k of keys) {
-      if (Object.prototype.hasOwnProperty.call(props, k) && props[k] != null) { v = String(props[k]); break }
+      if (Object.prototype.hasOwnProperty.call(props, k) && props[k] != null) {
+        v = String(props[k])
+        break
+      }
     }
     if (!v) {
       for (const k of Object.keys(props)) {
-        if (k.toLowerCase().includes('type') || k.toLowerCase().includes('class') || k.toLowerCase().includes('kind') || k.toLowerCase().includes('category')) {
-          v = String(props[k]); break
+        if (
+          k.toLowerCase().includes('type') ||
+          k.toLowerCase().includes('class') ||
+          k.toLowerCase().includes('kind') ||
+          k.toLowerCase().includes('category')
+        ) {
+          v = String(props[k])
+          break
         }
       }
     }
@@ -511,7 +645,7 @@ function addOrUpdatePointLayer(features: GeoJSON.Feature[]) {
     return '其他'
   }
 
-  const coloredFeatures = features.map((f) => {
+  const coloredFeatures = features.map(f => {
     const fp = (f.properties as Record<string, any>) || {}
     fp.mtype = normalizeType(fp)
     f.properties = fp
@@ -521,21 +655,23 @@ function addOrUpdatePointLayer(features: GeoJSON.Feature[]) {
   const fc = { type: 'FeatureCollection', features: coloredFeatures }
 
   const colorMap: Record<string, string> = {
-    '城镇': '#ff5e57',
-    '农村': '#f7a35c',
-    '遗址': '#b77bff',
-    '关隘': '#ffdf5e',
-    '国家': '#2db7f5',
-    '地区': '#7bd389',
-    '山体': '#8b5a2b',
-    '水体': '#3aa6ff',
-    '沙漠': '#e0c068',
-    '草原': '#86c166',
-    '其他': '#9aa0a6'
+    城镇: '#ff5e57',
+    农村: '#f7a35c',
+    遗址: '#b77bff',
+    关隘: '#ffdf5e',
+    国家: '#2db7f5',
+    地区: '#7bd389',
+    山体: '#8b5a2b',
+    水体: '#3aa6ff',
+    沙漠: '#e0c068',
+    草原: '#86c166',
+    其他: '#9aa0a6',
   }
 
   const matchExpr: any[] = ['match', ['get', 'mtype']]
-  for (const k of Object.keys(colorMap)) { matchExpr.push(k, colorMap[k]) }
+  for (const k of Object.keys(colorMap)) {
+    matchExpr.push(k, colorMap[k])
+  }
   matchExpr.push(colorMap['其他'])
 
   if (map.getSource(POINT_SOURCE_ID)) {
@@ -550,8 +686,8 @@ function addOrUpdatePointLayer(features: GeoJSON.Feature[]) {
         'circle-radius': 6,
         'circle-color': matchExpr,
         'circle-stroke-color': '#fff',
-        'circle-stroke-width': 1
-      }
+        'circle-stroke-width': 1,
+      },
     })
   }
 
@@ -565,7 +701,7 @@ function addOrUpdatePointLayer(features: GeoJSON.Feature[]) {
 
     map.on('mousemove', POINT_LAYER_ID, handlePointMove)
     map.on('mouseleave', POINT_LAYER_ID, handlePointLeave)
-    
+
     // Click handler removed in favor of hover panel
   }
 }
@@ -578,7 +714,11 @@ async function reloadManifest() {
     const r = await fetch('/data/mengyuan/manifest.json')
     if (!r.ok) throw new Error(`manifest fetch failed: ${r.status}`)
     const mj = await r.json()
-    routes.value = (mj.routes || []).map((it: any) => ({ id: String(it.id), base: String(it.base), label: it.label ? String(it.label) : undefined }))
+    routes.value = (mj.routes || []).map((it: any) => ({
+      id: String(it.id),
+      base: String(it.base),
+      label: it.label ? String(it.label) : undefined,
+    }))
     console.log('[MengYuan] manifest loaded, routes:', routes.value.length)
     if (!selectedRouteId.value && routes.value.length) selectedRouteId.value = routes.value[0].id
   } catch (e) {
@@ -587,7 +727,7 @@ async function reloadManifest() {
     // fallback entries
     routes.value = [
       { id: '1218', base: 'line/1218lines' },
-      { id: '1220', base: 'line/1220lines' }
+      { id: '1220', base: 'line/1220lines' },
     ]
     if (!selectedRouteId.value && routes.value.length) selectedRouteId.value = routes.value[0].id
   } finally {
@@ -596,7 +736,7 @@ async function reloadManifest() {
 }
 
 // 当下拉选择变化时加载对应路线
-watch(selectedRouteId, async (newId) => {
+watch(selectedRouteId, async newId => {
   if (!newId) return
   const entry = routes.value.find(r => r.id === newId)
   if (!entry) return
@@ -614,8 +754,12 @@ watch(selectedRouteId, async (newId) => {
     } catch (pe) {
       console.warn('[MengYuan] 加载节点失败', pe)
       // 如果加载节点失败，尝试移除已有的点图层/源
-      try { if (map.getLayer(POINT_LAYER_ID)) map.removeLayer(POINT_LAYER_ID) } catch (_) {}
-      try { if (map.getSource(POINT_SOURCE_ID)) map.removeSource(POINT_SOURCE_ID) } catch (_) {}
+      try {
+        if (map.getLayer(POINT_LAYER_ID)) map.removeLayer(POINT_LAYER_ID)
+      } catch (_) {}
+      try {
+        if (map.getSource(POINT_SOURCE_ID)) map.removeSource(POINT_SOURCE_ID)
+      } catch (_) {}
     }
     loadingRoute.value = false
   } catch (err) {
@@ -623,10 +767,18 @@ watch(selectedRouteId, async (newId) => {
     routeError.value = (err && (err as Error).message) || String(err)
     loadingRoute.value = false
     // remove layer if exists
-    try { if (map.getLayer(LINE_LAYER_ID)) map.removeLayer(LINE_LAYER_ID) } catch (_) {}
-    try { if (map.getSource(LINE_SOURCE_ID)) map.removeSource(LINE_SOURCE_ID) } catch (_) {}
-    try { if (map.getLayer(POINT_LAYER_ID)) map.removeLayer(POINT_LAYER_ID) } catch (_) {}
-    try { if (map.getSource(POINT_SOURCE_ID)) map.removeSource(POINT_SOURCE_ID) } catch (_) {}
+    try {
+      if (map.getLayer(LINE_LAYER_ID)) map.removeLayer(LINE_LAYER_ID)
+    } catch (_) {}
+    try {
+      if (map.getSource(LINE_SOURCE_ID)) map.removeSource(LINE_SOURCE_ID)
+    } catch (_) {}
+    try {
+      if (map.getLayer(POINT_LAYER_ID)) map.removeLayer(POINT_LAYER_ID)
+    } catch (_) {}
+    try {
+      if (map.getSource(POINT_SOURCE_ID)) map.removeSource(POINT_SOURCE_ID)
+    } catch (_) {}
   }
 })
 
@@ -638,7 +790,7 @@ setCallbacks(
       map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
     }
   },
-  (zoomFactor) => {
+  zoomFactor => {
     if (map) {
       const currentZoom = map.getZoom()
       const sensitivity = 0.3
@@ -660,10 +812,17 @@ setCallbacks(
 )
 
 // 键盘控制
-const keysPressed = reactive({ 
-  w: false, a: false, s: false, d: false,
-  q: false, e: false,
-  arrowup: false, arrowdown: false, arrowleft: false, arrowright: false
+const keysPressed = reactive({
+  w: false,
+  a: false,
+  s: false,
+  d: false,
+  q: false,
+  e: false,
+  arrowup: false,
+  arrowdown: false,
+  arrowleft: false,
+  arrowright: false,
 })
 let animationFrameId: number | null = null
 
@@ -685,9 +844,15 @@ function handleKeyUp(e: KeyboardEvent) {
 }
 
 function loopCameraMovement() {
-  if (!map) { animationFrameId = null; return }
+  if (!map) {
+    animationFrameId = null
+    return
+  }
   const { w, a, s, d, q, e, arrowup, arrowdown, arrowleft, arrowright } = keysPressed
-  if (!w && !a && !s && !d && !q && !e && !arrowup && !arrowdown && !arrowleft && !arrowright) { animationFrameId = null; return }
+  if (!w && !a && !s && !d && !q && !e && !arrowup && !arrowdown && !arrowleft && !arrowright) {
+    animationFrameId = null
+    return
+  }
 
   const panSpeed = 15
   const dx = (d ? panSpeed : 0) - (a ? panSpeed : 0)
@@ -726,7 +891,12 @@ function reduceTerrainForInteraction() {
   if (!map) return
   try {
     if (map.getLayer && map.getLayer('hillshade-layer')) {
-      try { if (savedHillEx === null) savedHillEx = map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number || 0.8; map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', 0.18) } catch (e) {}
+      try {
+        if (savedHillEx === null)
+          savedHillEx =
+            (map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number) || 0.8
+        map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', 0.18)
+      } catch (e) {}
     }
   } catch (e) {}
   if (interactionTimer) clearTimeout(interactionTimer)
@@ -737,7 +907,10 @@ function restoreTerrainAfterInteraction() {
   interactionTimer = setTimeout(() => {
     try {
       if (map.getLayer && map.getLayer('hillshade-layer')) {
-        try { const ex = terrainExaggeration.value; map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, ex * 0.8)) } catch (e) {}
+        try {
+          const ex = terrainExaggeration.value
+          map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, ex * 0.8))
+        } catch (e) {}
       }
     } catch (e) {}
     savedHillEx = null
@@ -746,18 +919,31 @@ function restoreTerrainAfterInteraction() {
 }
 
 function setChineseLabels() {
-  const CANDIDATE_KEYS = ['name_zh', 'name_zh_cn', 'name_zh-Hans', 'name_zh_hans', 'name_zh_CN', 'name_zh-Hant', 'name_zh_tw', 'name']
+  const CANDIDATE_KEYS = [
+    'name_zh',
+    'name_zh_cn',
+    'name_zh-Hans',
+    'name_zh_hans',
+    'name_zh_CN',
+    'name_zh-Hant',
+    'name_zh_tw',
+    'name',
+  ]
   try {
     const style = map.getStyle()
     const layers = (style && style.layers) || []
     layers.forEach((layer: any) => {
       if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
         const expr: any[] = ['coalesce']
-        CANDIDATE_KEYS.forEach((k) => expr.push(['get', k]))
-        try { map.setLayoutProperty(layer.id, 'text-field', expr) } catch (innerErr) {}
+        CANDIDATE_KEYS.forEach(k => expr.push(['get', k]))
+        try {
+          map.setLayoutProperty(layer.id, 'text-field', expr)
+        } catch (innerErr) {}
       }
     })
-  } catch (e) { console.warn('设置地图中文语言失败：', e) }
+  } catch (e) {
+    console.warn('设置地图中文语言失败：', e)
+  }
 }
 
 function applyMapStyle(styleId: string) {
@@ -765,27 +951,33 @@ function applyMapStyle(styleId: string) {
   map.setStyle(styleId)
   map.once('style.load', () => {
     setChineseLabels()
-    try { applyMapProjection(selectedMode.value) } catch (e) {}
+    try {
+      applyMapProjection(selectedMode.value)
+    } catch (e) {}
   })
 }
 
 function applyMapProjection(mode: string) {
   if (!map) return
   const fogConfig = {
-    'range': [0.5, 10],
-    'color': '#242B4B',
+    range: [0.5, 10],
+    color: '#242B4B',
     'high-color': '#161B33',
     'space-color': '#0B0B15',
-    'star-intensity': mode === 'globe' ? 0.8 : 0.0
+    'star-intensity': mode === 'globe' ? 0.8 : 0.0,
   }
   if (mode === 'globe') {
     map.setProjection('globe')
-    setTimeout(() => { if (map.getProjection().name !== 'globe') map.setProjection('globe') }, 100)
+    setTimeout(() => {
+      if (map.getProjection().name !== 'globe') map.setProjection('globe')
+    }, 100)
     map.setFog(fogConfig)
     if (map.getLayer('sky')) map.removeLayer('sky')
   } else {
     map.setProjection('mercator')
-    setTimeout(() => { if (map.getProjection().name !== 'mercator') map.setProjection('mercator') }, 100)
+    setTimeout(() => {
+      if (map.getProjection().name !== 'mercator') map.setProjection('mercator')
+    }, 100)
     map.setFog(fogConfig)
     if (!map.getLayer('sky')) {
       map.addLayer({
@@ -797,18 +989,25 @@ function applyMapProjection(mode: string) {
           'sky-atmosphere-sun-intensity': 15,
           'sky-atmosphere-color': '#242B4B',
           'sky-atmosphere-halo-color': '#161B33',
-          'sky-opacity': 1
-        }
+          'sky-opacity': 1,
+        },
       })
     }
     if (mode === 'terrain') {
       try {
         if (!map.getSource('mapbox-dem')) {
-          map.addSource('mapbox-dem', { type: 'raster-dem', url: 'mapbox://mapbox.terrain-rgb', tileSize: 512, maxzoom: 14 })
+          map.addSource('mapbox-dem', {
+            type: 'raster-dem',
+            url: 'mapbox://mapbox.terrain-rgb',
+            tileSize: 512,
+            maxzoom: 14,
+          })
         }
         const ex = terrainExaggeration.value
         map.setTerrain({ source: 'mapbox-dem', exaggeration: ex })
-      } catch (e) { console.warn('地形设置失败:', e) }
+      } catch (e) {
+        console.warn('地形设置失败:', e)
+      }
     }
   }
 }
@@ -822,7 +1021,7 @@ onMounted(() => {
     center: [105, 35],
     zoom: 3,
     projection: selectedMode.value === 'globe' ? 'globe' : 'mercator',
-    logoPosition: 'bottom-right'
+    logoPosition: 'bottom-right',
   })
   map.addControl(new mapboxgl.NavigationControl(), 'bottom-left')
   map.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left')
@@ -836,28 +1035,53 @@ onMounted(() => {
   map.on('rotateend', restoreTerrainAfterInteraction)
   map.on('pitchend', restoreTerrainAfterInteraction)
 
-  map.on('styledata', () => { try { setChineseLabels() } catch (e) {} })
-  map.on('style.load', () => { try { setChineseLabels() } catch (e) {} })
+  map.on('styledata', () => {
+    try {
+      setChineseLabels()
+    } catch (e) {}
+  })
+  map.on('style.load', () => {
+    try {
+      setChineseLabels()
+    } catch (e) {}
+  })
 
-  map.on('mousedown', () => { try { map.getCanvas().style.cursor = 'grabbing' } catch (e) {} })
-  map.on('mouseup', () => { try { map.getCanvas().style.cursor = '' } catch (e) {} })
+  map.on('mousedown', () => {
+    try {
+      map.getCanvas().style.cursor = 'grabbing'
+    } catch (e) {}
+  })
+  map.on('mouseup', () => {
+    try {
+      map.getCanvas().style.cursor = ''
+    } catch (e) {}
+  })
 
   map.on('load', () => {
     applyMapStyle(selectedStyle.value)
-    if (typeof applyMapProjection === 'function') try { applyMapProjection(selectedMode.value) } catch (e) {}
+    if (typeof applyMapProjection === 'function')
+      try {
+        applyMapProjection(selectedMode.value)
+      } catch (e) {}
     // 读取 manifest 并初始化下拉选项
     reloadManifest()
   })
 
-  watch(selectedStyle, (style) => applyMapStyle(style))
-  watch(selectedMode, (mode) => { try { if (typeof applyMapProjection === 'function') applyMapProjection(mode) } catch (e) {} })
+  watch(selectedStyle, style => applyMapStyle(style))
+  watch(selectedMode, mode => {
+    try {
+      if (typeof applyMapProjection === 'function') applyMapProjection(mode)
+    } catch (e) {}
+  })
 
   window.addEventListener('keydown', handleKeyDown)
   window.addEventListener('keyup', handleKeyUp)
 })
 
 onUnmounted(() => {
-  try { if (map) map.remove() } catch (e) {}
+  try {
+    if (map) map.remove()
+  } catch (e) {}
   window.removeEventListener('keydown', handleKeyDown)
   window.removeEventListener('keyup', handleKeyUp)
   if (animationFrameId) cancelAnimationFrame(animationFrameId)
@@ -865,7 +1089,10 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.map-container { width: 100%; height: 100vh; }
+.map-container {
+  width: 100%;
+  height: 100vh;
+}
 .wasd-controls {
   position: absolute;
   right: 16px;
@@ -982,7 +1209,7 @@ onUnmounted(() => {
   border: 2px solid #333;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .input_video {
@@ -1009,7 +1236,7 @@ onUnmounted(() => {
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   color: #fff;
   padding: 6px;
   text-align: center;
@@ -1034,22 +1261,50 @@ onUnmounted(() => {
   z-index: 1100;
   min-width: 260px;
   max-width: 92%;
-  background: rgba(12,20,30,0.88);
+  background: rgba(12, 20, 30, 0.88);
   color: #fff;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(6px);
   pointer-events: auto; /* ensure select is clickable */
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.route-select label { font-size:13px; margin-bottom:6px; display:block; text-align:center }
-.route-select select { background: #111; color: #fff; border: 1px solid rgba(255,255,255,0.08); padding:6px 8px; border-radius:6px; width:100% }
-.route-hint { margin-top:6px; font-size:12px; color:#9aa }
-.route-error { margin-top:6px; font-size:12px; color:#ff7b7b }
-.route-select button { margin-top:8px; padding:8px 10px; border-radius:8px; background:#222; color:#fff; border:1px solid rgba(255,255,255,0.06); cursor:pointer }
+.route-select label {
+  font-size: 13px;
+  margin-bottom: 6px;
+  display: block;
+  text-align: center;
+}
+.route-select select {
+  background: #111;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 6px 8px;
+  border-radius: 6px;
+  width: 100%;
+}
+.route-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #9aa;
+}
+.route-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #ff7b7b;
+}
+.route-select button {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
 
 .hover-panel {
   position: absolute;
@@ -1097,7 +1352,9 @@ onUnmounted(() => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .hover-title .title {
@@ -1164,7 +1421,9 @@ onUnmounted(() => {
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 220ms cubic-bezier(.2, .9, .2, 1), opacity 180ms ease;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 180ms ease;
 }
 
 .slide-enter-from,

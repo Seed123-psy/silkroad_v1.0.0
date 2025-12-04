@@ -2,13 +2,20 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import XLSX from 'xlsx'
+// SPDX-License-Identifier: MIT
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const INPUTS = [
-  { file: '../public/data/lianghan/western_han_points.xlsx', out: '../src/assets/data/liangHan/westernHanPoints.json' },
-  { file: '../public/data/lianghan/eastern_han_points.xlsx', out: '../src/assets/data/liangHan/easternHanPoints.json' }
+  {
+    file: '../public/data/lianghan/western_han_points.xlsx',
+    out: '../src/assets/data/liangHan/westernHanPoints.json',
+  },
+  {
+    file: '../public/data/lianghan/eastern_han_points.xlsx',
+    out: '../src/assets/data/liangHan/easternHanPoints.json',
+  },
 ]
 
 function normalizeKey(key) {
@@ -27,10 +34,10 @@ function convertOne({ file, out }) {
   const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
   const [rawHeaders, ...dataRows] = rows
   if (!rawHeaders) throw new Error(`No header row in ${file}`)
-  const headers = rawHeaders.map((header) => normalizeKey(header))
+  const headers = rawHeaders.map(header => normalizeKey(header))
   const result = dataRows
-    .filter((row) => row.some((cell) => String(cell).trim() !== ''))
-    .map((row) => {
+    .filter(row => row.some(cell => String(cell).trim() !== ''))
+    .map(row => {
       const entry = {}
       headers.forEach((header, idx) => {
         entry[header] = row[idx] ?? ''
@@ -39,7 +46,10 @@ function convertOne({ file, out }) {
     })
   fs.mkdirSync(path.dirname(absOut), { recursive: true })
   fs.writeFileSync(absOut, JSON.stringify({ headers, records: result }, null, 2), 'utf-8')
-  console.log(`Converted ${path.basename(file)} -> ${path.relative(process.cwd(), absOut)} (${result.length} rows)\nHeaders:`, headers)
+  console.log(
+    `Converted ${path.basename(file)} -> ${path.relative(process.cwd(), absOut)} (${result.length} rows)\nHeaders:`,
+    headers
+  )
 }
 
 for (const item of INPUTS) {

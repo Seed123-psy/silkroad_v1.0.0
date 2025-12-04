@@ -230,7 +230,7 @@ export function createTextTexture(text: string, options: TextOptions = {}): THRE
 
   const canvasWidth = Math.pow(2, Math.ceil(Math.log2(textWidth + totalPadding * 2)))
   const canvasHeight = Math.pow(2, Math.ceil(Math.log2(fontSize * 1.5 + totalPadding * 2)))
-  
+
   canvas.width = canvasWidth
   canvas.height = canvasHeight
 
@@ -244,7 +244,7 @@ export function createTextTexture(text: string, options: TextOptions = {}): THRE
   context.font = fontStr
   context.textAlign = 'center'
   context.textBaseline = 'middle'
-  
+
   const centerX = canvasWidth / 2
   const centerY = canvasHeight / 2
 
@@ -264,7 +264,7 @@ export function createTextTexture(text: string, options: TextOptions = {}): THRE
   // 提高纹理质量
   texture.minFilter = THREE.LinearFilter
   texture.magFilter = THREE.LinearFilter
-  texture.generateMipmaps = false 
+  texture.generateMipmaps = false
 
   return texture
 }

@@ -4,37 +4,45 @@
 
     <!-- 地图模式和样式切换控件（复用组件） -->
     <MapControls
-      v-model:modelMode="selectedMode"
-      v-model:modelStyle="selectedStyle"
+      v-model:model-mode="selectedMode"
+      v-model:model-style="selectedStyle"
       :modes="MAP_MODES"
       :styles="MAP_STYLES"
-      modePlaceholder="选择显示模式"
-      stylePlaceholder="选择地图样式"
+      mode-placeholder="选择显示模式"
+      style-placeholder="选择地图样式"
     />
 
     <!-- 时间轴组件：居中底部，毛玻璃半透明效果 -->
     <div class="timeline-glass">
       <div class="timeline-labels">
         <span class="timeline-mark" @click="setYear(startYear)">{{ startYear }}</span>
-        <input type="range" :min="startYear" :max="endYear" v-model.number="selectedYear" class="timeline-slider" />
+        <input
+          v-model.number="selectedYear"
+          type="range"
+          :min="startYear"
+          :max="endYear"
+          class="timeline-slider"
+        />
         <span class="timeline-mark" @click="setYear(endYear)">{{ endYear }}</span>
         <button
           type="button"
           class="timeline-play"
           :class="{ playing: isPlaying }"
-          @click="togglePlay"
           :aria-pressed="isPlaying"
           aria-label="播放/暂停唐代交通时间轴"
+          @click="togglePlay"
         >
           <span v-if="!isPlaying">▶ 播放</span>
           <span v-else>❚❚ 暂停</span>
         </button>
       </div>
-      <div class="timeline-selected">当前年份：<span class="highlight">{{ selectedYear }}</span></div>
+      <div class="timeline-selected">
+        当前年份：<span class="highlight">{{ selectedYear }}</span>
+      </div>
     </div>
 
     <transition name="legend">
-      <div class="legend-panel" v-if="showLegend" @mouseleave="showLegend = false">
+      <div v-if="showLegend" class="legend-panel" @mouseleave="showLegend = false">
         <h4>节点类型</h4>
         <div class="legend-select-all">
           <label class="legend-item">
@@ -56,8 +64,8 @@
               <input
                 type="checkbox"
                 :checked="Boolean(typeFilters[type.key])"
-                @change="onTypeToggle(type.key, $event)"
                 class="legend-checkbox"
+                @change="onTypeToggle(type.key, $event)"
               />
               <span class="swatch" :style="{ backgroundColor: type.color }" />
               <div class="legend-text">
@@ -73,28 +81,39 @@
     <button
       v-if="!showLegend"
       class="legend-toggle"
+      aria-label="展开节点类型图例"
       @mouseenter="showLegend = true"
       @focus="showLegend = true"
-      aria-label="展开节点类型图例"
-    >类型</button>
+    >
+      类型
+    </button>
 
     <transition name="slide">
-      <div class="hover-panel compact" v-if="hoverPanel.show">
+      <div v-if="hoverPanel.show" class="hover-panel compact">
         <div class="hover-top">
           <div class="icon-wrap" :style="{ borderColor: hoverPanel.props?.color || '#e67e22' }">
-            <div class="icon-core" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }" />
+            <div
+              class="icon-core"
+              :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }"
+            />
           </div>
           <div class="hover-title">
             <h4 class="title">{{ hoverPanel.props?.name }}</h4>
-            <div v-if="hoverPanel.props?.subtitle" class="subtitle">{{ hoverPanel.props?.subtitle }}</div>
+            <div v-if="hoverPanel.props?.subtitle" class="subtitle">
+              {{ hoverPanel.props?.subtitle }}
+            </div>
           </div>
-          <div class="meta" v-if="hoverPanel.props?.badge">
-            <span class="badge small" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }">{{ hoverPanel.props?.badge }}</span>
+          <div v-if="hoverPanel.props?.badge" class="meta">
+            <span
+              class="badge small"
+              :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }"
+              >{{ hoverPanel.props?.badge }}</span
+            >
           </div>
         </div>
 
         <div class="hover-body">
-          <div class="row" v-for="row in hoverPanel.props?.rows || []" :key="row.label">
+          <div v-for="row in hoverPanel.props?.rows || []" :key="row.label" class="row">
             <div class="label">{{ row.label }}</div>
             <div class="value">{{ row.value }}</div>
           </div>
@@ -104,11 +123,11 @@
 
     <!-- 手势控制 UI -->
     <div class="gesture-controls">
-      <button class="gesture-btn" @click="toggleCamera" :class="{ active: isCameraOpen }">
+      <button class="gesture-btn" :class="{ active: isCameraOpen }" @click="toggleCamera">
         <span class="icon">📷</span>
         {{ isCameraOpen ? '关闭手势' : '开启手势' }}
       </button>
-      
+
       <div v-show="isCameraOpen" class="camera-wrapper">
         <video ref="videoRef" class="input_video" autoplay playsinline></video>
         <canvas ref="canvasRef" class="output_canvas"></canvas>
@@ -131,7 +150,7 @@
         </div>
         <div class="label">移动</div>
       </div>
-      
+
       <div class="divider"></div>
 
       <!-- 升降 -->
@@ -206,8 +225,9 @@ import MapControls from '@/components/MapControls.vue'
 // 从环境变量读取 token（Vite 要求以 VITE_ 前缀暴露给客户端）
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string) || ''
 if (!MAPBOX_TOKEN) {
-  // eslint-disable-next-line no-console
-  console.warn('VITE_MAPBOX_TOKEN 未配置，Mapbox 地图可能无法正常加载。请在 .env 中设置 VITE_MAPBOX_TOKEN。')
+  console.warn(
+    'VITE_MAPBOX_TOKEN 未配置，Mapbox 地图可能无法正常加载。请在 .env 中设置 VITE_MAPBOX_TOKEN。'
+  )
 }
 
 const mapContainer = ref<HTMLDivElement | null>(null)
@@ -220,26 +240,20 @@ let pendingFeatureKey = ''
 let activeHoverSource: 'point' | 'line' | null = null
 
 // --- 手势控制逻辑 ---
-const { 
-  isCameraOpen, 
-  videoRef, 
-  canvasRef, 
-  gestureStatus, 
-  toggleCamera, 
-  setCallbacks 
-} = useGestureControl()
+const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallbacks } =
+  useGestureControl()
 
 setCallbacks(
   (deltaX, deltaY) => {
     if (map) {
       // 摄像头是镜像的，且 delta 是归一化坐标
       // 移动灵敏度
-      const sensitivity = 1000 
+      const sensitivity = 1000
       // 反转 X 轴以匹配镜像，反转 Y 轴以匹配屏幕坐标系
       map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
     }
   },
-  (zoomFactor) => {
+  zoomFactor => {
     if (map) {
       const currentZoom = map.getZoom()
       // 缩放灵敏度
@@ -259,24 +273,31 @@ setCallbacks(
 
       // deltaX > 0 (向右) -> 逆时针旋转 -> bearing 减小 (修复左右反向)
       const newBearing = currentBearing - deltaX * rotateSensitivity
-      
+
       // deltaY > 0 (向下) -> 视角变低 -> pitch 减少
       // deltaY < 0 (向上) -> 视角变高 -> pitch 增加
       const newPitch = currentPitch - deltaY * pitchSensitivity
 
       map.jumpTo({
         bearing: newBearing,
-        pitch: Math.max(0, Math.min(85, newPitch))
+        pitch: Math.max(0, Math.min(85, newPitch)),
       })
     }
   }
 )
 
 // 键盘控制状态
-const keysPressed = reactive({ 
-  w: false, a: false, s: false, d: false,
-  q: false, e: false,
-  arrowup: false, arrowdown: false, arrowleft: false, arrowright: false
+const keysPressed = reactive({
+  w: false,
+  a: false,
+  s: false,
+  d: false,
+  q: false,
+  e: false,
+  arrowup: false,
+  arrowdown: false,
+  arrowleft: false,
+  arrowright: false,
 })
 let animationFrameId: number | null = null
 
@@ -292,7 +313,7 @@ const TYPE_CATEGORIES = [
   { key: '湖泊', label: '湖泊', description: '水域交通节点', color: '#1abc9c' },
   { key: '堡寨', label: '堡寨', description: '小型防御聚落', color: '#d35400' },
   { key: '军城', label: '军城', description: '军队驻扎城池', color: '#e84393' },
-  { key: '都城', label: '都城', description: '朝廷或区域首府', color: '#2ecc71' }
+  { key: '都城', label: '都城', description: '朝廷或区域首府', color: '#2ecc71' },
 ]
 
 const TYPE_SYNONYM_MAP: Record<string, string> = {
@@ -319,7 +340,7 @@ const TYPE_SYNONYM_MAP: Record<string, string> = {
   capital: '都城',
   metropolis: '都城',
   ancientcity: '古城',
-  oldcity: '古城'
+  oldcity: '古城',
 }
 
 const DEFAULT_TYPE_KEY = '地名'
@@ -330,14 +351,27 @@ const TYPE_COLOR_MAP = TYPE_CATEGORIES.reduce<Record<string, string>>((acc, type
 }, {})
 
 const TYPE_COLOR_EXPRESSION: any[] = ['match', ['coalesce', ['get', '__typeKey'], DEFAULT_TYPE_KEY]]
-TYPE_CATEGORIES.forEach((cat) => {
+TYPE_CATEGORIES.forEach(cat => {
   TYPE_COLOR_EXPRESSION.push(cat.key)
   TYPE_COLOR_EXPRESSION.push(cat.color)
 })
 TYPE_COLOR_EXPRESSION.push(TYPE_COLOR_MAP[DEFAULT_TYPE_KEY] || '#e67e22')
 
 const DEFAULT_ROUTE_COLOR = '#2980b9'
-const ROUTE_COLOR_PALETTE = ['#ff5e57', '#ff884e', '#ffa94d', '#ffcd3c', '#10ac84', '#00d2d3', '#48dbfb', '#2e86de', '#5f27cd', '#f368e0', '#ff6b6b', '#1dd1a1']
+const ROUTE_COLOR_PALETTE = [
+  '#ff5e57',
+  '#ff884e',
+  '#ffa94d',
+  '#ffcd3c',
+  '#10ac84',
+  '#00d2d3',
+  '#48dbfb',
+  '#2e86de',
+  '#5f27cd',
+  '#f368e0',
+  '#ff6b6b',
+  '#1dd1a1',
+]
 const ROUTE_TONE_BASE = '#1f2835'
 const ROUTE_TONE_RATIO = 0.28
 const routeColorCache = new Map<string, string>()
@@ -345,18 +379,23 @@ function getRouteColorExpression(): any[] {
   return ['coalesce', ['get', '__routeColor'], DEFAULT_ROUTE_COLOR]
 }
 
-const typeFilters = reactive<Record<string, boolean>>(TYPE_CATEGORIES.reduce((acc, type) => {
-  acc[type.key] = true
-  return acc
-}, {} as Record<string, boolean>))
+const typeFilters = reactive<Record<string, boolean>>(
+  TYPE_CATEGORIES.reduce(
+    (acc, type) => {
+      acc[type.key] = true
+      return acc
+    },
+    {} as Record<string, boolean>
+  )
+)
 
 const allTypesSelected = computed({
-  get: () => TYPE_CATEGORIES.every((cat) => typeFilters[cat.key]),
+  get: () => TYPE_CATEGORIES.every(cat => typeFilters[cat.key]),
   set: (value: boolean) => {
-    TYPE_CATEGORIES.forEach((cat) => {
+    TYPE_CATEGORIES.forEach(cat => {
       typeFilters[cat.key] = value
     })
-  }
+  },
 })
 
 // 地图显示模式
@@ -395,7 +434,7 @@ const setYear = (year: number) => {
 const playYear = ref<number>(selectedYear.value)
 
 // 当用户手动通过滑块设置年份时，同步 playYear 并渲染
-watch(selectedYear, (year) => {
+watch(selectedYear, year => {
   playYear.value = year
   filterByYear(year)
 })
@@ -409,21 +448,26 @@ let lastFrameTime = 0
 const terrainExaggeration = ref<number>(2.5)
 
 // 当用户调整夸张值时，实时更新 map 的 terrain 与 hillshade 表现
-watch(terrainExaggeration, (val) => {
+watch(terrainExaggeration, val => {
   try {
     if (map && map.setTerrain) {
       map.setTerrain({ source: 'mapbox-dem', exaggeration: val })
     }
     if (map && map.getLayer && map.getLayer('hillshade-layer')) {
-      try { map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, val * 0.8)) } catch (e) {}
+      try {
+        map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, val * 0.8))
+      } catch (e) {}
     }
- 
   } catch (e) {}
 })
 
-watch(typeFilters, () => {
-  filterByYear(selectedYear.value)
-}, { deep: true })
+watch(
+  typeFilters,
+  () => {
+    filterByYear(selectedYear.value)
+  },
+  { deep: true }
+)
 
 // 交互优化：在用户交互（拖动/缩放/旋转/倾斜）期间降低 hillshade 强度，交互结束后恢复
 let savedHillEx: number | null = null
@@ -450,7 +494,9 @@ function reduceTerrainForInteraction() {
   try {
     if (map.getLayer && map.getLayer('hillshade-layer')) {
       try {
-        if (savedHillEx === null) savedHillEx = map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number || 0.8
+        if (savedHillEx === null)
+          savedHillEx =
+            (map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number) || 0.8
         map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', 0.18)
       } catch (e) {}
     }
@@ -467,7 +513,8 @@ function restoreTerrainAfterInteraction() {
     try {
       if (map.getLayer && map.getLayer('hillshade-layer')) {
         try {
-          const ex = (typeof terrainExaggeration !== 'undefined') ? terrainExaggeration.value : 0.8
+          const ex =
+            typeof terrainExaggeration.value !== 'undefined' ? terrainExaggeration.value : 0.8
           map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, ex * 0.8))
         } catch (e) {}
       }
@@ -537,22 +584,26 @@ function applyMapStyle(styleId: string) {
   map.once('style.load', () => {
     setChineseLabels()
     // 样式切换后重新应用当前投影/地形设置，确保 3（模式）×8（样式） 组合生效
-    try { applyMapProjection(selectedMode.value) } catch (e) {}
+    try {
+      applyMapProjection(selectedMode.value)
+    } catch (e) {}
     // After style change, re-render current data so points/lines and hitboxes are restored
-    try { filterByYear(selectedYear.value) } catch (e) {}
+    try {
+      filterByYear(selectedYear.value)
+    } catch (e) {}
   })
 }
 
 function applyMapProjection(mode: string) {
   if (!map) return
-  
+
   // 通用的星空/深空背景配置
   const fogConfig = {
-    'range': [0.5, 10],
-    'color': '#242B4B',
+    range: [0.5, 10],
+    color: '#242B4B',
     'high-color': '#161B33',
     'space-color': '#0B0B15',
-    'star-intensity': mode === 'globe' ? 0.8 : 0.0 // 星星仅在 globe 模式下可见
+    'star-intensity': mode === 'globe' ? 0.8 : 0.0, // 星星仅在 globe 模式下可见
   }
 
   if (mode === 'globe') {
@@ -563,7 +614,7 @@ function applyMapProjection(mode: string) {
         map.setProjection('globe')
       }
     }, 100)
-    
+
     // 设置星空背景
     map.setFog(fogConfig)
 
@@ -579,7 +630,7 @@ function applyMapProjection(mode: string) {
         map.setProjection('mercator')
       }
     }, 100)
-    
+
     // 在 Mercator 模式下也设置 Fog，营造深邃氛围
     map.setFog(fogConfig)
 
@@ -594,8 +645,8 @@ function applyMapProjection(mode: string) {
           'sky-atmosphere-sun-intensity': 15,
           'sky-atmosphere-color': '#242B4B',
           'sky-atmosphere-halo-color': '#161B33',
-          'sky-opacity': 1
-        }
+          'sky-opacity': 1,
+        },
       })
     }
 
@@ -607,14 +658,14 @@ function applyMapProjection(mode: string) {
             type: 'raster-dem',
             url: 'mapbox://mapbox.terrain-rgb',
             tileSize: 512,
-            maxzoom: 14
+            maxzoom: 14,
           })
         }
         // 使用 terrainExaggeration 的当前值以增强立体感
-        const ex = (typeof terrainExaggeration !== 'undefined') ? terrainExaggeration.value : 1.2
+        const ex =
+          typeof terrainExaggeration.value !== 'undefined' ? terrainExaggeration.value : 1.2
         map.setTerrain({ source: 'mapbox-dem', exaggeration: ex })
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.warn('地形设置失败:', e)
       }
 
@@ -628,15 +679,15 @@ function applyMapProjection(mode: string) {
               type: 'hillshade',
               source: 'mapbox-dem',
               paint: {
-                'hillshade-exaggeration': (typeof terrainExaggeration !== 'undefined') ? Math.max(0.2, terrainExaggeration.value * 0.8) : 0.8,
-                'hillshade-illumination-direction': 335
-              }
+                'hillshade-exaggeration':
+                  typeof terrainExaggeration.value !== 'undefined'
+                    ? Math.max(0.2, terrainExaggeration.value * 0.8)
+                    : 0.8,
+                'hillshade-illumination-direction': 335,
+              },
             })
           }
-
-          
         } catch (innerE) {
-          // eslint-disable-next-line no-console
           console.warn('添加地形图层时出错：', innerE)
         }
       })
@@ -646,12 +697,16 @@ function applyMapProjection(mode: string) {
         map.setTerrain(null)
       } catch (e) {}
       if (map.getLayer && map.getLayer('hillshade-layer')) {
-        try { map.removeLayer('hillshade-layer') } catch (e) {}
+        try {
+          map.removeLayer('hillshade-layer')
+        } catch (e) {}
       }
-      
+
       // 移除星空层（globe 专用）
       if (map.getLayer && map.getLayer('sky')) {
-        try { map.removeLayer('sky') } catch (e) {}
+        try {
+          map.removeLayer('sky')
+        } catch (e) {}
       }
     }
   }
@@ -659,7 +714,16 @@ function applyMapProjection(mode: string) {
 
 function setChineseLabels() {
   // 支持多种可能的中文字段名，优先级从左到右
-  const CANDIDATE_KEYS = ['name_zh', 'name_zh_cn', 'name_zh-Hans', 'name_zh_hans', 'name_zh_CN', 'name_zh-Hant', 'name_zh_tw', 'name']
+  const CANDIDATE_KEYS = [
+    'name_zh',
+    'name_zh_cn',
+    'name_zh-Hans',
+    'name_zh_hans',
+    'name_zh_CN',
+    'name_zh-Hant',
+    'name_zh_tw',
+    'name',
+  ]
   try {
     const style = map.getStyle()
     const layers = (style && style.layers) || []
@@ -667,7 +731,7 @@ function setChineseLabels() {
       if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
         // 构造 coalesce 表达式，依次尝试候选字段，最后回退到原始 name
         const expr: any[] = ['coalesce']
-        CANDIDATE_KEYS.forEach((k) => expr.push(['get', k]))
+        CANDIDATE_KEYS.forEach(k => expr.push(['get', k]))
         try {
           map.setLayoutProperty(layer.id, 'text-field', expr)
         } catch (innerErr) {
@@ -676,7 +740,6 @@ function setChineseLabels() {
       }
     })
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.warn('设置地图中文语言失败：', e)
   }
 }
@@ -693,8 +756,8 @@ function filterByYear(year: number) {
     return beg <= year && end >= year
   }
 
-  const filteredPoints = points.value.filter((p) => inRange(p.properties || {}))
-  const filteredLines = lines.value.filter((l) => inRange(l.properties || {}))
+  const filteredPoints = points.value.filter(p => inRange(p.properties || {}))
+  const filteredLines = lines.value.filter(l => inRange(l.properties || {}))
   renderToMap(filteredPoints, filteredLines)
 }
 
@@ -703,7 +766,7 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
   if (!map) return
 
   // 使用 setData 更新已有 source，避免删除/重建导致的依赖冲突
-  const normalizedPoints = preparePointFeatures(filteredPoints).filter((feature) => {
+  const normalizedPoints = preparePointFeatures(filteredPoints).filter(feature => {
     const typeKey = (feature.properties as any)?.__typeKey as string | undefined
     return isTypeEnabled(typeKey)
   })
@@ -732,8 +795,8 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
         'circle-radius': 3.5,
         'circle-color': TYPE_COLOR_EXPRESSION,
         'circle-stroke-width': 1,
-        'circle-stroke-color': '#fff'
-      }
+        'circle-stroke-color': '#fff',
+      },
     })
   }
 
@@ -746,8 +809,8 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
       paint: {
         'circle-radius': 16,
         'circle-color': '#ffffff',
-        'circle-opacity': 0
-      }
+        'circle-opacity': 0,
+      },
     })
   }
 
@@ -772,8 +835,8 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
       source: 'lines',
       paint: {
         'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.2, 5, 2.2, 8, 4, 12, 7],
-        'line-color': getRouteColorExpression()
-      }
+        'line-color': getRouteColorExpression(),
+      },
     })
   } else {
     try {
@@ -818,7 +881,10 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
     isOverPoint = false
     pendingFeatureKey = ''
     lastFeatureKey = ''
-    if (popupTimer) { clearTimeout(popupTimer); popupTimer = null }
+    if (popupTimer) {
+      clearTimeout(popupTimer)
+      popupTimer = null
+    }
     map.getCanvas().style.cursor = isMouseDown ? 'grabbing' : ''
     if (activeHoverSource === 'point') {
       hoverPanel.value = { show: false }
@@ -860,7 +926,10 @@ function renderToMap(filteredPoints: TangPointFeature[], filteredLines: TangLine
   map.on('mouseleave', 'lines', () => {
     pendingLineKey = ''
     lastLineKey = ''
-    if (lineTimer) { clearTimeout(lineTimer); lineTimer = null }
+    if (lineTimer) {
+      clearTimeout(lineTimer)
+      lineTimer = null
+    }
     if (activeHoverSource === 'line') {
       hoverPanel.value = { show: false }
       activeHoverSource = null
@@ -878,7 +947,7 @@ const TANG_ROUTES_ZIP_URL = buildPublicDataUrl('data/tang/routes.zip')
 function handleKeyDown(e: KeyboardEvent) {
   const tagName = (e.target as HTMLElement).tagName
   if (tagName === 'INPUT' || tagName === 'TEXTAREA') return
-  
+
   const key = e.key.toLowerCase()
   if (Object.prototype.hasOwnProperty.call(keysPressed, key)) {
     keysPressed[key as keyof typeof keysPressed] = true
@@ -900,9 +969,9 @@ function loopCameraMovement() {
     animationFrameId = null
     return
   }
-  
+
   const { w, a, s, d, q, e, arrowup, arrowdown, arrowleft, arrowright } = keysPressed
-  
+
   // 检查是否有任意键被按下
   if (!w && !a && !s && !d && !q && !e && !arrowup && !arrowdown && !arrowleft && !arrowright) {
     animationFrameId = null
@@ -967,56 +1036,66 @@ onMounted(() => {
 
   if (!mapContainer.value) return
 
-    map = new mapboxgl.Map({
-      container: mapContainer.value,
-      style: selectedStyle.value,
-      center: [105, 35],
-      zoom: 3,
-      projection: selectedMode.value === 'globe' ? 'globe' : 'mercator',
-      logoPosition: 'bottom-right', 
-    })
+  map = new mapboxgl.Map({
+    container: mapContainer.value,
+    style: selectedStyle.value,
+    center: [105, 35],
+    zoom: 3,
+    projection: selectedMode.value === 'globe' ? 'globe' : 'mercator',
+    logoPosition: 'bottom-right',
+  })
 
-    // 将 Mapbox 默认控件放置到左下角，避免与右下角的自定义控制面板冲突
-    map.addControl(new mapboxgl.NavigationControl(), 'bottom-left')
-    map.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left')
+  // 将 Mapbox 默认控件放置到左下角，避免与右下角的自定义控制面板冲突
+  map.addControl(new mapboxgl.NavigationControl(), 'bottom-left')
+  map.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left')
 
-    // 交互优化事件：在交互开始降低地形效果，交互结束恢复
-    map.on('movestart', reduceTerrainForInteraction)
-    map.on('zoomstart', reduceTerrainForInteraction)
-    map.on('rotatestart', reduceTerrainForInteraction)
-    map.on('pitchstart', reduceTerrainForInteraction)
+  // 交互优化事件：在交互开始降低地形效果，交互结束恢复
+  map.on('movestart', reduceTerrainForInteraction)
+  map.on('zoomstart', reduceTerrainForInteraction)
+  map.on('rotatestart', reduceTerrainForInteraction)
+  map.on('pitchstart', reduceTerrainForInteraction)
 
-    map.on('moveend', restoreTerrainAfterInteraction)
-    map.on('zoomend', restoreTerrainAfterInteraction)
-    map.on('rotateend', restoreTerrainAfterInteraction)
-    map.on('pitchend', restoreTerrainAfterInteraction)
+  map.on('moveend', restoreTerrainAfterInteraction)
+  map.on('zoomend', restoreTerrainAfterInteraction)
+  map.on('rotateend', restoreTerrainAfterInteraction)
+  map.on('pitchend', restoreTerrainAfterInteraction)
 
-    // 确保在样式数据更新时也尝试设置中文标签（应对部分样式异步添加 label 层的情况）
-    map.on('styledata', () => {
-      try { setChineseLabels() } catch (e) {}
-    })
-    // 也监听 style.load（有时 styledata 不足以覆盖首次加载）
-    map.on('style.load', () => {
-      try { setChineseLabels() } catch (e) {}
-    })
+  // 确保在样式数据更新时也尝试设置中文标签（应对部分样式异步添加 label 层的情况）
+  map.on('styledata', () => {
+    try {
+      setChineseLabels()
+    } catch (e) {}
+  })
+  // 也监听 style.load（有时 styledata 不足以覆盖首次加载）
+  map.on('style.load', () => {
+    try {
+      setChineseLabels()
+    } catch (e) {}
+  })
 
-    // 鼠标按下/松开控制抓手显示：按下显示 grabbing，松开恢复到 hover 状态（或默认）
-    map.on('mousedown', () => {
-      isMouseDown = true
-      try { map.getCanvas().style.cursor = 'grabbing' } catch (e) {}
-    })
-    map.on('mouseup', () => {
-      isMouseDown = false
-      try { map.getCanvas().style.cursor = isOverPoint ? 'pointer' : '' } catch (e) {}
-    })
-    // 监听 document mouseup，防止在地图外释放鼠标导致状态未恢复
-    const docUp = () => {
-      isMouseDown = false
-      try { if (map) map.getCanvas().style.cursor = isOverPoint ? 'pointer' : '' } catch (e) {}
-    }
-    document.addEventListener('mouseup', docUp)
-    // 在组件卸载时移除该监听
-    onUnmounted(() => document.removeEventListener('mouseup', docUp))
+  // 鼠标按下/松开控制抓手显示：按下显示 grabbing，松开恢复到 hover 状态（或默认）
+  map.on('mousedown', () => {
+    isMouseDown = true
+    try {
+      map.getCanvas().style.cursor = 'grabbing'
+    } catch (e) {}
+  })
+  map.on('mouseup', () => {
+    isMouseDown = false
+    try {
+      map.getCanvas().style.cursor = isOverPoint ? 'pointer' : ''
+    } catch (e) {}
+  })
+  // 监听 document mouseup，防止在地图外释放鼠标导致状态未恢复
+  const docUp = () => {
+    isMouseDown = false
+    try {
+      if (map) map.getCanvas().style.cursor = isOverPoint ? 'pointer' : ''
+    } catch (e) {}
+  }
+  document.addEventListener('mouseup', docUp)
+  // 在组件卸载时移除该监听
+  onUnmounted(() => document.removeEventListener('mouseup', docUp))
 
   // 初始化时应用样式和投影
   map.on('load', () => {
@@ -1118,10 +1197,18 @@ function formatYear(year?: number): string {
 
 function buildPointPanel(properties: TangPointProperties): HoverPanelContent {
   const name = properties?.Name_CH || properties?.Name_EN || '未知交通点'
-  const subtitle = properties?.Name_EN && properties.Name_EN !== properties.Name_CH ? properties.Name_EN : undefined
-  const typeKey = (properties as any)?.__typeKey ? String((properties as any).__typeKey) : normalizeType(properties?.Type)
-  const readableType = TYPE_CATEGORIES.find((item) => item.key === typeKey)?.label || typeKey || '未知类型'
-  const location = [properties?.PL_City, properties?.County, properties?.Town].filter(Boolean).join(' / ') || '未知'
+  const subtitle =
+    properties?.Name_EN && properties.Name_EN !== properties.Name_CH
+      ? properties.Name_EN
+      : undefined
+  const typeKey = (properties as any)?.__typeKey
+    ? String((properties as any).__typeKey)
+    : normalizeType(properties?.Type)
+  const readableType =
+    TYPE_CATEGORIES.find(item => item.key === typeKey)?.label || typeKey || '未知类型'
+  const location =
+    [properties?.PL_City, properties?.County, properties?.Town].filter(Boolean).join(' / ') ||
+    '未知'
   const site = properties?.Site || '未知'
   const typeColor = getTypeColor(typeKey)
 
@@ -1129,7 +1216,10 @@ function buildPointPanel(properties: TangPointProperties): HoverPanelContent {
     { label: '类型', value: readableType },
     { label: '位置', value: location },
     { label: '遗址', value: site },
-    { label: '存续', value: `${formatYear(properties?.Beg_year)} - ${formatYear(properties?.End_year)}` }
+    {
+      label: '存续',
+      value: `${formatYear(properties?.Beg_year)} - ${formatYear(properties?.End_year)}`,
+    },
   ]
 
   return {
@@ -1137,7 +1227,7 @@ function buildPointPanel(properties: TangPointProperties): HoverPanelContent {
     subtitle,
     badge: readableType,
     color: typeColor,
-    rows
+    rows,
   }
 }
 
@@ -1149,7 +1239,7 @@ async function loadTangZipData(zipUrl: string) {
 
   const archive = unzipSync(new Uint8Array(await response.arrayBuffer()))
   const entries = Object.keys(archive)
-  const findEntry = (ext: string) => entries.find((name) => name.toLowerCase().endsWith(ext))
+  const findEntry = (ext: string) => entries.find(name => name.toLowerCase().endsWith(ext))
   const shpName = findEntry('.shp')
   const dbfName = findEntry('.dbf')
   if (!shpName || !dbfName) {
@@ -1175,8 +1265,9 @@ async function loadTangZipData(zipUrl: string) {
     }
   } finally {
     if (source && typeof source.cancel === 'function') {
-      try { source.cancel() } catch (err) {
-        // eslint-disable-next-line no-console
+      try {
+        source.cancel()
+      } catch (err) {
         console.warn('[Transport] 关闭 shapefile 读取器失败', err)
       }
     }
@@ -1192,7 +1283,10 @@ function sliceArrayBuffer(entry: Uint8Array): ArrayBuffer {
 function buildLinePanel(properties: TangLineProperties): HoverPanelContent {
   const routeName = properties?.__routeName || properties?.Name || '未知路线'
   const rows: HoverPanelRow[] = [
-    { label: '存续', value: `${formatYear(properties?.Beg_year)} - ${formatYear(properties?.End_year)}` }
+    {
+      label: '存续',
+      value: `${formatYear(properties?.Beg_year)} - ${formatYear(properties?.End_year)}`,
+    },
   ]
 
   return {
@@ -1200,7 +1294,7 @@ function buildLinePanel(properties: TangLineProperties): HoverPanelContent {
     subtitle: '唐代交通线',
     badge: '交通线',
     color: properties?.__routeColor || DEFAULT_ROUTE_COLOR,
-    rows
+    rows,
   }
 }
 
@@ -1208,7 +1302,7 @@ function normalizeType(type?: string): string {
   if (!type) return DEFAULT_TYPE_KEY
   const raw = String(type).trim()
   if (!raw) return DEFAULT_TYPE_KEY
-  const direct = TYPE_CATEGORIES.find((cat) => cat.key === raw)
+  const direct = TYPE_CATEGORIES.find(cat => cat.key === raw)
   if (direct) return direct.key
   const synonym = TYPE_SYNONYM_MAP[raw.toLowerCase()]
   if (synonym) return synonym
@@ -1221,14 +1315,14 @@ function getTypeColor(typeKey?: string): string {
 }
 
 function preparePointFeatures(features: TangPointFeature[]): TangPointFeature[] {
-  return features.map((feature) => {
+  return features.map(feature => {
     const typeKey = normalizeType(feature?.properties?.Type)
     return {
       ...feature,
       properties: {
         ...feature.properties,
-        __typeKey: typeKey
-      }
+        __typeKey: typeKey,
+      },
     }
   })
 }
@@ -1243,8 +1337,8 @@ function assignRouteColors(features: TangLineFeature[]): TangLineFeature[] {
         ...feature.properties,
         Name: feature?.properties?.Name || routeName,
         __routeName: routeName,
-        __routeColor: routeColor
-      }
+        __routeColor: routeColor,
+      },
     }
   })
 }
@@ -1281,7 +1375,7 @@ function toneDownColor(hex: string, mixHex: string, ratio: number): string {
   const mix = hexToRgb(mixHex)
   if (!base || !mix) return hex
   const blended = base.map((channel, idx) => {
-    const mixChannel = (Array.isArray(mix) && typeof mix[idx] === 'number') ? mix[idx] : 0
+    const mixChannel = Array.isArray(mix) && typeof mix[idx] === 'number' ? mix[idx] : 0
     return Math.round(channel * (1 - ratio) + mixChannel * ratio)
   }) as [number, number, number]
   return rgbToHex(blended[0], blended[1], blended[2])
@@ -1290,9 +1384,13 @@ function toneDownColor(hex: string, mixHex: string, ratio: number): string {
 function hexToRgb(hex: string): [number, number, number] | null {
   const normalized = hex.replace('#', '')
   if (!(normalized.length === 6 || normalized.length === 3)) return null
-  const expanded = normalized.length === 3
-    ? normalized.split('').map((char) => `${char}${char}`).join('')
-    : normalized
+  const expanded =
+    normalized.length === 3
+      ? normalized
+          .split('')
+          .map(char => `${char}${char}`)
+          .join('')
+      : normalized
   const num = Number.parseInt(expanded, 16)
   if (Number.isNaN(num)) return null
   const r = (num >> 16) & 255
@@ -1308,7 +1406,8 @@ function rgbToHex(r: number, g: number, b: number): string {
 }
 
 function isTypeEnabled(typeKey?: string | null): boolean {
-  const key = typeKey && TYPE_CATEGORIES.some((item) => item.key === typeKey) ? typeKey : DEFAULT_TYPE_KEY
+  const key =
+    typeKey && TYPE_CATEGORIES.some(item => item.key === typeKey) ? typeKey : DEFAULT_TYPE_KEY
   return typeFilters[key] !== false
 }
 
@@ -1382,7 +1481,9 @@ function onTypeSelectAll(event: Event) {
   padding: 4px 10px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   user-select: none;
 }
 
@@ -1479,7 +1580,9 @@ function onTypeSelectAll(event: Event) {
   background: rgba(0, 0, 0, 0.2);
   position: relative;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .legend-checkbox:checked {
@@ -1536,7 +1639,9 @@ function onTypeSelectAll(event: Event) {
 
 .legend-enter-active,
 .legend-leave-active {
-  transition: transform 220ms cubic-bezier(.2, .9, .2, 1), opacity 180ms ease;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 180ms ease;
 }
 
 .legend-enter-from,
@@ -1595,7 +1700,9 @@ function onTypeSelectAll(event: Event) {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .hover-title .title {
@@ -1662,7 +1769,9 @@ function onTypeSelectAll(event: Event) {
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 220ms cubic-bezier(.2, .9, .2, 1), opacity 180ms ease;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 180ms ease;
 }
 
 .slide-enter-from,
@@ -1794,7 +1903,7 @@ function onTypeSelectAll(event: Event) {
   border: 2px solid #333;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .input_video {
@@ -1821,7 +1930,7 @@ function onTypeSelectAll(event: Event) {
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   color: #fff;
   padding: 6px;
   text-align: center;

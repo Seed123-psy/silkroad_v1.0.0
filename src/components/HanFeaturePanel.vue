@@ -42,11 +42,7 @@
         <section v-if="showRouteNarratives" class="info-section narrative">
           <h3>丝绸之路路线说明</h3>
           <div class="narrative-wrapper">
-            <div
-              v-for="section in narrativeSections"
-              :key="section.id"
-              class="narrative-block"
-            >
+            <div v-for="section in narrativeSections" :key="section.id" class="narrative-block">
               <h4 class="narrative-title">{{ section.title }}</h4>
               <p
                 v-for="(paragraph, idx) in section.content"
@@ -56,11 +52,7 @@
                 {{ paragraph }}
               </p>
               <div v-if="section.children?.length" class="narrative-children">
-                <div
-                  v-for="child in section.children"
-                  :key="child.id"
-                  class="narrative-subblock"
-                >
+                <div v-for="child in section.children" :key="child.id" class="narrative-subblock">
                   <h5 class="narrative-subtitle">{{ child.title }}</h5>
                   <p
                     v-for="(paragraph, cIdx) in child.content"
@@ -82,7 +74,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { HanFeaturePanelData } from '@/types/lianghan'
-import { liangHanRouteNarratives, type RouteNarrativeBlock } from '@/assets/data/liangHan/routeNarratives'
+import {
+  liangHanRouteNarratives,
+  type RouteNarrativeBlock,
+} from '@/assets/data/liangHan/routeNarratives'
 
 interface Props {
   feature: HanFeaturePanelData | null
@@ -102,7 +97,7 @@ const narrativeSections = computed<RouteNarrativeBlock[]>(() => {
 
   const folderSegments = folderPath
     .split('/')
-    .map((segment) => segment.replace(/\.kmz$/i, '').trim())
+    .map(segment => segment.replace(/\.kmz$/i, '').trim())
     .filter(Boolean)
 
   for (const candidate of [...folderSegments].reverse()) {
@@ -116,7 +111,9 @@ const narrativeSections = computed<RouteNarrativeBlock[]>(() => {
 
 const title = computed(() => {
   if (!props.feature) return ''
-  return props.feature.kind === 'point' ? props.feature.properties.nameZh : props.feature.properties.name
+  return props.feature.kind === 'point'
+    ? props.feature.properties.nameZh
+    : props.feature.properties.name
 })
 
 const subtitle = computed(() => {
@@ -132,7 +129,9 @@ const tags = computed(() => {
   if (!props.feature) return [] as string[]
   if (props.feature.kind === 'point') {
     const { type, classification, dataset } = props.feature.properties
-    return [dataset === 'western' ? '西汉交通点' : '东汉交通点', type, classification].filter(Boolean) as string[]
+    return [dataset === 'western' ? '西汉交通点' : '东汉交通点', type, classification].filter(
+      Boolean
+    ) as string[]
   }
   return ['两汉交通线']
 })
@@ -154,7 +153,7 @@ const locationEntries = computed(() => {
     { label: '郡县', value: county },
     { label: '乡镇', value: town },
     { label: '村落', value: village },
-  ].filter((item) => Boolean(item.value)) as Array<{ label: string; value: string }>
+  ].filter(item => Boolean(item.value)) as Array<{ label: string; value: string }>
 })
 
 const siteEntries = computed(() => {
@@ -164,15 +163,20 @@ const siteEntries = computed(() => {
     return [
       { label: '遗址', value: site },
       { label: '邮编', value: postalCode },
-    ].filter((item) => Boolean(item.value)) as Array<{ label: string; value: string }>
+    ].filter(item => Boolean(item.value)) as Array<{ label: string; value: string }>
   }
   const { length } = props.feature.properties
   return length
-    ? ([{ label: '路线长度', value: `${length.toFixed(2)} km` }] as Array<{ label: string; value: string }>)
+    ? ([{ label: '路线长度', value: `${length.toFixed(2)} km` }] as Array<{
+        label: string
+        value: string
+      }>)
     : []
 })
 
-const showRouteNarratives = computed(() => props.feature?.kind === 'line' && narrativeSections.value.length > 0)
+const showRouteNarratives = computed(
+  () => props.feature?.kind === 'line' && narrativeSections.value.length > 0
+)
 
 function formatYear(year?: number) {
   if (year === undefined || Number.isNaN(year)) return '不详'

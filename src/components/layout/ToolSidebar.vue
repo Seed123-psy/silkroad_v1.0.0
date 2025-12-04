@@ -2,15 +2,39 @@
   <aside class="tool-sidebar">
     <div class="sidebar-header">
       <div class="logo-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M2 17L12 22L22 17" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M2 12L12 17L22 12" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <svg
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 2L2 7L12 12L22 7L12 2Z"
+            stroke="#D4AF37"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M2 17L12 22L22 17"
+            stroke="#D4AF37"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M2 12L12 17L22 12"
+            stroke="#D4AF37"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </div>
       <span class="logo-text">SilkRoad</span>
     </div>
-    
+
     <nav class="sidebar-nav">
       <template v-for="item in navItems" :key="item.label">
         <RouterLink
@@ -21,28 +45,28 @@
         >
           <component :is="item.icon" class="nav-icon" aria-hidden="true" />
           <span class="nav-label">{{ item.label }}</span>
-          
+
           <!-- Active Indicator -->
-          <div class="active-indicator" v-if="currentPath === item.path"></div>
+          <div v-if="currentPath === item.path" class="active-indicator"></div>
         </RouterLink>
 
         <div v-else class="nav-group-container">
-          <div 
-            class="nav-item group-header" 
-            :class="{ 'active': isGroupActive(item) }"
+          <div
+            class="nav-item group-header"
+            :class="{ active: isGroupActive(item) }"
             @click="toggleGroup(item.label)"
           >
             <component :is="item.icon" class="nav-icon" aria-hidden="true" />
             <div class="label-row">
               <span class="nav-label">{{ item.label }}</span>
-              <ChevronDownIcon 
-                class="group-arrow" 
-                :class="{ 'rotate-180': openGroups.includes(item.label) }" 
+              <ChevronDownIcon
+                class="group-arrow"
+                :class="{ 'rotate-180': openGroups.includes(item.label) }"
               />
             </div>
           </div>
-          
-          <div class="group-children" v-show="openGroups.includes(item.label)">
+
+          <div v-show="openGroups.includes(item.label)" class="group-children">
             <RouterLink
               v-for="child in item.children"
               :key="child.path"
@@ -52,7 +76,7 @@
             >
               <component :is="child.icon" class="nav-icon small" aria-hidden="true" />
               <span class="nav-label">{{ child.label }}</span>
-              <div class="active-indicator" v-if="currentPath === child.path"></div>
+              <div v-if="currentPath === child.path" class="active-indicator"></div>
             </RouterLink>
           </div>
         </div>
@@ -68,11 +92,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { 
-  GlobeAltIcon, 
-  ChartBarIcon, 
+import {
+  GlobeAltIcon,
+  ChartBarIcon,
   // BuildingLibraryIcon,
-  ChevronDownIcon
+  ChevronDownIcon,
 } from '@heroicons/vue/24/outline'
 import TransportRoutesIcon from '@/components/icons/TransportRoutesIcon.vue'
 import HanMingTransportIcon from '@/components/icons/HanMingTransportIcon.vue'
@@ -110,12 +134,12 @@ const navItems: NavItem[] = [
         path: '/lianghan',
         icon: HanMingTransportIcon,
       },
-          {
-            label: '蒙元路线',
-            path: '/mengyuan',
-            icon: LiangHanTransportIcon,
-          },
-    ]
+      {
+        label: '蒙元路线',
+        path: '/mengyuan',
+        icon: LiangHanTransportIcon,
+      },
+    ],
   },
   {
     label: '明清城区',
@@ -211,20 +235,20 @@ navItems.forEach(item => {
   border-radius: $border-radius-lg;
   color: $text-secondary;
   transition: all $transition-duration-fast;
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.05);
     color: $text-primary;
-    
+
     .nav-icon {
       transform: translateY(-2px);
     }
   }
-  
+
   &.active {
     color: $color-gold;
     background: rgba(212, 175, 55, 0.1);
-    
+
     .nav-icon {
       filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.4));
     }
@@ -294,12 +318,12 @@ navItems.forEach(item => {
 .child-item {
   height: 48px;
   background: transparent;
-  
+
   .nav-icon.small {
     width: 20px;
     height: 20px;
   }
-  
+
   &:hover {
     background: rgba(255, 255, 255, 0.03);
   }
@@ -335,20 +359,20 @@ navItems.forEach(item => {
     width: auto;
     flex: 1;
     border-radius: $border-radius-base;
-    
+
     &:hover {
       background: transparent;
     }
   }
-  
+
   .active-indicator {
     display: none;
   }
-  
+
   .nav-item.active {
     background: transparent;
     color: $color-gold;
-    
+
     &::after {
       content: '';
       position: absolute;

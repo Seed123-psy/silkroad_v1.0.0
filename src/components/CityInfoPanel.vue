@@ -7,7 +7,17 @@
           <span class="name-en">{{ city.nameEn }}</span>
         </h2>
         <button class="close-btn" aria-label="关闭" @click="handleClose">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
@@ -36,7 +46,8 @@
                     :key="i"
                     class="star"
                     :class="{ active: i <= city.importance }"
-                  >★</span>
+                    >★</span
+                  >
                 </span>
               </span>
             </div>
@@ -164,7 +175,7 @@ const getPeriodName = (period: string): string => {
   z-index: 50;
   display: flex;
   flex-direction: column;
-  
+
   @include mobile {
     top: auto;
     bottom: 0;
@@ -182,7 +193,7 @@ const getPeriodName = (period: string): string => {
   justify-content: space-between;
   align-items: flex-start;
   padding: $spacing-lg $spacing-xl;
-  background: linear-gradient(to bottom, rgba(255,255,255,0.05), transparent);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
   border-bottom: 1px solid $border-color-light;
 }
 
@@ -192,7 +203,7 @@ const getPeriodName = (period: string): string => {
     font-size: $font-size-2xl;
     color: $color-gold;
     margin-bottom: $spacing-xs;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   }
 
   .name-en {
@@ -218,13 +229,13 @@ const getPeriodName = (period: string): string => {
   flex: 1;
   overflow-y: auto;
   padding: $spacing-lg $spacing-xl;
-  
+
   // Hide scrollbar for cleaner look but keep functionality
   &::-webkit-scrollbar {
     width: 4px;
   }
   &::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255, 255, 255, 0.1);
   }
 }
 
@@ -274,7 +285,7 @@ const getPeriodName = (period: string): string => {
     color: $border-color-light;
     font-size: $font-size-base;
     margin-right: 2px;
-    
+
     &.active {
       color: $color-gold;
     }
@@ -299,7 +310,7 @@ const getPeriodName = (period: string): string => {
   border-radius: $border-radius-full;
   font-size: $font-size-xs;
   border: 1px solid $border-color-light;
-  background: rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
   color: $text-secondary;
   transition: all $transition-duration-fast;
 

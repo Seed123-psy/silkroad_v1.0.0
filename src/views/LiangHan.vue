@@ -4,37 +4,47 @@
 
     <!-- 地图模式和样式切换控件（复用组件） -->
     <MapControls
-      v-model:modelMode="selectedMode"
-      v-model:modelStyle="selectedStyle"
+      v-model:model-mode="selectedMode"
+      v-model:model-style="selectedStyle"
       :modes="MAP_MODES"
       :styles="MAP_STYLES"
-      modePlaceholder="选择显示模式"
-      stylePlaceholder="选择地图样式"
+      mode-placeholder="选择显示模式"
+      style-placeholder="选择地图样式"
     />
 
     <!-- 时间轴组件：居中底部，毛玻璃半透明效果 -->
     <div class="timeline-glass">
       <div class="timeline-labels">
-        <span class="timeline-mark" @click="setYear(startYear)">{{ formatYearLabel(startYear) }}</span>
-        <input type="range" :min="startYear" :max="endYear" v-model.number="selectedYear" class="timeline-slider" />
+        <span class="timeline-mark" @click="setYear(startYear)">{{
+          formatYearLabel(startYear)
+        }}</span>
+        <input
+          v-model.number="selectedYear"
+          type="range"
+          :min="startYear"
+          :max="endYear"
+          class="timeline-slider"
+        />
         <span class="timeline-mark" @click="setYear(endYear)">{{ formatYearLabel(endYear) }}</span>
         <button
           type="button"
           class="timeline-play"
           :class="{ playing: isPlaying }"
-          @click="togglePlay"
           :aria-pressed="isPlaying"
           aria-label="播放/暂停两汉交通时间轴"
+          @click="togglePlay"
         >
           <span v-if="!isPlaying">▶ 播放</span>
           <span v-else>❚❚ 暂停</span>
         </button>
       </div>
-      <div class="timeline-selected">当前年份：<span class="highlight">{{ formatYearLabel(selectedYear) }}</span></div>
+      <div class="timeline-selected">
+        当前年份：<span class="highlight">{{ formatYearLabel(selectedYear) }}</span>
+      </div>
     </div>
 
     <transition name="legend">
-      <div class="legend-panel" v-if="showLegend" @mouseleave="showLegend = false">
+      <div v-if="showLegend" class="legend-panel" @mouseleave="showLegend = false">
         <h4>节点类型</h4>
         <div class="legend-select-all">
           <label class="legend-item">
@@ -73,28 +83,39 @@
     <button
       v-if="!showLegend"
       class="legend-toggle"
+      aria-label="展开节点类型图例"
       @mouseenter="showLegend = true"
       @focus="showLegend = true"
-      aria-label="展开节点类型图例"
-    >类型</button>
+    >
+      类型
+    </button>
 
     <transition name="slide">
-      <div class="hover-panel compact" v-if="hoverPanel.show">
+      <div v-if="hoverPanel.show" class="hover-panel compact">
         <div class="hover-top">
           <div class="icon-wrap" :style="{ borderColor: hoverPanel.props?.color || '#e67e22' }">
-            <div class="icon-core" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }" />
+            <div
+              class="icon-core"
+              :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }"
+            />
           </div>
           <div class="hover-title">
             <h4 class="title">{{ hoverPanel.props?.name }}</h4>
-            <div v-if="hoverPanel.props?.subtitle" class="subtitle">{{ hoverPanel.props?.subtitle }}</div>
+            <div v-if="hoverPanel.props?.subtitle" class="subtitle">
+              {{ hoverPanel.props?.subtitle }}
+            </div>
           </div>
-          <div class="meta" v-if="hoverPanel.props?.badge">
-            <span class="badge small" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }">{{ hoverPanel.props?.badge }}</span>
+          <div v-if="hoverPanel.props?.badge" class="meta">
+            <span
+              class="badge small"
+              :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }"
+              >{{ hoverPanel.props?.badge }}</span
+            >
           </div>
         </div>
 
         <div class="hover-body">
-          <div class="row" v-for="row in hoverPanel.props?.rows || []" :key="row.label">
+          <div v-for="row in hoverPanel.props?.rows || []" :key="row.label" class="row">
             <div class="label">{{ row.label }}</div>
             <div class="value">{{ row.value }}</div>
           </div>
@@ -103,11 +124,11 @@
     </transition>
     <!-- 手势控制 UI -->
     <div class="gesture-controls">
-      <button class="gesture-btn" @click="toggleCamera" :class="{ active: isCameraOpen }">
+      <button class="gesture-btn" :class="{ active: isCameraOpen }" @click="toggleCamera">
         <span class="icon">📷</span>
         {{ isCameraOpen ? '关闭手势' : '开启手势' }}
       </button>
-      
+
       <div v-show="isCameraOpen" class="camera-wrapper">
         <video ref="videoRef" class="input_video" autoplay playsinline></video>
         <canvas ref="canvasRef" class="output_canvas"></canvas>
@@ -130,7 +151,7 @@
         </div>
         <div class="label">移动</div>
       </div>
-      
+
       <div class="divider"></div>
 
       <!-- 升降 -->
@@ -161,19 +182,29 @@ import { unzipSync } from 'fflate'
 import { open as openShapefile } from 'shapefile'
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useGestureControl } from '@/composables/useGestureControl'
-import { liangHanRouteNarratives, type RouteNarrativeBlock } from '@/assets/data/liangHan/routeNarratives'
+import {
+  liangHanRouteNarratives,
+  type RouteNarrativeBlock,
+} from '@/assets/data/liangHan/routeNarratives'
 
 // 导入 Mapbox GL（需先安装 `mapbox-gl`）
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import MapControls from '@/components/MapControls.vue'
-import type { HanLineFeature, HanLineProperties, HanPointFeature, HanPointProperties, HanPointRecord } from '@/types/lianghan'
+import type {
+  HanLineFeature,
+  HanLineProperties,
+  HanPointFeature,
+  HanPointProperties,
+  HanPointRecord,
+} from '@/types/lianghan'
 
 // 从环境变量读取 token（Vite 要求以 VITE_ 前缀暴露给客户端）
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string) || ''
 if (!MAPBOX_TOKEN) {
-  // eslint-disable-next-line no-console
-  console.warn('VITE_MAPBOX_TOKEN 未配置，Mapbox 地图可能无法正常加载。请在 .env 中设置 VITE_MAPBOX_TOKEN。')
+  console.warn(
+    'VITE_MAPBOX_TOKEN 未配置，Mapbox 地图可能无法正常加载。请在 .env 中设置 VITE_MAPBOX_TOKEN。'
+  )
 }
 
 const mapContainer = ref<HTMLDivElement | null>(null)
@@ -186,26 +217,20 @@ let isMouseDown = false
 // let activeHoverSource: 'point' | 'line' | null = null
 
 // --- 手势控制逻辑 ---
-const { 
-  isCameraOpen, 
-  videoRef, 
-  canvasRef, 
-  gestureStatus, 
-  toggleCamera, 
-  setCallbacks 
-} = useGestureControl()
+const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallbacks } =
+  useGestureControl()
 
 setCallbacks(
   (deltaX, deltaY) => {
     if (map) {
       // 摄像头是镜像的，且 delta 是归一化坐标
       // 移动灵敏度
-      const sensitivity = 1000 
+      const sensitivity = 1000
       // 反转 X 轴以匹配镜像，反转 Y 轴以匹配屏幕坐标系
       map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
     }
   },
-  (zoomFactor) => {
+  zoomFactor => {
     if (map) {
       const currentZoom = map.getZoom()
       // 缩放灵敏度
@@ -225,24 +250,31 @@ setCallbacks(
 
       // deltaX > 0 (向右) -> 逆时针旋转 -> bearing 减小
       const newBearing = currentBearing - deltaX * rotateSensitivity
-      
+
       // deltaY > 0 (向下) -> 视角变低 -> pitch 减少
       // deltaY < 0 (向上) -> 视角变高 -> pitch 增加
       const newPitch = currentPitch - deltaY * pitchSensitivity
 
       map.jumpTo({
         bearing: newBearing,
-        pitch: Math.max(0, Math.min(85, newPitch))
+        pitch: Math.max(0, Math.min(85, newPitch)),
       })
     }
   }
 )
 
 // 键盘控制状态
-const keysPressed = reactive({ 
-  w: false, a: false, s: false, d: false,
-  q: false, e: false,
-  arrowup: false, arrowdown: false, arrowleft: false, arrowright: false
+const keysPressed = reactive({
+  w: false,
+  a: false,
+  s: false,
+  d: false,
+  q: false,
+  e: false,
+  arrowup: false,
+  arrowdown: false,
+  arrowleft: false,
+  arrowright: false,
 })
 let animationFrameId: number | null = null
 
@@ -300,11 +332,10 @@ const setYear = (year: number) => {
 const playYear = ref<number>(selectedYear.value)
 
 // 当用户手动通过滑块设置年份时，同步 playYear 并渲染
-watch(selectedYear, (year) => {
+watch(selectedYear, year => {
   playYear.value = year
   filterByYear(year)
 })
-
 
 // 时间轴播放控制（平滑过渡）
 const isPlaying = ref(false)
@@ -320,12 +351,12 @@ const HAN_ROUTES_ZIP_URL = '/data/lianghan/han_silk_road.zip'
 
 const DATASET_COLOR_MAP: Record<HanPointProperties['dataset'], string> = {
   western: '#f3a712',
-  eastern: '#4fa8ff'
+  eastern: '#4fa8ff',
 }
 
 const DATASET_LABEL_MAP: Record<HanPointProperties['dataset'], string> = {
   western: '西汉交通点',
-  eastern: '东汉交通点'
+  eastern: '东汉交通点',
 }
 
 const POINT_TYPE_COLOR_MAP: Record<string, string> = {
@@ -342,26 +373,61 @@ const POINT_TYPE_COLOR_MAP: Record<string, string> = {
   都城: '#f94144',
   都尉治所: '#6a4c93',
   驿站: '#2ec4b6',
-  其他节点: '#f6c177'
+  其他节点: '#f6c177',
 }
 
 const DEFAULT_POINT_TYPE_KEY = '其他节点'
 
 const POINT_TYPE_CATEGORIES = [
-  { key: '都城', label: '都城', description: '帝国首府或行在', color: POINT_TYPE_COLOR_MAP['都城'] },
-  { key: '都尉治所', label: '都尉治所', description: '边防军政指挥机构', color: POINT_TYPE_COLOR_MAP['都尉治所'] },
-  { key: '郡级驻所', label: '郡级驻所', description: '郡国/属国治所', color: POINT_TYPE_COLOR_MAP['郡级驻所'] },
-  { key: '县级驻所', label: '县级驻所', description: '县城与行政节点', color: POINT_TYPE_COLOR_MAP['县级驻所'] },
-  { key: '城市', label: '城市', description: '区域内重要城市', color: POINT_TYPE_COLOR_MAP['城市'] },
+  {
+    key: '都城',
+    label: '都城',
+    description: '帝国首府或行在',
+    color: POINT_TYPE_COLOR_MAP['都城'],
+  },
+  {
+    key: '都尉治所',
+    label: '都尉治所',
+    description: '边防军政指挥机构',
+    color: POINT_TYPE_COLOR_MAP['都尉治所'],
+  },
+  {
+    key: '郡级驻所',
+    label: '郡级驻所',
+    description: '郡国/属国治所',
+    color: POINT_TYPE_COLOR_MAP['郡级驻所'],
+  },
+  {
+    key: '县级驻所',
+    label: '县级驻所',
+    description: '县城与行政节点',
+    color: POINT_TYPE_COLOR_MAP['县级驻所'],
+  },
+  {
+    key: '城市',
+    label: '城市',
+    description: '区域内重要城市',
+    color: POINT_TYPE_COLOR_MAP['城市'],
+  },
   { key: '聚邑', label: '聚邑', description: '聚落与市镇', color: POINT_TYPE_COLOR_MAP['聚邑'] },
   { key: '驿站', label: '驿站', description: '官方传递网络', color: POINT_TYPE_COLOR_MAP['驿站'] },
-  { key: '关隘', label: '关隘', description: '山口与防线门户', color: POINT_TYPE_COLOR_MAP['关隘'] },
+  {
+    key: '关隘',
+    label: '关隘',
+    description: '山口与防线门户',
+    color: POINT_TYPE_COLOR_MAP['关隘'],
+  },
   { key: '城门', label: '城门', description: '城池出入口', color: POINT_TYPE_COLOR_MAP['城门'] },
   { key: '桥梁', label: '桥梁', description: '跨河交通节点', color: POINT_TYPE_COLOR_MAP['桥梁'] },
   { key: '渡口', label: '渡口', description: '河流/水网渡点', color: POINT_TYPE_COLOR_MAP['渡口'] },
   { key: '湖泊', label: '湖泊', description: '水域交通据点', color: POINT_TYPE_COLOR_MAP['湖泊'] },
   { key: '沙漠', label: '沙漠', description: '荒漠行经节点', color: POINT_TYPE_COLOR_MAP['沙漠'] },
-  { key: '其他节点', label: '其他节点', description: '未注明或杂项节点', color: POINT_TYPE_COLOR_MAP['其他节点'] }
+  {
+    key: '其他节点',
+    label: '其他节点',
+    description: '未注明或杂项节点',
+    color: POINT_TYPE_COLOR_MAP['其他节点'],
+  },
 ]
 
 const POINT_TYPE_SYNONYM_MAP: Record<string, string> = {
@@ -401,35 +467,44 @@ const POINT_TYPE_SYNONYM_MAP: Record<string, string> = {
   duwei: '都尉治所',
   garrison: '都尉治所',
   controloffice: '都尉治所',
-  '县治': '县级驻所',
-  '郡治': '郡级驻所',
-  '郡府': '郡级驻所',
-  '都尉': '都尉治所',
-  '邮驿': '驿站',
-  '津渡': '渡口',
-  '水门': '渡口',
-  '边塞': '关隘'
+  县治: '县级驻所',
+  郡治: '郡级驻所',
+  郡府: '郡级驻所',
+  都尉: '都尉治所',
+  邮驿: '驿站',
+  津渡: '渡口',
+  水门: '渡口',
+  边塞: '关隘',
 }
 
-const typeFilters = reactive<Record<string, boolean>>(POINT_TYPE_CATEGORIES.reduce((acc, type) => {
-  acc[type.key] = true
-  return acc
-}, {} as Record<string, boolean>))
+const typeFilters = reactive<Record<string, boolean>>(
+  POINT_TYPE_CATEGORIES.reduce(
+    (acc, type) => {
+      acc[type.key] = true
+      return acc
+    },
+    {} as Record<string, boolean>
+  )
+)
 
 const showLegend = ref(true)
 
 const allTypesSelected = computed({
-  get: () => POINT_TYPE_CATEGORIES.every((cat) => typeFilters[cat.key]),
+  get: () => POINT_TYPE_CATEGORIES.every(cat => typeFilters[cat.key]),
   set: (value: boolean) => {
-    POINT_TYPE_CATEGORIES.forEach((cat) => {
+    POINT_TYPE_CATEGORIES.forEach(cat => {
       typeFilters[cat.key] = value
     })
-  }
+  },
 })
 
-watch(typeFilters, () => {
-  filterByYear(selectedYear.value)
-}, { deep: true })
+watch(
+  typeFilters,
+  () => {
+    filterByYear(selectedYear.value)
+  },
+  { deep: true }
+)
 
 const POINT_COLOR_EXPRESSION = buildPointColorExpression()
 
@@ -447,27 +522,41 @@ const ROUTE_COLOR_MAP: Record<string, string> = {
   略阳道: '#1dd1a1',
   回中道: '#ffcd3c',
   萧关道: '#48dbfb',
-  河湟道: '#9B6B4A'
+  河湟道: '#9B6B4A',
 }
 
-const ROUTE_COLOR_PALETTE = ['#ff5e57', '#ff884e', '#ffa94d', '#ffcd3c', '#10ac84', '#9B6B4A', '#48dbfb', '#2e86de', '#5f27cd', '#f368e0', '#ff6b6b', '#1dd1a1']
+const ROUTE_COLOR_PALETTE = [
+  '#ff5e57',
+  '#ff884e',
+  '#ffa94d',
+  '#ffcd3c',
+  '#10ac84',
+  '#9B6B4A',
+  '#48dbfb',
+  '#2e86de',
+  '#5f27cd',
+  '#f368e0',
+  '#ff6b6b',
+  '#1dd1a1',
+]
 
 const HAN_LAYER_IDS = {
   west: { source: 'han-west-points', layer: 'han-west-points-circle' },
   east: { source: 'han-east-points', layer: 'han-east-points-circle' },
-  route: { source: 'han-routes', layer: 'han-routes-line' }
+  route: { source: 'han-routes', layer: 'han-routes-line' },
 } as const
 
 // 当用户调整夸张值时，实时更新 map 的 terrain 与 hillshade 表现
-watch(terrainExaggeration, (val) => {
+watch(terrainExaggeration, val => {
   try {
     if (map && map.setTerrain) {
       map.setTerrain({ source: 'mapbox-dem', exaggeration: val })
     }
     if (map && map.getLayer && map.getLayer('hillshade-layer')) {
-      try { map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, val * 0.8)) } catch (e) {}
+      try {
+        map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, val * 0.8))
+      } catch (e) {}
     }
- 
   } catch (e) {}
 })
 
@@ -505,7 +594,9 @@ function reduceTerrainForInteraction() {
   try {
     if (map.getLayer && map.getLayer('hillshade-layer')) {
       try {
-        if (savedHillEx === null) savedHillEx = map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number || 0.8
+        if (savedHillEx === null)
+          savedHillEx =
+            (map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number) || 0.8
         map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', 0.18)
       } catch (e) {}
     }
@@ -522,7 +613,8 @@ function restoreTerrainAfterInteraction() {
     try {
       if (map.getLayer && map.getLayer('hillshade-layer')) {
         try {
-          const ex = (typeof terrainExaggeration !== 'undefined') ? terrainExaggeration.value : 0.8
+          const ex =
+            typeof terrainExaggeration.value !== 'undefined' ? terrainExaggeration.value : 0.8
           map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', Math.max(0.2, ex * 0.8))
         } catch (e) {}
       }
@@ -592,21 +684,25 @@ function applyMapStyle(styleId: string) {
   map.once('style.load', () => {
     setChineseLabels()
     // 样式切换后重新应用当前投影/地形设置，确保 3（模式）×8（样式） 组合生效
-    try { applyMapProjection(selectedMode.value) } catch (e) {}
-    try { renderAllLayers() } catch (e) {}
+    try {
+      applyMapProjection(selectedMode.value)
+    } catch (e) {}
+    try {
+      renderAllLayers()
+    } catch (e) {}
   })
 }
 
 function applyMapProjection(mode: string) {
   if (!map) return
-  
+
   // 通用的星空/深空背景配置
   const fogConfig = {
-    'range': [0.5, 10],
-    'color': '#242B4B',
+    range: [0.5, 10],
+    color: '#242B4B',
     'high-color': '#161B33',
     'space-color': '#0B0B15',
-    'star-intensity': mode === 'globe' ? 0.8 : 0.0 // 星星仅在 globe 模式下可见
+    'star-intensity': mode === 'globe' ? 0.8 : 0.0, // 星星仅在 globe 模式下可见
   }
 
   if (mode === 'globe') {
@@ -617,7 +713,7 @@ function applyMapProjection(mode: string) {
         map.setProjection('globe')
       }
     }, 100)
-    
+
     // 设置星空背景
     map.setFog(fogConfig)
 
@@ -633,7 +729,7 @@ function applyMapProjection(mode: string) {
         map.setProjection('mercator')
       }
     }, 100)
-    
+
     // 在 Mercator 模式下也设置 Fog，营造深邃氛围
     map.setFog(fogConfig)
 
@@ -648,8 +744,8 @@ function applyMapProjection(mode: string) {
           'sky-atmosphere-sun-intensity': 15,
           'sky-atmosphere-color': '#242B4B',
           'sky-atmosphere-halo-color': '#161B33',
-          'sky-opacity': 1
-        }
+          'sky-opacity': 1,
+        },
       })
     }
 
@@ -661,14 +757,14 @@ function applyMapProjection(mode: string) {
             type: 'raster-dem',
             url: 'mapbox://mapbox.terrain-rgb',
             tileSize: 512,
-            maxzoom: 14
+            maxzoom: 14,
           })
         }
         // 使用 terrainExaggeration 的当前值以增强立体感
-        const ex = (typeof terrainExaggeration !== 'undefined') ? terrainExaggeration.value : 1.2
+        const ex =
+          typeof terrainExaggeration.value !== 'undefined' ? terrainExaggeration.value : 1.2
         map.setTerrain({ source: 'mapbox-dem', exaggeration: ex })
       } catch (e) {
-        // eslint-disable-next-line no-console
         console.warn('地形设置失败:', e)
       }
 
@@ -682,15 +778,15 @@ function applyMapProjection(mode: string) {
               type: 'hillshade',
               source: 'mapbox-dem',
               paint: {
-                'hillshade-exaggeration': (typeof terrainExaggeration !== 'undefined') ? Math.max(0.2, terrainExaggeration.value * 0.8) : 0.8,
-                'hillshade-illumination-direction': 335
-              }
+                'hillshade-exaggeration':
+                  typeof terrainExaggeration.value !== 'undefined'
+                    ? Math.max(0.2, terrainExaggeration.value * 0.8)
+                    : 0.8,
+                'hillshade-illumination-direction': 335,
+              },
             })
           }
-
-          
         } catch (innerE) {
-          // eslint-disable-next-line no-console
           console.warn('添加地形图层时出错：', innerE)
         }
       })
@@ -700,12 +796,16 @@ function applyMapProjection(mode: string) {
         map.setTerrain(null)
       } catch (e) {}
       if (map.getLayer && map.getLayer('hillshade-layer')) {
-        try { map.removeLayer('hillshade-layer') } catch (e) {}
+        try {
+          map.removeLayer('hillshade-layer')
+        } catch (e) {}
       }
-      
+
       // 移除星空层（globe 专用）
       if (map.getLayer && map.getLayer('sky')) {
-        try { map.removeLayer('sky') } catch (e) {}
+        try {
+          map.removeLayer('sky')
+        } catch (e) {}
       }
     }
   }
@@ -713,7 +813,16 @@ function applyMapProjection(mode: string) {
 
 function setChineseLabels() {
   // 支持多种可能的中文字段名，优先级从左到右
-  const CANDIDATE_KEYS = ['name_zh', 'name_zh_cn', 'name_zh-Hans', 'name_zh_hans', 'name_zh_CN', 'name_zh-Hant', 'name_zh_tw', 'name']
+  const CANDIDATE_KEYS = [
+    'name_zh',
+    'name_zh_cn',
+    'name_zh-Hans',
+    'name_zh_hans',
+    'name_zh_CN',
+    'name_zh-Hant',
+    'name_zh_tw',
+    'name',
+  ]
   try {
     const style = map.getStyle()
     const layers = (style && style.layers) || []
@@ -721,7 +830,7 @@ function setChineseLabels() {
       if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
         // 构造 coalesce 表达式，依次尝试候选字段，最后回退到原始 name
         const expr: any[] = ['coalesce']
-        CANDIDATE_KEYS.forEach((k) => expr.push(['get', k]))
+        CANDIDATE_KEYS.forEach(k => expr.push(['get', k]))
         try {
           map.setLayoutProperty(layer.id, 'text-field', expr)
         } catch (innerErr) {
@@ -730,7 +839,6 @@ function setChineseLabels() {
       }
     })
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.warn('设置地图中文语言失败：', e)
   }
 }
@@ -739,7 +847,7 @@ function setChineseLabels() {
 function handleKeyDown(e: KeyboardEvent) {
   const tagName = (e.target as HTMLElement).tagName
   if (tagName === 'INPUT' || tagName === 'TEXTAREA') return
-  
+
   const key = e.key.toLowerCase()
   if (Object.prototype.hasOwnProperty.call(keysPressed, key)) {
     keysPressed[key as keyof typeof keysPressed] = true
@@ -761,9 +869,9 @@ function loopCameraMovement() {
     animationFrameId = null
     return
   }
-  
+
   const { w, a, s, d, q, e, arrowup, arrowdown, arrowleft, arrowright } = keysPressed
-  
+
   // 检查是否有任意键被按下
   if (!w && !a && !s && !d && !q && !e && !arrowup && !arrowdown && !arrowleft && !arrowright) {
     animationFrameId = null
@@ -828,57 +936,69 @@ onMounted(() => {
 
   if (!mapContainer.value) return
 
-    map = new mapboxgl.Map({
-      container: mapContainer.value,
-      style: selectedStyle.value,
-      center: [105, 35],
-      zoom: 3,
-      projection: selectedMode.value === 'globe' ? 'globe' : 'mercator',
-      logoPosition: 'bottom-right', 
-    })
+  map = new mapboxgl.Map({
+    container: mapContainer.value,
+    style: selectedStyle.value,
+    center: [105, 35],
+    zoom: 3,
+    projection: selectedMode.value === 'globe' ? 'globe' : 'mercator',
+    logoPosition: 'bottom-right',
+  })
 
-    // 将 Mapbox 默认控件放置到左下角，避免与右下角的自定义控制面板冲突
-    map.addControl(new mapboxgl.NavigationControl(), 'bottom-left')
-    map.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left')
+  // 将 Mapbox 默认控件放置到左下角，避免与右下角的自定义控制面板冲突
+  map.addControl(new mapboxgl.NavigationControl(), 'bottom-left')
+  map.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: 'metric' }), 'bottom-left')
 
-    // 交互优化事件：在交互开始降低地形效果，交互结束恢复
-    map.on('movestart', reduceTerrainForInteraction)
-    map.on('zoomstart', reduceTerrainForInteraction)
-    map.on('rotatestart', reduceTerrainForInteraction)
-    map.on('pitchstart', reduceTerrainForInteraction)
+  // 交互优化事件：在交互开始降低地形效果，交互结束恢复
+  map.on('movestart', reduceTerrainForInteraction)
+  map.on('zoomstart', reduceTerrainForInteraction)
+  map.on('rotatestart', reduceTerrainForInteraction)
+  map.on('pitchstart', reduceTerrainForInteraction)
 
-    map.on('moveend', restoreTerrainAfterInteraction)
-    map.on('zoomend', restoreTerrainAfterInteraction)
-    map.on('rotateend', restoreTerrainAfterInteraction)
-    map.on('pitchend', restoreTerrainAfterInteraction)
+  map.on('moveend', restoreTerrainAfterInteraction)
+  map.on('zoomend', restoreTerrainAfterInteraction)
+  map.on('rotateend', restoreTerrainAfterInteraction)
+  map.on('pitchend', restoreTerrainAfterInteraction)
 
-    // 确保在样式数据更新时也尝试设置中文标签（应对部分样式异步添加 label 层的情况）
-    map.on('styledata', () => {
-      try { setChineseLabels() } catch (e) {}
-    })
-    // 也监听 style.load（有时 styledata 不足以覆盖首次加载）
-    map.on('style.load', () => {
-      try { setChineseLabels() } catch (e) {}
-      try { renderAllLayers() } catch (e) {}
-    })
+  // 确保在样式数据更新时也尝试设置中文标签（应对部分样式异步添加 label 层的情况）
+  map.on('styledata', () => {
+    try {
+      setChineseLabels()
+    } catch (e) {}
+  })
+  // 也监听 style.load（有时 styledata 不足以覆盖首次加载）
+  map.on('style.load', () => {
+    try {
+      setChineseLabels()
+    } catch (e) {}
+    try {
+      renderAllLayers()
+    } catch (e) {}
+  })
 
-    // 鼠标按下/松开控制抓手显示：按下显示 grabbing，松开恢复到 hover 状态（或默认）
-    map.on('mousedown', () => {
-      isMouseDown = true
-      try { map.getCanvas().style.cursor = 'grabbing' } catch (e) {}
-    })
-    map.on('mouseup', () => {
-      isMouseDown = false
-      try { map.getCanvas().style.cursor = isOverPoint ? 'pointer' : '' } catch (e) {}
-    })
-    // 监听 document mouseup，防止在地图外释放鼠标导致状态未恢复
-    const docUp = () => {
-      isMouseDown = false
-      try { if (map) map.getCanvas().style.cursor = isOverPoint ? 'pointer' : '' } catch (e) {}
-    }
-    document.addEventListener('mouseup', docUp)
-    // 在组件卸载时移除该监听
-    onUnmounted(() => document.removeEventListener('mouseup', docUp))
+  // 鼠标按下/松开控制抓手显示：按下显示 grabbing，松开恢复到 hover 状态（或默认）
+  map.on('mousedown', () => {
+    isMouseDown = true
+    try {
+      map.getCanvas().style.cursor = 'grabbing'
+    } catch (e) {}
+  })
+  map.on('mouseup', () => {
+    isMouseDown = false
+    try {
+      map.getCanvas().style.cursor = isOverPoint ? 'pointer' : ''
+    } catch (e) {}
+  })
+  // 监听 document mouseup，防止在地图外释放鼠标导致状态未恢复
+  const docUp = () => {
+    isMouseDown = false
+    try {
+      if (map) map.getCanvas().style.cursor = isOverPoint ? 'pointer' : ''
+    } catch (e) {}
+  }
+  document.addEventListener('mouseup', docUp)
+  // 在组件卸载时移除该监听
+  onUnmounted(() => document.removeEventListener('mouseup', docUp))
 
   // 初始化时应用样式、投影并加载数据
   map.on('load', async () => {
@@ -888,7 +1008,6 @@ onMounted(() => {
       await loadLiangHanDataset()
       filterByYear(selectedYear.value)
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('[LiangHan] 数据加载失败', error)
     }
   })
@@ -909,12 +1028,20 @@ onMounted(() => {
 onUnmounted(() => {
   if (map) {
     const pointLayers = [HAN_LAYER_IDS.west.layer, HAN_LAYER_IDS.east.layer]
-    pointLayers.forEach((layerId) => {
-      try { map.off('mousemove', layerId, handlePointMove) } catch (e) {}
-      try { map.off('mouseleave', layerId, handlePointLeave) } catch (e) {}
+    pointLayers.forEach(layerId => {
+      try {
+        map.off('mousemove', layerId, handlePointMove)
+      } catch (e) {}
+      try {
+        map.off('mouseleave', layerId, handlePointLeave)
+      } catch (e) {}
     })
-    try { map.off('mousemove', HAN_LAYER_IDS.route.layer, handleLineMove) } catch (e) {}
-    try { map.off('mouseleave', HAN_LAYER_IDS.route.layer, handleLineLeave) } catch (e) {}
+    try {
+      map.off('mousemove', HAN_LAYER_IDS.route.layer, handleLineMove)
+    } catch (e) {}
+    try {
+      map.off('mouseleave', HAN_LAYER_IDS.route.layer, handleLineLeave)
+    } catch (e) {}
 
     map.remove()
     map = null
@@ -970,7 +1097,7 @@ async function loadLiangHanDataset() {
   try {
     const attributeModules = (await Promise.all([
       import('@/assets/data/liangHan/westernHanPoints.json'),
-      import('@/assets/data/liangHan/easternHanPoints.json')
+      import('@/assets/data/liangHan/easternHanPoints.json'),
     ])) as Array<{ default: HanAttributeTable }>
     const westernAttrModule = attributeModules[0]
     const easternAttrModule = attributeModules[1]
@@ -981,11 +1108,19 @@ async function loadLiangHanDataset() {
     const [westernRaw, easternRaw, routeRaw] = await Promise.all([
       loadShapefileZip(WESTERN_POINTS_ZIP_URL),
       loadShapefileZip(EASTERN_POINTS_ZIP_URL),
-      loadShapefileZip(HAN_ROUTES_ZIP_URL)
+      loadShapefileZip(HAN_ROUTES_ZIP_URL),
     ])
 
-    westernPoints.value = buildPointFeatures(westernRaw, westernAttrModule.default.records, 'western')
-    easternPoints.value = buildPointFeatures(easternRaw, easternAttrModule.default.records, 'eastern')
+    westernPoints.value = buildPointFeatures(
+      westernRaw,
+      westernAttrModule.default.records,
+      'western'
+    )
+    easternPoints.value = buildPointFeatures(
+      easternRaw,
+      easternAttrModule.default.records,
+      'eastern'
+    )
     hanRoutes.value = buildLineFeatures(routeRaw)
     filteredWesternPoints.value = westernPoints.value
     filteredEasternPoints.value = easternPoints.value
@@ -1007,8 +1142,8 @@ async function loadShapefileZip(zipUrl: string): Promise<GeoJSON.Feature[]> {
 
   const archive = unzipSync(new Uint8Array(await response.arrayBuffer()))
   const entries = Object.keys(archive)
-  const shpName = entries.find((name) => name.toLowerCase().endsWith('.shp'))
-  const dbfName = entries.find((name) => name.toLowerCase().endsWith('.dbf'))
+  const shpName = entries.find(name => name.toLowerCase().endsWith('.shp'))
+  const dbfName = entries.find(name => name.toLowerCase().endsWith('.dbf'))
 
   if (!shpName || !dbfName) {
     throw new Error('数据包缺少 shp/dbf 文件，无法解析。')
@@ -1022,11 +1157,9 @@ async function loadShapefileZip(zipUrl: string): Promise<GeoJSON.Feature[]> {
 
   const encoding = detectEncodingFromArchive(entries, archive)
 
-  const source: any = await openShapefile(
-    sliceEntryBuffer(shpEntry),
-    sliceEntryBuffer(dbfEntry),
-    { encoding }
-  )
+  const source: any = await openShapefile(sliceEntryBuffer(shpEntry), sliceEntryBuffer(dbfEntry), {
+    encoding,
+  })
 
   const features: GeoJSON.Feature[] = []
   try {
@@ -1037,7 +1170,9 @@ async function loadShapefileZip(zipUrl: string): Promise<GeoJSON.Feature[]> {
     }
   } finally {
     if (source && typeof source.cancel === 'function') {
-      try { source.cancel() } catch (_) {}
+      try {
+        source.cancel()
+      } catch (_) {}
     }
   }
 
@@ -1049,7 +1184,7 @@ function sliceEntryBuffer(entry: Uint8Array): ArrayBuffer {
 }
 
 function detectEncodingFromArchive(entries: string[], archive: Record<string, Uint8Array>): string {
-  const cpgName = entries.find((name) => name.toLowerCase().endsWith('.cpg'))
+  const cpgName = entries.find(name => name.toLowerCase().endsWith('.cpg'))
   if (!cpgName) return 'utf-8'
   const cpgEntry = archive[cpgName]
   if (!cpgEntry) return 'utf-8'
@@ -1058,16 +1193,15 @@ function detectEncodingFromArchive(entries: string[], archive: Record<string, Ui
     if (!text) return 'utf-8'
     const NORMALIZED: Record<string, string> = {
       'utf-8': 'utf-8',
-      'utf8': 'utf-8',
+      utf8: 'utf-8',
       'utf-16': 'utf-16le',
-      'utf16': 'utf-16le',
-      'gbk': 'gbk',
-      'gb2312': 'gb2312',
-      'gb18030': 'gb18030'
+      utf16: 'utf-16le',
+      gbk: 'gbk',
+      gb2312: 'gb2312',
+      gb18030: 'gb18030',
     }
     return NORMALIZED[text] || text
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.warn('[LiangHan] 无法解析 cpg 文件编码，退回 UTF-8', error)
     return 'utf-8'
   }
@@ -1080,7 +1214,10 @@ function buildPointFeatures(
 ): HanPointFeature[] {
   const index = createRecordIndex(records, dataset)
   return rawFeatures
-    .filter((feature): feature is GeoJSON.Feature<GeoJSON.Point> => Boolean(feature.geometry) && feature.geometry.type === 'Point')
+    .filter(
+      (feature): feature is GeoJSON.Feature<GeoJSON.Point> =>
+        Boolean(feature.geometry) && feature.geometry.type === 'Point'
+    )
     .map((feature, idx) => {
       const geometry = feature.geometry as GeoJSON.Point
       const coords = geometry.coordinates as [number, number]
@@ -1108,7 +1245,7 @@ function buildPointFeatures(
             beginYear: undefined,
             endYear: undefined,
             postalCode: undefined,
-            color: DATASET_COLOR_MAP[dataset]
+            color: DATASET_COLOR_MAP[dataset],
           }
       if (!base.dynasty) {
         base.dynasty = dataset === 'western' ? '西汉' : '东汉'
@@ -1121,8 +1258,8 @@ function buildPointFeatures(
         properties: {
           ...base,
           color: base.color || DATASET_COLOR_MAP[dataset],
-          coordinates: coords
-        }
+          coordinates: coords,
+        },
       }
     })
 }
@@ -1132,11 +1269,11 @@ function createRecordIndex(
   dataset: HanPointProperties['dataset']
 ): Map<string, PointPropsWithoutCoord> {
   const mapIndex = new Map<string, PointPropsWithoutCoord>()
-  records.forEach((record) => {
+  records.forEach(record => {
     const normalized = normalizePointRecord(record, dataset)
     if (!normalized) return
     const keys = new Set([normalized.matchKey, ...normalized.altKeys])
-    keys.forEach((key) => {
+    keys.forEach(key => {
       if (key) {
         mapIndex.set(key, normalized.props)
       }
@@ -1155,7 +1292,8 @@ function normalizePointRecord(
   const props: PointPropsWithoutCoord = {
     id: safeNumber(record.OBJECTID) ?? `${dataset}-${nameZh}`,
     dataset,
-    dynasty: sanitize(record.Dynasty ?? record.dynasty) || (dataset === 'western' ? '西汉' : '东汉'),
+    dynasty:
+      sanitize(record.Dynasty ?? record.dynasty) || (dataset === 'western' ? '西汉' : '东汉'),
     nameZh,
     nameEn: sanitize(record.Name_Engli),
     type: sanitize(record.type),
@@ -1170,7 +1308,7 @@ function normalizePointRecord(
     beginYear: safeNumber(record.beg_year),
     endYear: safeNumber(record.end_year),
     postalCode: sanitize(record.Postal_cod),
-    color: DATASET_COLOR_MAP[dataset]
+    color: DATASET_COLOR_MAP[dataset],
   }
 
   props.typeKey = resolvePointTypeKey(props)
@@ -1179,7 +1317,7 @@ function normalizePointRecord(
   return {
     matchKey: normalizeName(nameZh),
     altKeys: alt ? [normalizeName(alt)] : [],
-    props
+    props,
   }
 }
 
@@ -1226,12 +1364,16 @@ function buildLineFeatures(rawFeatures: GeoJSON.Feature[]): HanLineFeature[] {
   return rawFeatures
     .filter(
       (feature): feature is GeoJSON.Feature<GeoJSON.LineString | GeoJSON.MultiLineString> =>
-        Boolean(feature.geometry) && (feature.geometry.type === 'LineString' || feature.geometry.type === 'MultiLineString')
+        Boolean(feature.geometry) &&
+        (feature.geometry.type === 'LineString' || feature.geometry.type === 'MultiLineString')
     )
     .map((feature, idx) => {
       const rawProps = (feature.properties || {}) as Record<string, unknown>
       const lengthValue = safeNumber(rawProps.Shape_Leng)
-      const name = typeof rawProps.Name === 'string' && rawProps.Name.trim() ? rawProps.Name : `未命名路线 ${idx + 1}`
+      const name =
+        typeof rawProps.Name === 'string' && rawProps.Name.trim()
+          ? rawProps.Name
+          : `未命名路线 ${idx + 1}`
       return {
         type: 'Feature',
         id: name,
@@ -1241,8 +1383,10 @@ function buildLineFeatures(rawFeatures: GeoJSON.Feature[]): HanLineFeature[] {
           name,
           folderPath: typeof rawProps.FolderPath === 'string' ? rawProps.FolderPath : undefined,
           length: lengthValue ? lengthValue * 111 : undefined,
-          color: normalizeColorToHex(getRouteColor(name, rawProps.FolderPath as string | undefined))
-        }
+          color: normalizeColorToHex(
+            getRouteColor(name, rawProps.FolderPath as string | undefined)
+          ),
+        },
       }
     })
 }
@@ -1250,11 +1394,14 @@ function buildLineFeatures(rawFeatures: GeoJSON.Feature[]): HanLineFeature[] {
 function filterByYear(year: number) {
   if (!datasetReady.value) return
   const withinRange = (feature: HanPointFeature) => {
-    const start = typeof feature.properties.beginYear === 'number' ? feature.properties.beginYear : -Infinity
-    const end = typeof feature.properties.endYear === 'number' ? feature.properties.endYear : Infinity
+    const start =
+      typeof feature.properties.beginYear === 'number' ? feature.properties.beginYear : -Infinity
+    const end =
+      typeof feature.properties.endYear === 'number' ? feature.properties.endYear : Infinity
     return year >= start && year <= end
   }
-  const matchesFilters = (feature: HanPointFeature) => withinRange(feature) && isPointTypeEnabled(feature)
+  const matchesFilters = (feature: HanPointFeature) =>
+    withinRange(feature) && isPointTypeEnabled(feature)
   filteredWesternPoints.value = westernPoints.value.filter(matchesFilters)
   filteredEasternPoints.value = easternPoints.value.filter(matchesFilters)
   renderAllLayers()
@@ -1270,13 +1417,21 @@ function renderAllLayers() {
   if (!map || !datasetReady.value) return
   if (map.isStyleLoaded && !map.isStyleLoaded()) {
     map.once('style.load', () => {
-      try { renderAllLayers() } catch (_) {}
+      try {
+        renderAllLayers()
+      } catch (_) {}
     })
     return
   }
 
-  upsertGeoJsonSource(HAN_LAYER_IDS.west.source, filteredWesternPoints.value as unknown as GeoJSON.Feature[])
-  upsertGeoJsonSource(HAN_LAYER_IDS.east.source, filteredEasternPoints.value as unknown as GeoJSON.Feature[])
+  upsertGeoJsonSource(
+    HAN_LAYER_IDS.west.source,
+    filteredWesternPoints.value as unknown as GeoJSON.Feature[]
+  )
+  upsertGeoJsonSource(
+    HAN_LAYER_IDS.east.source,
+    filteredEasternPoints.value as unknown as GeoJSON.Feature[]
+  )
   upsertGeoJsonSource(HAN_LAYER_IDS.route.source, hanRoutes.value as unknown as GeoJSON.Feature[])
   ensureHanLayers()
   bindHanLayerInteractions()
@@ -1286,11 +1441,13 @@ function upsertGeoJsonSource(sourceId: string, features: GeoJSON.Feature[]) {
   if (!map) return
   const data: GeoJSON.FeatureCollection = {
     type: 'FeatureCollection',
-    features
+    features,
   }
   const existing = map.getSource(sourceId) as any
   if (existing && typeof existing.setData === 'function') {
-    try { existing.setData(data) } catch (_) {}
+    try {
+      existing.setData(data)
+    } catch (_) {}
     return
   }
   map.addSource(sourceId, { type: 'geojson', data, promoteId: 'id' })
@@ -1308,8 +1465,8 @@ function ensureHanLayers() {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 4.5, 6, 7, 9, 11, 12, 16],
         'circle-stroke-width': 1.2,
         'circle-stroke-color': '#ffffff',
-        'circle-opacity': 0.88
-      }
+        'circle-opacity': 0.88,
+      },
     })
   }
 
@@ -1323,8 +1480,8 @@ function ensureHanLayers() {
         'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 4.5, 6, 7, 9, 11, 12, 16],
         'circle-stroke-width': 1.2,
         'circle-stroke-color': '#0b1c2c',
-        'circle-opacity': 0.9
-      }
+        'circle-opacity': 0.9,
+      },
     })
   }
 
@@ -1337,8 +1494,8 @@ function ensureHanLayers() {
         'line-color': ['get', 'color'],
         'line-width': ['interpolate', ['linear'], ['zoom'], 3, 1.2, 5, 2.2, 8, 4, 12, 7],
         'line-opacity': 0.8,
-        'line-blur': 0.2
-      }
+        'line-blur': 0.2,
+      },
     })
   }
 }
@@ -1346,15 +1503,23 @@ function ensureHanLayers() {
 function bindHanLayerInteractions() {
   if (!map) return
   const pointLayers = [HAN_LAYER_IDS.west.layer, HAN_LAYER_IDS.east.layer]
-  pointLayers.forEach((layerId) => {
-    try { map.off('mousemove', layerId, handlePointMove) } catch (_) {}
-    try { map.off('mouseleave', layerId, handlePointLeave) } catch (_) {}
+  pointLayers.forEach(layerId => {
+    try {
+      map.off('mousemove', layerId, handlePointMove)
+    } catch (_) {}
+    try {
+      map.off('mouseleave', layerId, handlePointLeave)
+    } catch (_) {}
     map.on('mousemove', layerId, handlePointMove)
     map.on('mouseleave', layerId, handlePointLeave)
   })
 
-  try { map.off('mousemove', HAN_LAYER_IDS.route.layer, handleLineMove) } catch (_) {}
-  try { map.off('mouseleave', HAN_LAYER_IDS.route.layer, handleLineLeave) } catch (_) {}
+  try {
+    map.off('mousemove', HAN_LAYER_IDS.route.layer, handleLineMove)
+  } catch (_) {}
+  try {
+    map.off('mouseleave', HAN_LAYER_IDS.route.layer, handleLineLeave)
+  } catch (_) {}
   map.on('mousemove', HAN_LAYER_IDS.route.layer, handleLineMove)
   map.on('mouseleave', HAN_LAYER_IDS.route.layer, handleLineLeave)
 }
@@ -1367,7 +1532,9 @@ function handlePointMove(e: LayerMouseEvent) {
   const props = feature.properties as HanPointProperties | undefined
   if (!props) return
   hoverPanel.value = { show: true, props: buildPointHoverContent(props) }
-  try { map.getCanvas().style.cursor = 'pointer' } catch (_) {}
+  try {
+    map.getCanvas().style.cursor = 'pointer'
+  } catch (_) {}
 }
 
 function handlePointLeave() {
@@ -1387,7 +1554,9 @@ function handleLineMove(e: LayerMouseEvent) {
   const props = feature.properties as HanLineProperties | undefined
   if (!props) return
   hoverPanel.value = { show: true, props: buildLineHoverContent(props) }
-  try { map.getCanvas().style.cursor = 'pointer' } catch (_) {}
+  try {
+    map.getCanvas().style.cursor = 'pointer'
+  } catch (_) {}
 }
 
 function handleLineLeave() {
@@ -1401,7 +1570,11 @@ function handleLineLeave() {
 
 function buildPointHoverContent(props: HanPointProperties): HoverPanelContent {
   const datasetLabel = DATASET_LABEL_MAP[props.dataset] || '两汉交通点'
-  const accentColor = getPointTypeColor(props.typeKey || props.type || props.classification, props.dataset, props.color)
+  const accentColor = getPointTypeColor(
+    props.typeKey || props.type || props.classification,
+    props.dataset,
+    props.color
+  )
   const rows: HoverPanelRow[] = []
 
   rows.push({ label: '数据集', value: datasetLabel })
@@ -1414,8 +1587,9 @@ function buildPointHoverContent(props: HanPointProperties): HoverPanelContent {
     rows.push({ label: '英文名称', value: props.nameEn })
   }
 
-  const typeParts = [props.typeKey, props.type, props.classification]
-    .filter((value, index, self): value is string => Boolean(value) && self.indexOf(value) === index)
+  const typeParts = [props.typeKey, props.type, props.classification].filter(
+    (value, index, self): value is string => Boolean(value) && self.indexOf(value) === index
+  )
   if (typeParts.length) {
     rows.push({ label: '交通类别', value: typeParts.join(' · ') })
   }
@@ -1427,7 +1601,7 @@ function buildPointHoverContent(props: HanPointProperties): HoverPanelContent {
     ['府州', props.prefecture],
     ['郡县', props.county],
     ['乡镇', props.town],
-    ['村落', props.village]
+    ['村落', props.village],
   ]
   locationFields.forEach(([label, value]) => {
     if (value) rows.push({ label, value })
@@ -1455,7 +1629,7 @@ function buildPointHoverContent(props: HanPointProperties): HoverPanelContent {
     subtitle: [props.dynasty || datasetLabel, props.nameEn].filter(Boolean).join(' · '),
     badge: datasetLabel,
     color: accentColor,
-    rows
+    rows,
   }
 }
 
@@ -1475,8 +1649,11 @@ function buildLineHoverContent(props: HanLineProperties): HoverPanelContent {
     name: props.name,
     subtitle: '两汉交通线',
     badge: '交通线',
-    color: normalizeColorToHex((props.color && String(props.color).trim()) || getRouteColor(props.name || '', props.folderPath)),
-    rows
+    color: normalizeColorToHex(
+      (props.color && String(props.color).trim()) ||
+        getRouteColor(props.name || '', props.folderPath)
+    ),
+    rows,
   }
 }
 
@@ -1511,7 +1688,7 @@ function resolveRouteNarratives(props: HanLineProperties): RouteNarrativeBlock[]
   if (!folderPath) return []
   const segments = folderPath
     .split('/')
-    .map((segment) => segment.replace(/\.kmz$/i, '').trim())
+    .map(segment => segment.replace(/\.kmz$/i, '').trim())
     .filter(Boolean)
 
   for (const candidate of [...segments].reverse()) {
@@ -1526,7 +1703,7 @@ function resolveRouteNarratives(props: HanLineProperties): RouteNarrativeBlock[]
 function formatNarrativeSummary(blocks: RouteNarrativeBlock[]): string {
   if (!blocks.length) return ''
   const pieces: string[] = []
-  blocks.forEach((block) => {
+  blocks.forEach(block => {
     if (block.title || block.content?.length) {
       const contentText = (block.content || []).join(' ')
       if (block.title && contentText) {
@@ -1538,7 +1715,7 @@ function formatNarrativeSummary(blocks: RouteNarrativeBlock[]): string {
       }
     }
     if (block.children?.length) {
-      block.children.forEach((child) => {
+      block.children.forEach(child => {
         const childText = (child.content || []).join(' ')
         if (child.title && childText) {
           pieces.push(`${child.title}：${childText}`)
@@ -1554,7 +1731,8 @@ function formatNarrativeSummary(blocks: RouteNarrativeBlock[]): string {
 }
 
 function getRouteColor(name: string, folderPath?: string): string {
-  const directColor = ROUTE_COLOR_MAP[name.trim()] || (folderPath ? ROUTE_COLOR_MAP[folderPath.trim()] : undefined)
+  const directColor =
+    ROUTE_COLOR_MAP[name.trim()] || (folderPath ? ROUTE_COLOR_MAP[folderPath.trim()] : undefined)
   if (directColor) return directColor
   const key = folderPath || name
   const hash = [...key].reduce((acc, char) => acc + char.charCodeAt(0), 0)
@@ -1609,7 +1787,11 @@ function rgbToHex(r: number, g: number, b: number): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`
 }
 
-function getPointTypeColor(type?: string, dataset?: HanPointProperties['dataset'], fallback?: string): string {
+function getPointTypeColor(
+  type?: string,
+  dataset?: HanPointProperties['dataset'],
+  fallback?: string
+): string {
   if (type && POINT_TYPE_COLOR_MAP[type]) return POINT_TYPE_COLOR_MAP[type]
   if (dataset && DATASET_COLOR_MAP[dataset]) return DATASET_COLOR_MAP[dataset]
   if (fallback) return fallback
@@ -1617,14 +1799,16 @@ function getPointTypeColor(type?: string, dataset?: HanPointProperties['dataset'
 }
 
 function buildPointColorExpression(): any[] {
-  const expr: any[] = ['match', ['coalesce', ['get', 'typeKey'], ['get', 'type'], ['get', 'classification']]]
+  const expr: any[] = [
+    'match',
+    ['coalesce', ['get', 'typeKey'], ['get', 'type'], ['get', 'classification']],
+  ]
   Object.entries(POINT_TYPE_COLOR_MAP).forEach(([typeKey, color]) => {
     expr.push(typeKey, color)
   })
   expr.push(['coalesce', ['get', 'color'], '#f6c177'])
   return expr
 }
-
 </script>
 
 <style scoped>
@@ -1686,7 +1870,9 @@ function buildPointColorExpression(): any[] {
   padding: 4px 10px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   user-select: none;
 }
 
@@ -1783,7 +1969,9 @@ function buildPointColorExpression(): any[] {
   background: rgba(0, 0, 0, 0.2);
   position: relative;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .legend-checkbox:checked {
@@ -1840,7 +2028,9 @@ function buildPointColorExpression(): any[] {
 
 .legend-enter-active,
 .legend-leave-active {
-  transition: transform 220ms cubic-bezier(.2, .9, .2, 1), opacity 180ms ease;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 180ms ease;
 }
 
 .legend-enter-from,
@@ -1901,7 +2091,9 @@ function buildPointColorExpression(): any[] {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .hover-title .title {
@@ -1968,7 +2160,9 @@ function buildPointColorExpression(): any[] {
 
 .slide-enter-active,
 .slide-leave-active {
-  transition: transform 220ms cubic-bezier(.2, .9, .2, 1), opacity 180ms ease;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 180ms ease;
 }
 
 .slide-enter-from,
@@ -2100,7 +2294,7 @@ function buildPointColorExpression(): any[] {
   border: 2px solid #333;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .input_video {
@@ -2127,7 +2321,7 @@ function buildPointColorExpression(): any[] {
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   color: #fff;
   padding: 6px;
   text-align: center;

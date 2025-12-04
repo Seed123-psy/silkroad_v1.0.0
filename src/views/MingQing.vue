@@ -3,32 +3,32 @@
     <div ref="mapContainer" class="map-container" />
 
     <MapControls
-      v-model:modelMode="selectedMode"
-      v-model:modelStyle="selectedStyle"
+      v-model:model-mode="selectedMode"
+      v-model:model-style="selectedStyle"
       :modes="MAP_MODES"
       :styles="MAP_STYLES"
-      modePlaceholder="选择显示模式"
-      stylePlaceholder="选择地图样式"
+      mode-placeholder="选择显示模式"
+      style-placeholder="选择地图样式"
     />
 
     <div class="timeline-glass">
       <div class="timeline-labels">
         <span class="timeline-mark" @click="setYear(startYear)">{{ startYear }}</span>
         <input
+          v-model.number="selectedYear"
           class="timeline-slider"
           type="range"
           :min="startYear"
           :max="endYear"
-          v-model.number="selectedYear"
         />
         <span class="timeline-mark" @click="setYear(endYear)">{{ endYear }}</span>
         <button
           type="button"
           class="timeline-play"
           :class="{ playing: isPlaying }"
-          @click="togglePlay"
           :aria-pressed="isPlaying"
           aria-label="播放/暂停明清城池时间轴"
+          @click="togglePlay"
         >
           <span v-if="!isPlaying">▶ 播放</span>
           <span v-else>❚❚ 暂停</span>
@@ -39,71 +39,94 @@
       </div>
     </div>
 
-        <transition name="legend">
-          <div class="legend-panel" :class="{ collapsed: !showLegend }" v-if="showLegend" @mouseleave="showLegend = false">
-            <h4>精准度</h4>
-            <div class="legend-select-all">
-              <label class="legend-item">
-                <input
-                  type="checkbox"
-                  class="legend-checkbox"
-                  :checked="allAccuracySelected"
-                  @change="onAccuracySelectAll($event)"
-                />
-                <div class="legend-text">
-                  <strong>全选</strong>
-                  <span>切换全部准确度等级</span>
-                </div>
-              </label>
+    <transition name="legend">
+      <div
+        v-if="showLegend"
+        class="legend-panel"
+        :class="{ collapsed: !showLegend }"
+        @mouseleave="showLegend = false"
+      >
+        <h4>精准度</h4>
+        <div class="legend-select-all">
+          <label class="legend-item">
+            <input
+              type="checkbox"
+              class="legend-checkbox"
+              :checked="allAccuracySelected"
+              @change="onAccuracySelectAll($event)"
+            />
+            <div class="legend-text">
+              <strong>全选</strong>
+              <span>切换全部准确度等级</span>
             </div>
-            <ul>
-              <li v-for="level in ACCURACY_LEVELS" :key="level.level">
-                <label class="legend-item">
-                  <input
-                    type="checkbox"
-                    class="legend-checkbox"
-                    :checked="Boolean(accuracyFilters[level.level])"
-                    @change="onAccuracyToggle(level.level, $event)"
-                  />
-                  <span class="swatch" :style="{ backgroundColor: level.color }" />
-                  <div class="legend-text">
-                    <strong>{{ level.title }}</strong>
-                    <span>{{ level.description }}</span>
-                  </div>
-                </label>
-              </li>
-            </ul>
-            <p class="legend-note">数据来源：丝绸之路城市数据库（明清城区复原）。</p>
-          </div>
-        </transition>
+          </label>
+        </div>
+        <ul>
+          <li v-for="level in ACCURACY_LEVELS" :key="level.level">
+            <label class="legend-item">
+              <input
+                type="checkbox"
+                class="legend-checkbox"
+                :checked="Boolean(accuracyFilters[level.level])"
+                @change="onAccuracyToggle(level.level, $event)"
+              />
+              <span class="swatch" :style="{ backgroundColor: level.color }" />
+              <div class="legend-text">
+                <strong>{{ level.title }}</strong>
+                <span>{{ level.description }}</span>
+              </div>
+            </label>
+          </li>
+        </ul>
+        <p class="legend-note">数据来源：丝绸之路城市数据库（明清城区复原）。</p>
+      </div>
+    </transition>
 
-        <button v-if="!showLegend" class="legend-toggle" @mouseenter="showLegend = true" @focus="showLegend = true" aria-label="展开图例">准确度</button>
+    <button
+      v-if="!showLegend"
+      class="legend-toggle"
+      aria-label="展开图例"
+      @mouseenter="showLegend = true"
+      @focus="showLegend = true"
+    >
+      准确度
+    </button>
 
     <transition name="slide">
-      <div class="hover-panel compact" v-if="hoverPanel.show">
+      <div v-if="hoverPanel.show" class="hover-panel compact">
         <div class="hover-top">
           <div class="icon-wrap" :style="{ borderColor: hoverPanel.props?.color || '#e67e22' }">
-            <div class="icon-core" :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }" />
+            <div
+              class="icon-core"
+              :style="{ backgroundColor: hoverPanel.props?.color || '#e67e22' }"
+            />
           </div>
           <div class="hover-title">
             <h4 class="title">{{ hoverPanel.props?.name }}</h4>
-            <div v-if="hoverPanel.props?.otherName" class="subtitle">别称：{{ hoverPanel.props?.otherName }}</div>
+            <div v-if="hoverPanel.props?.otherName" class="subtitle">
+              别称：{{ hoverPanel.props?.otherName }}
+            </div>
           </div>
           <div class="meta">
-            <span class="badge small" :style="{ backgroundColor: hoverPanel.props?.color }">{{ hoverPanel.props?.accuracyLabel }}</span>
+            <span class="badge small" :style="{ backgroundColor: hoverPanel.props?.color }">{{
+              hoverPanel.props?.accuracyLabel
+            }}</span>
           </div>
         </div>
 
         <div class="hover-body">
           <div class="row">
             <div class="label">存续</div>
-            <div class="value">{{ formatYear(hoverPanel.props?.beginYear) }} - {{ formatYear(hoverPanel.props?.endYear) }}</div>
+            <div class="value">
+              {{ formatYear(hoverPanel.props?.beginYear) }} -
+              {{ formatYear(hoverPanel.props?.endYear) }}
+            </div>
           </div>
-          <div class="row" v-if="hoverPanel.props?.landmark">
+          <div v-if="hoverPanel.props?.landmark" class="row">
             <div class="label">地标</div>
             <div class="value">{{ hoverPanel.props?.landmark }}</div>
           </div>
-          <div class="row" v-if="hoverPanel.props?.references">
+          <div v-if="hoverPanel.props?.references" class="row">
             <div class="label">资料</div>
             <div class="value">{{ hoverPanel.props?.references }}</div>
           </div>
@@ -113,11 +136,11 @@
 
     <!-- 手势控制 UI -->
     <div class="gesture-controls">
-      <button class="gesture-btn" @click="toggleCamera" :class="{ active: isCameraOpen }">
+      <button class="gesture-btn" :class="{ active: isCameraOpen }" @click="toggleCamera">
         <span class="icon">📷</span>
         {{ isCameraOpen ? '关闭手势' : '开启手势' }}
       </button>
-      
+
       <div v-show="isCameraOpen" class="camera-wrapper">
         <video ref="videoRef" class="input_video" autoplay playsinline></video>
         <canvas ref="canvasRef" class="output_canvas"></canvas>
@@ -140,7 +163,7 @@
         </div>
         <div class="label">移动</div>
       </div>
-      
+
       <div class="divider"></div>
 
       <!-- 升降 -->
@@ -163,7 +186,6 @@
         <div class="label">旋转</div>
       </div>
     </div>
-
   </div>
 </template>
 
@@ -191,7 +213,10 @@ interface MingQingRegionProperties {
   color: string
 }
 
-type MingQingRegionFeature = GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiPolygon, MingQingRegionProperties> & {
+type MingQingRegionFeature = GeoJSON.Feature<
+  GeoJSON.Polygon | GeoJSON.MultiPolygon,
+  MingQingRegionProperties
+> & {
   id: number
 }
 
@@ -242,23 +267,17 @@ let regionInteractionDisposer: (() => void) | null = null
 let latestRegionGeoJSON: GeoJSON.FeatureCollection | null = null
 
 // --- 手势控制逻辑 ---
-const { 
-  isCameraOpen, 
-  videoRef, 
-  canvasRef, 
-  gestureStatus, 
-  toggleCamera, 
-  setCallbacks 
-} = useGestureControl()
+const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallbacks } =
+  useGestureControl()
 
 setCallbacks(
   (deltaX, deltaY) => {
     if (map) {
-      const sensitivity = 1000 
+      const sensitivity = 1000
       map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
     }
   },
-  (zoomFactor) => {
+  zoomFactor => {
     if (map) {
       const currentZoom = map.getZoom()
       const sensitivity = 0.3
@@ -277,13 +296,13 @@ setCallbacks(
 
       // deltaX > 0 (向右) -> 逆时针旋转 -> bearing 减小
       const newBearing = currentBearing - deltaX * rotateSensitivity
-      
+
       // deltaY > 0 (向下) -> 视角变低 -> pitch 减少
       const newPitch = currentPitch - deltaY * pitchSensitivity
 
       map.jumpTo({
         bearing: newBearing,
-        pitch: Math.max(0, Math.min(85, newPitch))
+        pitch: Math.max(0, Math.min(85, newPitch)),
       })
     }
   }
@@ -297,18 +316,23 @@ let pendingFeatureKey = ''
 let isOverRegion = false
 const hoverPanel = ref<{ show: boolean; props?: MingQingRegionProperties }>({ show: false })
 const showLegend = ref(true)
-const accuracyFilters = reactive<Record<number, boolean>>(ACCURACY_LEVELS.reduce((acc, level) => {
-  acc[level.level] = true
-  return acc
-}, {} as Record<number, boolean>))
+const accuracyFilters = reactive<Record<number, boolean>>(
+  ACCURACY_LEVELS.reduce(
+    (acc, level) => {
+      acc[level.level] = true
+      return acc
+    },
+    {} as Record<number, boolean>
+  )
+)
 
 const allAccuracySelected = computed({
-  get: () => ACCURACY_LEVELS.every((level) => accuracyFilters[level.level]),
+  get: () => ACCURACY_LEVELS.every(level => accuracyFilters[level.level]),
   set: (value: boolean) => {
-    ACCURACY_LEVELS.forEach((level) => {
+    ACCURACY_LEVELS.forEach(level => {
       accuracyFilters[level.level] = value
     })
-  }
+  },
 })
 
 const selectedMode = ref<MapMode>('flat')
@@ -327,15 +351,15 @@ let lastFrameTime = 0
 let savedHillEx: number | null = null
 let interactionTimer: any = null
 
-watch(selectedYear, (year) => {
+watch(selectedYear, year => {
   playYear.value = year
   filterRegionsByYear(year)
 })
 
-watch(selectedStyle, (style) => applyMapStyle(style))
-watch(selectedMode, (mode) => applyMapProjection(mode))
+watch(selectedStyle, style => applyMapStyle(style))
+watch(selectedMode, mode => applyMapProjection(mode))
 
-watch(regions, (list) => {
+watch(regions, list => {
   if (!list.length) return
   if (selectedYear.value !== startYear.value) {
     selectedYear.value = startYear.value
@@ -344,9 +368,13 @@ watch(regions, (list) => {
   filterRegionsByYear(startYear.value)
 })
 
-watch(accuracyFilters, () => {
-  filterRegionsByYear(selectedYear.value)
-}, { deep: true })
+watch(
+  accuracyFilters,
+  () => {
+    filterRegionsByYear(selectedYear.value)
+  },
+  { deep: true }
+)
 
 function setYear(year: number) {
   selectedYear.value = year
@@ -404,25 +432,40 @@ function mapReady(): boolean {
 function renderRegions(features: MingQingRegionFeature[]) {
   latestRegionGeoJSON = { type: 'FeatureCollection', features }
   // debug log
-  // eslint-disable-next-line no-console
-  console.log('[MingQing] renderRegions called, features:', Array.isArray(features) ? features.length : 0)
+
+  console.log(
+    '[MingQing] renderRegions called, features:',
+    Array.isArray(features) ? features.length : 0
+  )
   if (!mapReady() || !latestRegionGeoJSON) return
 
   // Prefer updating existing sources to avoid removing/adding layers which causes flicker
   try {
     if (map!.getSource('mq-regions')) {
-      try { (map!.getSource('mq-regions') as any).setData(latestRegionGeoJSON) } catch (e) { /* ignore */ }
+      try {
+        ;(map!.getSource('mq-regions') as any).setData(latestRegionGeoJSON)
+      } catch (e) {
+        /* ignore */
+      }
     } else {
       map!.addSource('mq-regions', { type: 'geojson', data: latestRegionGeoJSON, promoteId: 'uid' })
     }
   } catch (err) {
     // if something unexpected happens, attempt a safe recreate after removing old resources
     try {
-      if (map!.getLayer('mq-regions-fill')) { map!.removeLayer('mq-regions-fill') }
-      if (map!.getLayer('mq-regions-outline')) { map!.removeLayer('mq-regions-outline') }
-      if (map!.getSource('mq-regions')) { map!.removeSource('mq-regions') }
+      if (map!.getLayer('mq-regions-fill')) {
+        map!.removeLayer('mq-regions-fill')
+      }
+      if (map!.getLayer('mq-regions-outline')) {
+        map!.removeLayer('mq-regions-outline')
+      }
+      if (map!.getSource('mq-regions')) {
+        map!.removeSource('mq-regions')
+      }
       map!.addSource('mq-regions', { type: 'geojson', data: latestRegionGeoJSON, promoteId: 'uid' })
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   if (!map!.getLayer('mq-regions-fill')) {
@@ -431,11 +474,23 @@ function renderRegions(features: MingQingRegionFeature[]) {
       type: 'fill',
       source: 'mq-regions',
       paint: {
-        'fill-color': ['match', ['coalesce', ['get', 'accuracy'], 4], 1, ACCURACY_COLOR_MAP[1], 2, ACCURACY_COLOR_MAP[2], 3, ACCURACY_COLOR_MAP[3], 4, ACCURACY_COLOR_MAP[4], '#8d99ae'],
-        'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.85, 0.62]
-      }
+        'fill-color': [
+          'match',
+          ['coalesce', ['get', 'accuracy'], 4],
+          1,
+          ACCURACY_COLOR_MAP[1],
+          2,
+          ACCURACY_COLOR_MAP[2],
+          3,
+          ACCURACY_COLOR_MAP[3],
+          4,
+          ACCURACY_COLOR_MAP[4],
+          '#8d99ae',
+        ],
+        'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.85, 0.62],
+      },
     })
-    // eslint-disable-next-line no-console
+
     console.log('[MingQing] mq-regions-fill layer added')
   }
 
@@ -447,66 +502,86 @@ function renderRegions(features: MingQingRegionFeature[]) {
       paint: {
         'line-color': '#f5f8fb',
         'line-width': 0.6,
-        'line-opacity': 0.65
-      }
+        'line-opacity': 0.65,
+      },
     })
   }
 
   // Create/update centroid labels for regions (visible when zoomed out)
-    const labelFeatures = features.map((f) => {
-    const geom = f.geometry as any
-    let coords: [number, number] | null = null
-    if (geom && geom.type === 'Polygon') {
-      const ring = (geom.coordinates && geom.coordinates[0]) || []
-      if (ring.length) {
-        // typescript-safe reduce: ensure values exist
-        let sx = 0, sy = 0
-        for (let i = 0; i < ring.length; i++) {
-          const c = ring[i]
-          if (c && typeof c[0] === 'number' && typeof c[1] === 'number') {
-            sx += c[0]
-            sy += c[1]
+  const labelFeatures = features
+    .map(f => {
+      const geom = f.geometry as any
+      let coords: [number, number] | null = null
+      if (geom && geom.type === 'Polygon') {
+        const ring = (geom.coordinates && geom.coordinates[0]) || []
+        if (ring.length) {
+          // typescript-safe reduce: ensure values exist
+          let sx = 0,
+            sy = 0
+          for (let i = 0; i < ring.length; i++) {
+            const c = ring[i]
+            if (c && typeof c[0] === 'number' && typeof c[1] === 'number') {
+              sx += c[0]
+              sy += c[1]
+            }
           }
+          coords = [sx / ring.length, sy / ring.length]
         }
-        coords = [sx / ring.length, sy / ring.length]
-      }
-    } else if (geom && geom.type === 'MultiPolygon') {
-      // take centroid of first polygon's first ring as approximation
-      const ring = ((geom.coordinates && geom.coordinates[0]) ? geom.coordinates[0][0] : []) || []
-      if (ring.length) {
-        let sx = 0, sy = 0
-        for (let i = 0; i < ring.length; i++) {
-          const c = ring[i]
-          if (c && typeof c[0] === 'number' && typeof c[1] === 'number') {
-            sx += c[0]
-            sy += c[1]
+      } else if (geom && geom.type === 'MultiPolygon') {
+        // take centroid of first polygon's first ring as approximation
+        const ring = (geom.coordinates && geom.coordinates[0] ? geom.coordinates[0][0] : []) || []
+        if (ring.length) {
+          let sx = 0,
+            sy = 0
+          for (let i = 0; i < ring.length; i++) {
+            const c = ring[i]
+            if (c && typeof c[0] === 'number' && typeof c[1] === 'number') {
+              sx += c[0]
+              sy += c[1]
+            }
           }
+          coords = [sx / ring.length, sy / ring.length]
         }
-        coords = [sx / ring.length, sy / ring.length]
       }
-    }
-    return {
-      type: 'Feature',
-      geometry: coords ? { type: 'Point', coordinates: coords } : null,
-      properties: { uid: f.properties.uid, color: f.properties.color, accuracy: f.properties.accuracy }
-    }
-  }).filter((d) => d.geometry)
+      return {
+        type: 'Feature',
+        geometry: coords ? { type: 'Point', coordinates: coords } : null,
+        properties: {
+          uid: f.properties.uid,
+          color: f.properties.color,
+          accuracy: f.properties.accuracy,
+        },
+      }
+    })
+    .filter(d => d.geometry)
 
   const labelsGeoJSON = { type: 'FeatureCollection', features: labelFeatures }
   try {
     if (map!.getSource('mq-labels')) {
-      try { (map!.getSource('mq-labels') as any).setData(labelsGeoJSON) } catch (e) { /* ignore */ }
+      try {
+        ;(map!.getSource('mq-labels') as any).setData(labelsGeoJSON)
+      } catch (e) {
+        /* ignore */
+      }
     } else {
       map!.addSource('mq-labels', { type: 'geojson', data: labelsGeoJSON })
     }
   } catch (err) {
     // fallback: attempt safe recreate
     try {
-      if (map!.getLayer('mq-labels-halo')) { map!.removeLayer('mq-labels-halo') }
-      if (map!.getLayer('mq-labels-dot')) { map!.removeLayer('mq-labels-dot') }
-      if (map!.getSource('mq-labels')) { map!.removeSource('mq-labels') }
+      if (map!.getLayer('mq-labels-halo')) {
+        map!.removeLayer('mq-labels-halo')
+      }
+      if (map!.getLayer('mq-labels-dot')) {
+        map!.removeLayer('mq-labels-dot')
+      }
+      if (map!.getSource('mq-labels')) {
+        map!.removeSource('mq-labels')
+      }
       map!.addSource('mq-labels', { type: 'geojson', data: labelsGeoJSON })
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
   }
 
   // refined marker: outer halo + colored core (no text labels)
@@ -519,15 +594,11 @@ function renderRegions(features: MingQingRegionFeature[]) {
       maxzoom: 8,
       paint: {
         // halo grows slightly with zoom to remain visible at low zooms
-        'circle-radius': [
-          'interpolate', ['exponential', 1.2], ['zoom'],
-          0, 6,
-          8, 14
-        ],
+        'circle-radius': ['interpolate', ['exponential', 1.2], ['zoom'], 0, 6, 8, 14],
         'circle-color': 'rgba(8,12,18,0.65)',
         'circle-blur': 0.6,
-        'circle-opacity': 0.9
-      }
+        'circle-opacity': 0.9,
+      },
     })
   }
 
@@ -539,16 +610,12 @@ function renderRegions(features: MingQingRegionFeature[]) {
       minzoom: 0,
       maxzoom: 8,
       paint: {
-        'circle-radius': [
-          'interpolate', ['exponential', 1.2], ['zoom'],
-          0, 3,
-          8, 8
-        ],
+        'circle-radius': ['interpolate', ['exponential', 1.2], ['zoom'], 0, 3, 8, 8],
         // use feature color if provided, fallback to accuracy mapping
         'circle-color': ['coalesce', ['get', 'color'], '#e67e22'],
         'circle-stroke-color': 'rgba(255,255,255,0.85)',
-        'circle-stroke-width': 0.8
-      }
+        'circle-stroke-width': 0.8,
+      },
     })
   }
 
@@ -571,11 +638,16 @@ function attachRegionInteractions() {
 
     // set region-over flag and cursor
     isOverRegion = true
-    try { map.getCanvas().style.cursor = 'pointer' } catch (e) {}
+    try {
+      map.getCanvas().style.cursor = 'pointer'
+    } catch (e) {}
 
     // debounce/show with small delay to avoid flicker
     const name = feature.properties && (feature.properties.name || '')
-    const coordArr = (feature.geometry && feature.geometry.type === 'Point' && feature.geometry.coordinates) ? feature.geometry.coordinates : null
+    const coordArr =
+      feature.geometry && feature.geometry.type === 'Point' && feature.geometry.coordinates
+        ? feature.geometry.coordinates
+        : null
     const coord = coordArr ? coordArr.join(',') : ''
     const featureKey = `${newId}|${coord}|${name}`
 
@@ -603,9 +675,14 @@ function attachRegionInteractions() {
     isOverRegion = false
     pendingFeatureKey = ''
     lastFeatureKey = ''
-    if (popupTimer) { clearTimeout(popupTimer); popupTimer = null }
+    if (popupTimer) {
+      clearTimeout(popupTimer)
+      popupTimer = null
+    }
     hoverPanel.value = { show: false }
-    try { map.getCanvas().style.cursor = '' } catch (e) {}
+    try {
+      map.getCanvas().style.cursor = ''
+    } catch (e) {}
   }
 
   map.on('mousemove', 'mq-regions-fill', moveHandler)
@@ -620,13 +697,22 @@ function attachRegionInteractions() {
       map!.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: false })
     }
     hoveredRegionId = newId
-    try { map!.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: true }) } catch (e) {}
+    try {
+      map!.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: true })
+    } catch (e) {}
 
     isOverRegion = true
-    try { map.getCanvas().style.cursor = 'pointer' } catch (e) {}
+    try {
+      map.getCanvas().style.cursor = 'pointer'
+    } catch (e) {}
 
     const uid = newId
-    const coordArr = (labelFeature.geometry && labelFeature.geometry.type === 'Point' && labelFeature.geometry.coordinates) ? labelFeature.geometry.coordinates : null
+    const coordArr =
+      labelFeature.geometry &&
+      labelFeature.geometry.type === 'Point' &&
+      labelFeature.geometry.coordinates
+        ? labelFeature.geometry.coordinates
+        : null
     const coord = coordArr ? coordArr.join(',') : ''
     const featureKey = `${uid}|${coord}`
 
@@ -638,7 +724,10 @@ function attachRegionInteractions() {
       if (!isOverRegion || pendingFeatureKey !== featureKey) return
       lastFeatureKey = featureKey
       // find the full region properties by uid
-      const region = (latestRegionGeoJSON && latestRegionGeoJSON.features) ? latestRegionGeoJSON.features.find((f: any) => f.properties && f.properties.uid === uid) : null
+      const region =
+        latestRegionGeoJSON && latestRegionGeoJSON.features
+          ? latestRegionGeoJSON.features.find((f: any) => f.properties && f.properties.uid === uid)
+          : null
       const props = region ? (region.properties as MingQingRegionProperties) : undefined
       hoverPanel.value = { show: true, props }
     }, 120)
@@ -646,23 +735,36 @@ function attachRegionInteractions() {
 
   const labelLeaveHandler = () => {
     if (hoveredRegionId !== null) {
-      try { map!.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: false }) } catch (e) {}
+      try {
+        map!.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: false })
+      } catch (e) {}
       hoveredRegionId = null
     }
     isOverRegion = false
     pendingFeatureKey = ''
     lastFeatureKey = ''
-    if (popupTimer) { clearTimeout(popupTimer); popupTimer = null }
+    if (popupTimer) {
+      clearTimeout(popupTimer)
+      popupTimer = null
+    }
     hoverPanel.value = { show: false }
-    try { map.getCanvas().style.cursor = '' } catch (e) {}
+    try {
+      map.getCanvas().style.cursor = ''
+    } catch (e) {}
   }
 
   const labelDblClickHandler = (e: any) => {
     if (!e.features || !e.features.length) return
     const labelFeature = e.features[0] as any
-    const coords = (labelFeature.geometry && labelFeature.geometry.type === 'Point' && labelFeature.geometry.coordinates) ? labelFeature.geometry.coordinates : null
+    const coords =
+      labelFeature.geometry &&
+      labelFeature.geometry.type === 'Point' &&
+      labelFeature.geometry.coordinates
+        ? labelFeature.geometry.coordinates
+        : null
     if (!coords) return
-    const uid = labelFeature.properties && (labelFeature.properties.uid ?? labelFeature.properties.id)
+    const uid =
+      labelFeature.properties && (labelFeature.properties.uid ?? labelFeature.properties.id)
     // fly to the marker and zoom in for a close-to-ground, oblique view
     try {
       // prevent default double-click zoom interfering
@@ -672,7 +774,9 @@ function attachRegionInteractions() {
       } catch (err) {}
 
       // disable map's default doubleClickZoom behavior while we control the flight
-      try { map.doubleClickZoom && map.doubleClickZoom.disable && map.doubleClickZoom.disable() } catch (err) {}
+      try {
+        map.doubleClickZoom && map.doubleClickZoom.disable && map.doubleClickZoom.disable()
+      } catch (err) {}
 
       map.flyTo({
         center: coords,
@@ -681,34 +785,50 @@ function attachRegionInteractions() {
         bearing: 0,
         speed: 0.9,
         curve: 1.6,
-        essential: true
+        essential: true,
       })
       // after flying, open the hover panel and highlight the region; then restore doubleClickZoom
-      map.once && map.once('moveend', () => {
-        try {
-          const region = (latestRegionGeoJSON && latestRegionGeoJSON.features) ? latestRegionGeoJSON.features.find((f: any) => f.properties && (f.properties.uid === uid || f.id === uid)) : null
-          const props = region ? (region.properties as MingQingRegionProperties) : undefined
-          hoverPanel.value = { show: true, props }
-          if (hoveredRegionId !== null && hoveredRegionId !== uid) {
-            try { map.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: false }) } catch (e) {}
+      map.once &&
+        map.once('moveend', () => {
+          try {
+            const region =
+              latestRegionGeoJSON && latestRegionGeoJSON.features
+                ? latestRegionGeoJSON.features.find(
+                    (f: any) => f.properties && (f.properties.uid === uid || f.id === uid)
+                  )
+                : null
+            const props = region ? (region.properties as MingQingRegionProperties) : undefined
+            hoverPanel.value = { show: true, props }
+            if (hoveredRegionId !== null && hoveredRegionId !== uid) {
+              try {
+                map.setFeatureState({ source: 'mq-regions', id: hoveredRegionId }, { hover: false })
+              } catch (e) {}
+            }
+            if (uid !== undefined && uid !== null) {
+              try {
+                map.setFeatureState({ source: 'mq-regions', id: uid }, { hover: true })
+              } catch (e) {}
+              hoveredRegionId = uid
+            }
+          } catch (err) {
+            // ignore
+          } finally {
+            try {
+              map.doubleClickZoom && map.doubleClickZoom.enable && map.doubleClickZoom.enable()
+            } catch (err) {}
           }
-          if (uid !== undefined && uid !== null) {
-            try { map.setFeatureState({ source: 'mq-regions', id: uid }, { hover: true }) } catch (e) {}
-            hoveredRegionId = uid
-          }
-        } catch (err) {
-          // ignore
-        } finally {
-          try { map.doubleClickZoom && map.doubleClickZoom.enable && map.doubleClickZoom.enable() } catch (err) {}
-        }
-      })
+        })
     } catch (err) {
       // fallback to easeTo if flyTo fails
       try {
         // also temporarily disable doubleClickZoom to avoid conflicts
-        try { map.doubleClickZoom && map.doubleClickZoom.disable && map.doubleClickZoom.disable() } catch (err) {}
+        try {
+          map.doubleClickZoom && map.doubleClickZoom.disable && map.doubleClickZoom.disable()
+        } catch (err) {}
         map.easeTo({ center: coords, zoom: DETAIL_ZOOM, pitch: 60 })
-        try { map.doubleClickZoom && map.doubleClickZoom.enable && map.doubleClickZoom.enable() } catch (err) {}
+        try {
+          map.doubleClickZoom && map.doubleClickZoom.enable && map.doubleClickZoom.enable()
+        } catch (err) {}
       } catch (e) {}
     }
   }
@@ -740,14 +860,18 @@ async function loadMingQingRegions() {
     const buffer = await response.arrayBuffer()
     const dataset = await shp(buffer)
     const collections = Array.isArray(dataset) ? dataset : [dataset]
-    const features = collections.flatMap((collection) => collection?.features || [])
+    const features = collections.flatMap(collection => collection?.features || [])
 
     const normalized = features
       .map((feature, idx) => normalizeRegionFeature(feature, idx))
       .filter(Boolean) as MingQingRegionFeature[]
 
     regions.value = normalized
-    const allYears = normalized.flatMap((f) => [f.properties.beginYear, f.properties.endYear].filter((yr): yr is number => typeof yr === 'number' && Number.isFinite(yr)))
+    const allYears = normalized.flatMap(f =>
+      [f.properties.beginYear, f.properties.endYear].filter(
+        (yr): yr is number => typeof yr === 'number' && Number.isFinite(yr)
+      )
+    )
     if (allYears.length) {
       startYear.value = Math.min(...allYears)
       endYear.value = Math.max(...allYears)
@@ -763,13 +887,22 @@ async function loadMingQingRegions() {
   if (map) {
     try {
       if (map.isStyleLoaded && map.isStyleLoaded()) {
-        const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : regions.value
+        const toRender =
+          filteredRegions.value && filteredRegions.value.length
+            ? filteredRegions.value
+            : regions.value
         renderRegions(toRender as MingQingRegionFeature[])
       } else {
-        map.once && map.once('style.load', () => {
-          const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : regions.value
-          try { renderRegions(toRender as MingQingRegionFeature[]) } catch (e) {}
-        })
+        map.once &&
+          map.once('style.load', () => {
+            const toRender =
+              filteredRegions.value && filteredRegions.value.length
+                ? filteredRegions.value
+                : regions.value
+            try {
+              renderRegions(toRender as MingQingRegionFeature[])
+            } catch (e) {}
+          })
       }
     } catch (e) {}
   }
@@ -780,8 +913,28 @@ function normalizeRegionFeature(feature: any, idx: number): MingQingRegionFeatur
   const raw = feature.properties || {}
   // support multiple possible DBF field names (english and chinese)
   const nameKeys = ['name', 'Name', 'NAME', 'name_zh', 'name_zh_cn', '名称', '城名', '名']
-  const beginKeys = ['begin_yr', 'begin', 'Begin_yr', 'beginYear', 'start', 'start_year', '年代始', '始年', '起始年']
-  const endKeys = ['end_yr', 'end', 'End_yr', 'endYear', 'stop', 'end_year', '年代止', '止年', '结束年']
+  const beginKeys = [
+    'begin_yr',
+    'begin',
+    'Begin_yr',
+    'beginYear',
+    'start',
+    'start_year',
+    '年代始',
+    '始年',
+    '起始年',
+  ]
+  const endKeys = [
+    'end_yr',
+    'end',
+    'End_yr',
+    'endYear',
+    'stop',
+    'end_year',
+    '年代止',
+    '止年',
+    '结束年',
+  ]
   const accuracyKeys = ['accuracy', 'Accuracy', 'ACC', '准确度', '置信度']
 
   function firstOf(keys: string[]) {
@@ -809,8 +962,8 @@ function normalizeRegionFeature(feature: any, idx: number): MingQingRegionFeatur
       landmark: raw.landmark ?? raw.landmarks ?? raw['地标'] ?? undefined,
       accuracy,
       accuracyLabel: getAccuracyLabel(accuracy),
-      color: getAccuracyColor(accuracy)
-    }
+      color: getAccuracyColor(accuracy),
+    },
   }
   return normalized
 }
@@ -831,13 +984,14 @@ function getAccuracyColor(level: number) {
 }
 
 function getAccuracyLabel(level: number) {
-  const match = ACCURACY_LEVELS.find((item) => item.level === level)
+  const match = ACCURACY_LEVELS.find(item => item.level === level)
   return match ? match.title : '未明'
 }
 
 function filterRegionsByYear(year: number) {
-  const filtered = regions.value.filter((region) => {
-    const beg = typeof region.properties.beginYear === 'number' ? region.properties.beginYear : -Infinity
+  const filtered = regions.value.filter(region => {
+    const beg =
+      typeof region.properties.beginYear === 'number' ? region.properties.beginYear : -Infinity
     const end = typeof region.properties.endYear === 'number' ? region.properties.endYear : Infinity
     if (!(beg <= year && end >= year)) return false
     const accuracy = typeof region.properties.accuracy === 'number' ? region.properties.accuracy : 4
@@ -847,7 +1001,6 @@ function filterRegionsByYear(year: number) {
   renderRegions(filtered)
 }
 
-
 function applyMapStyle(styleId: string) {
   if (!map) return
   map.setStyle(styleId)
@@ -855,7 +1008,10 @@ function applyMapStyle(styleId: string) {
     setChineseLabels()
     applyMapProjection(selectedMode.value)
     if (latestRegionGeoJSON) {
-      const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : latestRegionGeoJSON.features
+      const toRender =
+        filteredRegions.value && filteredRegions.value.length
+          ? filteredRegions.value
+          : latestRegionGeoJSON.features
       renderRegions(toRender as MingQingRegionFeature[])
     }
   })
@@ -866,11 +1022,11 @@ function applyMapProjection(mode: MapMode) {
 
   // 通用的星空/深空背景配置
   const fogConfig = {
-    'range': [0.5, 10],
-    'color': '#242B4B',
+    range: [0.5, 10],
+    color: '#242B4B',
     'high-color': '#161B33',
     'space-color': '#0B0B15',
-    'star-intensity': mode === 'globe' ? 0.8 : 0.0 // 星星仅在 globe 模式下可见
+    'star-intensity': mode === 'globe' ? 0.8 : 0.0, // 星星仅在 globe 模式下可见
   }
 
   if (mode === 'globe') {
@@ -904,7 +1060,7 @@ function enableTerrain() {
         type: 'raster-dem',
         url: 'mapbox://mapbox.terrain-rgb',
         tileSize: 512,
-        maxzoom: 14
+        maxzoom: 14,
       })
     }
     map.setTerrain({ source: 'mapbox-dem', exaggeration: 2.5 })
@@ -913,7 +1069,7 @@ function enableTerrain() {
         id: 'hillshade-layer',
         type: 'hillshade',
         source: 'mapbox-dem',
-        paint: { 'hillshade-exaggeration': 0.8 }
+        paint: { 'hillshade-exaggeration': 0.8 },
       })
     }
   } catch (error) {
@@ -923,12 +1079,18 @@ function enableTerrain() {
 
 function disableTerrain() {
   if (!map) return
-  try { map.setTerrain(null) } catch (e) {}
+  try {
+    map.setTerrain(null)
+  } catch (e) {}
   if (map.getLayer('hillshade-layer')) {
-    try { map.removeLayer('hillshade-layer') } catch (e) {}
+    try {
+      map.removeLayer('hillshade-layer')
+    } catch (e) {}
   }
   if (map.getSource('mapbox-dem')) {
-    try { map.removeSource('mapbox-dem') } catch (e) {}
+    try {
+      map.removeSource('mapbox-dem')
+    } catch (e) {}
   }
 }
 
@@ -943,14 +1105,16 @@ function ensureSkyLayer() {
       'sky-atmosphere-sun-intensity': 15,
       'sky-atmosphere-color': '#242B4B',
       'sky-atmosphere-halo-color': '#161B33',
-      'sky-opacity': 1
-    }
+      'sky-opacity': 1,
+    },
   })
 }
 
 function removeSkyLayer() {
   if (map && map.getLayer('sky')) {
-    try { map.removeLayer('sky') } catch (e) {}
+    try {
+      map.removeLayer('sky')
+    } catch (e) {}
   }
 }
 
@@ -959,7 +1123,8 @@ function reduceTerrainForInteraction() {
   try {
     if (map.getLayer('hillshade-layer')) {
       if (savedHillEx === null) {
-        savedHillEx = map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number || 0.8
+        savedHillEx =
+          (map.getPaintProperty('hillshade-layer', 'hillshade-exaggeration') as number) || 0.8
       }
       map.setPaintProperty('hillshade-layer', 'hillshade-exaggeration', 0.2)
     }
@@ -982,10 +1147,17 @@ function restoreTerrainAfterInteraction() {
 }
 
 // 键盘控制状态
-const keysPressed = reactive({ 
-  w: false, a: false, s: false, d: false,
-  q: false, e: false,
-  arrowup: false, arrowdown: false, arrowleft: false, arrowright: false
+const keysPressed = reactive({
+  w: false,
+  a: false,
+  s: false,
+  d: false,
+  q: false,
+  e: false,
+  arrowup: false,
+  arrowdown: false,
+  arrowleft: false,
+  arrowright: false,
 })
 let animationFrameId: number | null = null
 
@@ -993,7 +1165,7 @@ let animationFrameId: number | null = null
 function handleKeyDown(e: KeyboardEvent) {
   const tagName = (e.target as HTMLElement).tagName
   if (tagName === 'INPUT' || tagName === 'TEXTAREA') return
-  
+
   const key = e.key.toLowerCase()
   if (Object.prototype.hasOwnProperty.call(keysPressed, key)) {
     keysPressed[key as keyof typeof keysPressed] = true
@@ -1015,9 +1187,9 @@ function loopCameraMovement() {
     animationFrameId = null
     return
   }
-  
+
   const { w, a, s, d, q, e, arrowup, arrowdown, arrowleft, arrowright } = keysPressed
-  
+
   // 检查是否有任意键被按下
   if (!w && !a && !s && !d && !q && !e && !arrowup && !arrowdown && !arrowleft && !arrowright) {
     animationFrameId = null
@@ -1072,14 +1244,23 @@ function loopCameraMovement() {
 
 function setChineseLabels() {
   if (!map) return
-  const CANDIDATE_KEYS = ['name_zh', 'name_zh_cn', 'name_zh-Hans', 'name_zh_hans', 'name_zh_CN', 'name_zh-Hant', 'name_zh_tw', 'name']
+  const CANDIDATE_KEYS = [
+    'name_zh',
+    'name_zh_cn',
+    'name_zh-Hans',
+    'name_zh_hans',
+    'name_zh_CN',
+    'name_zh-Hant',
+    'name_zh_tw',
+    'name',
+  ]
   try {
     const style = map.getStyle()
     const layers = (style && style.layers) || []
     layers.forEach((layer: any) => {
       if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
         const expr: any[] = ['coalesce']
-        CANDIDATE_KEYS.forEach((k) => expr.push(['get', k]))
+        CANDIDATE_KEYS.forEach(k => expr.push(['get', k]))
         try {
           map.setLayoutProperty(layer.id, 'text-field', expr)
         } catch (innerErr) {}
@@ -1099,12 +1280,17 @@ onMounted(() => {
     style: selectedStyle.value,
     center: [112, 35],
     zoom: 3.6,
-    projection: selectedMode.value === 'globe' ? 'globe' : 'mercator'
+    projection: selectedMode.value === 'globe' ? 'globe' : 'mercator',
   })
 
-  popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, anchor: 'top', className: 'custom-popup' })
+  popup = new mapboxgl.Popup({
+    closeButton: false,
+    closeOnClick: false,
+    anchor: 'top',
+    className: 'custom-popup',
+  })
   // debug: ensure popup instance exists
-  // eslint-disable-next-line no-console
+
   console.log('[MingQing] popup initialized', !!popup)
 
   map.addControl(new mapboxgl.NavigationControl(), 'bottom-right')
@@ -1114,7 +1300,10 @@ onMounted(() => {
     setChineseLabels()
     applyMapProjection(selectedMode.value)
     if (latestRegionGeoJSON) {
-      const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : latestRegionGeoJSON.features
+      const toRender =
+        filteredRegions.value && filteredRegions.value.length
+          ? filteredRegions.value
+          : latestRegionGeoJSON.features
       renderRegions(toRender as MingQingRegionFeature[])
     }
   })
@@ -1123,19 +1312,29 @@ onMounted(() => {
     setChineseLabels()
     // ensure labels/regions are re-rendered when style assets update
     if (latestRegionGeoJSON) {
-      const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : (latestRegionGeoJSON.features as MingQingRegionFeature[])
+      const toRender =
+        filteredRegions.value && filteredRegions.value.length
+          ? filteredRegions.value
+          : (latestRegionGeoJSON.features as MingQingRegionFeature[])
       // use a short timeout to allow style layers to settle
       setTimeout(() => {
-        try { renderRegions(toRender as MingQingRegionFeature[]) } catch (e) {}
+        try {
+          renderRegions(toRender as MingQingRegionFeature[])
+        } catch (e) {}
       }, 60)
     }
   })
   map.on('style.load', () => {
     setChineseLabels()
     if (latestRegionGeoJSON) {
-      const toRender = (filteredRegions.value && filteredRegions.value.length) ? filteredRegions.value : (latestRegionGeoJSON.features as MingQingRegionFeature[])
+      const toRender =
+        filteredRegions.value && filteredRegions.value.length
+          ? filteredRegions.value
+          : (latestRegionGeoJSON.features as MingQingRegionFeature[])
       setTimeout(() => {
-        try { renderRegions(toRender as MingQingRegionFeature[]) } catch (e) {}
+        try {
+          renderRegions(toRender as MingQingRegionFeature[])
+        } catch (e) {}
       }, 60)
     }
   })
@@ -1244,7 +1443,9 @@ function onAccuracySelectAll(event: Event) {
   padding: 4px 10px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.08);
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
   user-select: none;
 }
 
@@ -1310,7 +1511,7 @@ function onAccuracySelectAll(event: Event) {
   right: 8px;
   background: transparent;
   border: none;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   font-size: 14px;
 }
@@ -1319,9 +1520,9 @@ function onAccuracySelectAll(event: Event) {
   position: absolute;
   top: 24px;
   right: 24px;
-  background: rgba(6,9,16,0.82);
+  background: rgba(6, 9, 16, 0.82);
   color: #eef2ff;
-  border: 1px solid rgba(255,255,255,0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   padding: 8px 10px;
   border-radius: 12px;
   z-index: 2000;
@@ -1372,7 +1573,9 @@ function onAccuracySelectAll(event: Event) {
   background: rgba(0, 0, 0, 0.2);
   position: relative;
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .legend-checkbox:checked {
@@ -1424,7 +1627,7 @@ function onAccuracySelectAll(event: Event) {
   border-radius: 14px;
   color: #f2f6ff;
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 12px 36px rgba(0,0,0,0.45);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
   z-index: 3000;
 }
 
@@ -1432,7 +1635,7 @@ function onAccuracySelectAll(event: Event) {
   width: 300px; /* narrower */
   padding: 12px;
   border-radius: 12px;
-  background: linear-gradient(180deg, rgba(8,12,18,0.92), rgba(6,9,16,0.86));
+  background: linear-gradient(180deg, rgba(8, 12, 18, 0.92), rgba(6, 9, 16, 0.86));
   backdrop-filter: blur(6px) saturate(120%);
 }
 
@@ -1449,16 +1652,18 @@ function onAccuracySelectAll(event: Event) {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 6px 18px rgba(2,6,12,0.5);
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.08));
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 6px 18px rgba(2, 6, 12, 0.5);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.08));
 }
 
 .icon-core {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .hover-title .title {
@@ -1476,21 +1681,48 @@ function onAccuracySelectAll(event: Event) {
 .hover-title .subtitle {
   margin-top: 4px;
   font-size: 12px;
-  color: rgba(255,255,255,0.72);
+  color: rgba(255, 255, 255, 0.72);
   max-width: 170px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.meta { margin-left: auto }
-.badge.small { padding: 6px 8px; font-size: 12px; border-radius: 999px; color: #06101d; font-weight: 700 }
+.meta {
+  margin-left: auto;
+}
+.badge.small {
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 999px;
+  color: #06101d;
+  font-weight: 700;
+}
 
-.hover-body { margin-top: 10px; display: flex; flex-direction: column; gap: 8px }
-.row { display:flex; justify-content:space-between; gap:12px; align-items:flex-start }
-.label { color: rgba(255,255,255,0.62); font-size: 12px }
-.value { color: rgba(255,255,255,0.92); font-size: 13px; text-align: right; max-width: 180px; overflow: hidden; text-overflow: ellipsis }
-
+.hover-body {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+.label {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+}
+.value {
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+  text-align: right;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 .hover-header {
   display: flex;
@@ -1499,39 +1731,74 @@ function onAccuracySelectAll(event: Event) {
   gap: 12px;
 }
 
-.hover-header h3 { margin: 0; font-size: 18px }
-.info-sub { margin: 2px 0 0; font-size: 13px; color: rgba(255,255,255,0.78) }
-.badge { padding: 6px 12px; border-radius: 999px; font-size: 12px; color: #06101d; font-weight: 700 }
+.hover-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.info-sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+}
+.badge {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #06101d;
+  font-weight: 700;
+}
 
-.info-list { list-style: none; padding: 0; margin: 14px 0 0; display:flex; flex-direction:column; gap:10px }
-.info-list li { display:flex; justify-content:space-between; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.04); padding-bottom:6px }
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.info-list li {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 6px;
+}
 
 /* Slide transition for hover panel */
-.slide-enter-active, .slide-leave-active {
-  transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
+.slide-enter-active,
+.slide-leave-active {
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 180ms ease;
 }
-.slide-enter-from, .slide-leave-to {
+.slide-enter-from,
+.slide-leave-to {
   transform: translateX(-12px);
   opacity: 0;
 }
-.slide-enter-to, .slide-leave-from {
+.slide-enter-to,
+.slide-leave-from {
   transform: translateX(0);
   opacity: 1;
 }
 
 /* Legend slide-right transition: enter from right, leave to right */
-.legend-enter-active, .legend-leave-active {
-  transition: transform 220ms cubic-bezier(.2,.9,.2,1), opacity 180ms ease;
+.legend-enter-active,
+.legend-leave-active {
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 180ms ease;
 }
-.legend-enter-from, .legend-leave-to {
+.legend-enter-from,
+.legend-leave-to {
   transform: translateX(12px);
   opacity: 0;
 }
-.legend-enter-to, .legend-leave-from {
+.legend-enter-to,
+.legend-leave-from {
   transform: translateX(0);
   opacity: 1;
 }
-
 
 @media (max-width: 900px) {
   .legend-panel {
@@ -1593,7 +1860,7 @@ function onAccuracySelectAll(event: Event) {
   border: 2px solid #333;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
 
 .input_video {
@@ -1620,7 +1887,7 @@ function onAccuracySelectAll(event: Event) {
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   color: #fff;
   padding: 6px;
   text-align: center;
