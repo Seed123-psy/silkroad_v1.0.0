@@ -15,6 +15,19 @@ npm ci
 npm run dev
 ```
 
+## Documentation Navigation
+
+
+- [README.md](README.md): Project overview and quick start (this file).
+- [README_en.md](README_en.md): English project documentation.
+- [README_zh.md](README_zh.md): Chinese project documentation.
+- [DATA_LICENSES.md](DATA_LICENSES.md): Data licenses and usage instructions — review before reuse.
+- [REFERENCES.md](REFERENCES.md): Academic citation records (BibTeX / APA formats available).
+- [CONTRIBUTORS.md](CONTRIBUTORS.md): List of contributors and maintainers.
+- [public/data/lianghan/README.md](public/data/lianghan/README.md): Example dataset README with schema and provenance.
+
+Click these links to jump to corresponding documentation or dataset READMEs in the repository for license and provenance details.
+
 Key locations
 - Source code and UI modules: `src/`
 - Data collections and per-dataset guides: `public/data/`

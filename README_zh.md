@@ -74,6 +74,19 @@ npm ci
 npm run dev
 ```
 
+## 文档导航
+
+
+- [README.md](README.md)：项目总览与快速启动（根目录通用说明）。
+- [README_en.md](README_en.md)：英文版项目说明。
+- [README_zh.md](README_zh.md)：中文版项目说明（当前文件）。
+- [DATA_LICENSES.md](DATA_LICENSES.md)：数据许可与使用说明，使用数据前请务必参阅。
+- [REFERENCES.md](REFERENCES.md)：学术引用条目（BibTeX / APA 等格式）。
+- [CONTRIBUTORS.md](CONTRIBUTORS.md)：贡献者名单。
+- [public/data/lianghan/README.md](public/data/lianghan/README.md)：示例数据子目录（数据详情与字段说明）。
+
+点击上方链接可在仓库中跳转到对应文档或数据子目录的 README，便于查阅许可与数据来源。
+
 主要目录
 
 - `src/` — 前端源码（Vue 3 + TypeScript）

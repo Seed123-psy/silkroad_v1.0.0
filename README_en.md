@@ -35,6 +35,19 @@ npm ci
 npm run dev
 ```
 
+## Documentation Navigation
+
+
+- [README.md](README.md) — Project overview and quick start (root README).
+- [README_en.md](README_en.md) — English project documentation (this file).
+- [README_zh.md](README_zh.md) — Chinese project documentation.
+- [DATA_LICENSES.md](DATA_LICENSES.md) — Data license registry and usage notes; review before reuse.
+- [REFERENCES.md](REFERENCES.md) — Citation entries (BibTeX / APA / other formats).
+- [CONTRIBUTORS.md](CONTRIBUTORS.md) — Maintainers and contact information.
+- [public/data/lianghan/README.md](public/data/lianghan/README.md) — Example dataset README with schema and provenance.
+
+Use these links to quickly navigate to dataset READMEs and legal/citation material in the repository.
+
 Visit the Vite dev server address (default `http://localhost:5173`) and allow the application to stream required shapefiles, textures, and WASM bundles from `public/`.
 
 ## Development Workflow
