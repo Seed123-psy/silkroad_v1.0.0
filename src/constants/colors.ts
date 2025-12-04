@@ -5,7 +5,7 @@ export const PALETTE = [
   '#e5e5e5', // light gray
   '#a3a3a3', // mid gray
   '#737373', // dark gray
-]
+] as const
 
 export const STATIC_CATEGORY_COLORS: Record<string, string> = {
   textile: PALETTE[0], // 纺织品

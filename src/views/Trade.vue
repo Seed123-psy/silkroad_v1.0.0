@@ -695,7 +695,6 @@ const updateCharts = () => {
   })
 
   // 2. 热门商品 (基于当前过滤结果)
-  const goodCounts: Record<string, number> = {}
   // 聚合时同时记录商品所属类别，用于给每条柱子着色
   const goodAgg: Array<{ name: string; value: number; category: string }> = []
   const tempMap = new Map<string, { value: number; categoryCode: string }>()

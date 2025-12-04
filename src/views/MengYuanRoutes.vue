@@ -149,7 +149,7 @@ const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallb
   useGestureControl()
 
 // 路线选择数据
-const routes = ref<Array<{ id: string; base: string }>>([])
+const routes = ref<Array<{ id: string; base: string; label?: string }>>([])
 const selectedRouteId = ref<string>('')
 const manifestLoading = ref(false)
 const manifestError = ref<string | null>(null)
@@ -223,7 +223,6 @@ function detectBestEncoding(dbfBuf: ArrayBuffer, cpgBuf: ArrayBuffer | null): st
 
   let best = 'utf-8'
   let bestScore = -Infinity
-  let bestRecoveredEnc: string | null = null
   // unicode regex to detect CJK unified ideographs
   const hanRe = /\p{Script=Han}/u
   const mojibakeRe = /Ã|Â|�/g
@@ -251,7 +250,6 @@ function detectBestEncoding(dbfBuf: ArrayBuffer, cpgBuf: ArrayBuffer | null): st
       if (score > bestScore) {
         bestScore = score
         best = enc
-        bestRecoveredEnc = null
       }
       // if the decoded text looks like mojibake (UTF-8 decoded as Latin1/Windows-1252),
       // try recovering by reinterpreting those chars as raw bytes and decoding as UTF-8.
@@ -276,7 +274,6 @@ function detectBestEncoding(dbfBuf: ArrayBuffer, cpgBuf: ArrayBuffer | null): st
           if (rScore > bestScore) {
             bestScore = rScore
             best = 'utf-8'
-            bestRecoveredEnc = 'utf-8'
           }
         } catch (e) {}
       }
@@ -391,8 +388,9 @@ function addOrUpdateLineLayer(features: GeoJSON.Feature[]) {
       }
     })
     if (coords.length) {
-      const lons = coords.map(c => c[0])
-      const lats = coords.map(c => c[1])
+      const lons = coords.map(c => c[0]).filter((v): v is number => v !== undefined)
+      const lats = coords.map(c => c[1]).filter((v): v is number => v !== undefined)
+      if (lons.length === 0 || lats.length === 0) return
       const minLon = Math.min(...lons),
         maxLon = Math.max(...lons)
       const minLat = Math.min(...lats),
@@ -408,11 +406,7 @@ function addOrUpdateLineLayer(features: GeoJSON.Feature[]) {
   } catch (e) {}
 }
 
-function escapeHtml(input: any) {
-  if (input === null || input === undefined) return ''
-  const s = String(input)
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-}
+// escapeHtml removed (unused)
 
 function handlePointMove(e: any) {
   if (!map) return
@@ -720,16 +714,22 @@ async function reloadManifest() {
       label: it.label ? String(it.label) : undefined,
     }))
     console.log('[MengYuan] manifest loaded, routes:', routes.value.length)
-    if (!selectedRouteId.value && routes.value.length) selectedRouteId.value = routes.value[0].id
+    if (!selectedRouteId.value && routes.value.length) {
+      const first = routes.value[0]
+      if (first) selectedRouteId.value = first.id
+    }
   } catch (e) {
-    manifestError.value = (e && (e as Error).message) || String(e)
+    manifestError.value = String((e && (e as Error).message) || e)
     console.warn('[MengYuan] 无法读取 manifest:', manifestError.value)
     // fallback entries
     routes.value = [
       { id: '1218', base: 'line/1218lines' },
       { id: '1220', base: 'line/1220lines' },
     ]
-    if (!selectedRouteId.value && routes.value.length) selectedRouteId.value = routes.value[0].id
+    if (!selectedRouteId.value && routes.value.length) {
+      const first = routes.value[0]
+      if (first) selectedRouteId.value = first.id
+    }
   } finally {
     manifestLoading.value = false
   }
@@ -764,7 +764,7 @@ watch(selectedRouteId, async newId => {
     loadingRoute.value = false
   } catch (err) {
     console.warn('[MengYuan] 加载路线失败', err)
-    routeError.value = (err && (err as Error).message) || String(err)
+    routeError.value = String((err && (err as Error).message) || err)
     loadingRoute.value = false
     // remove layer if exists
     try {
