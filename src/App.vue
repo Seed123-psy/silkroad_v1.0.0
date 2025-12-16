@@ -4,11 +4,17 @@
     <main class="app-content">
       <router-view />
     </main>
+    <GlobalGestureCursor />
   </div>
 </template>
 
 <script setup lang="ts">
 import ToolSidebar from '@/components/layout/ToolSidebar.vue'
+import GlobalGestureCursor from '@/components/GlobalGestureCursor.vue'
+import { useGlobalGesture } from '@/composables/useGlobalGesture'
+
+// 初始化全局手势控制
+useGlobalGesture()
 </script>
 
 <style scoped lang="scss">

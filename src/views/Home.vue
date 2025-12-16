@@ -9,23 +9,6 @@
       @city-hover="handleCityHover"
     />
     <CityInfoPanel :city="hoveredCity" @close="handleClosePanel" />
-
-    <!-- 手势控制 UI -->
-    <div class="gesture-controls">
-      <button class="gesture-btn" :class="{ active: isCameraOpen }" @click="toggleCamera">
-        <span class="icon">📷</span>
-        {{ isCameraOpen ? '关闭手势控制' : '开启手势控制' }}
-      </button>
-
-      <div v-show="isCameraOpen" class="camera-wrapper">
-        <video ref="videoRef" class="input_video" autoplay playsinline></video>
-        <canvas ref="canvasRef" class="output_canvas"></canvas>
-        <div class="gesture-status">
-          <p>状态: {{ gestureStatus }}</p>
-          <p class="hint">单手捏合: 旋转地球 | 双手开合: 缩放地球</p>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -35,7 +18,7 @@ import Globe3D from '@/components/Globe3D.vue'
 import CityInfoPanel from '@/components/CityInfoPanel.vue'
 import { dataService } from '@/services/dataService'
 import type { City, Route } from '@/types'
-import { useGestureControl } from '@/composables/useGestureControl'
+import { useGestureStore } from '@/stores/gesture'
 
 const cities = ref<City[]>([])
 const routes = ref<Route[]>([])
@@ -45,29 +28,13 @@ const autoRotate = ref(true)
 const isNodeHovered = ref(false)
 let hoverResetTimer: number | null = null
 
-// --- 手势控制逻辑 ---
-const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallbacks } =
-  useGestureControl()
-
-// 设置手势回调
-setCallbacks(
-  (deltaX, deltaY) => {
-    if (globeRef.value) {
-      globeRef.value.handleGestureRotate(deltaX, deltaY)
-    }
-  },
-  zoomFactor => {
-    if (globeRef.value) {
-      globeRef.value.handleGestureZoom(zoomFactor)
-    }
-  }
-)
+const gestureStore = useGestureStore()
 
 const updateAutoRotate = () => {
-  autoRotate.value = !isCameraOpen.value && !isNodeHovered.value
+  autoRotate.value = !gestureStore.isCameraOpen && !isNodeHovered.value
 }
 
-watch(isCameraOpen, () => {
+watch(() => gestureStore.isCameraOpen, () => {
   updateAutoRotate()
 })
 

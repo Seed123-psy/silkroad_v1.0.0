@@ -85,6 +85,14 @@
 
     <div class="sidebar-footer">
       <!-- Placeholder for future settings or profile -->
+      <button 
+        class="gesture-toggle-btn" 
+        :class="{ active: gestureStore.isCameraOpen }"
+        @click="gestureStore.toggleCamera"
+        title="手势控制"
+      >
+        <span class="icon">👋</span>
+      </button>
     </div>
   </aside>
 </template>
@@ -92,6 +100,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useGestureStore } from '@/stores/gesture'
 import {
   GlobeAltIcon,
   ChartBarIcon,
@@ -101,6 +110,8 @@ import {
 import TransportRoutesIcon from '@/components/icons/TransportRoutesIcon.vue'
 import HanMingTransportIcon from '@/components/icons/HanMingTransportIcon.vue'
 import LiangHanTransportIcon from '@/components/icons/LiangHanTransportIcon.vue'
+
+const gestureStore = useGestureStore()
 
 interface NavItem {
   label: string
@@ -326,6 +337,42 @@ navItems.forEach(item => {
 
   &:hover {
     background: rgba(255, 255, 255, 0.03);
+  }
+}
+
+.sidebar-footer {
+  padding: $spacing-md;
+  border-top: 1px solid rgba($color-gold, 0.1);
+  display: flex;
+  justify-content: center;
+}
+
+.gesture-toggle-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba($color-gold, 0.3);
+  color: $text-primary;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba($color-gold, 0.2);
+    border-color: $color-gold;
+  }
+  
+  &.active {
+    background: $color-gold;
+    color: $bg-primary;
+    box-shadow: 0 0 10px rgba($color-gold, 0.5);
+  }
+  
+  .icon {
+    font-size: 1.2rem;
   }
 }
 

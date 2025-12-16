@@ -42,32 +42,131 @@
 
           <div class="filter-group">
             <label>商品类别</label>
-            <select v-model="selectedCategory" class="filter-select">
-              <option value="">全部类别</option>
-              <option v-for="c in categories" :key="c.value" :value="c.value">
-                {{ c.label }}
-              </option>
-            </select>
+            <Listbox v-model="selectedCategory">
+              <div class="relative">
+                <ListboxButton class="filter-select-btn">
+                  <span>{{ categories.find(c => c.value === selectedCategory)?.label || '全部类别' }}</span>
+                  <span class="chev">▾</span>
+                </ListboxButton>
+                <transition
+                  enter-active-class="transition duration-100 ease-out"
+                  enter-from-class="transform scale-95 opacity-0"
+                  enter-to-class="transform scale-100 opacity-100"
+                  leave-active-class="transition duration-75 ease-in"
+                  leave-from-class="transform scale-100 opacity-100"
+                  leave-to-class="transform scale-95 opacity-0"
+                >
+                  <ListboxOptions class="filter-options-dropdown">
+                    <ListboxOption
+                      v-slot="{ active, selected }"
+                      value=""
+                      as="template"
+                    >
+                      <li :class="['filter-option', { active, selected }]">
+                        全部类别
+                      </li>
+                    </ListboxOption>
+                    <ListboxOption
+                      v-for="c in categories"
+                      :key="c.value"
+                      :value="c.value"
+                      v-slot="{ active, selected }"
+                      as="template"
+                    >
+                      <li :class="['filter-option', { active, selected }]">
+                        {{ c.label }}
+                      </li>
+                    </ListboxOption>
+                  </ListboxOptions>
+                </transition>
+              </div>
+            </Listbox>
           </div>
 
           <div class="filter-group">
             <label>出发城市</label>
-            <select v-model="selectedFromCity" class="filter-select">
-              <option value="">全部出发地</option>
-              <option v-for="city in fromCities" :key="city" :value="city">
-                {{ city }}
-              </option>
-            </select>
+            <Listbox v-model="selectedFromCity">
+              <div class="relative">
+                <ListboxButton class="filter-select-btn">
+                  <span>{{ selectedFromCity || '全部出发地' }}</span>
+                  <span class="chev">▾</span>
+                </ListboxButton>
+                <transition
+                  enter-active-class="transition duration-100 ease-out"
+                  enter-from-class="transform scale-95 opacity-0"
+                  enter-to-class="transform scale-100 opacity-100"
+                  leave-active-class="transition duration-75 ease-in"
+                  leave-from-class="transform scale-100 opacity-100"
+                  leave-to-class="transform scale-95 opacity-0"
+                >
+                  <ListboxOptions class="filter-options-dropdown">
+                    <ListboxOption
+                      v-slot="{ active, selected }"
+                      value=""
+                      as="template"
+                    >
+                      <li :class="['filter-option', { active, selected }]">
+                        全部出发地
+                      </li>
+                    </ListboxOption>
+                    <ListboxOption
+                      v-for="city in fromCities"
+                      :key="city"
+                      :value="city"
+                      v-slot="{ active, selected }"
+                      as="template"
+                    >
+                      <li :class="['filter-option', { active, selected }]">
+                        {{ city }}
+                      </li>
+                    </ListboxOption>
+                  </ListboxOptions>
+                </transition>
+              </div>
+            </Listbox>
           </div>
 
           <div class="filter-group">
             <label>目的城市</label>
-            <select v-model="selectedToCity" class="filter-select">
-              <option value="">全部目的地</option>
-              <option v-for="city in toCities" :key="city" :value="city">
-                {{ city }}
-              </option>
-            </select>
+            <Listbox v-model="selectedToCity">
+              <div class="relative">
+                <ListboxButton class="filter-select-btn">
+                  <span>{{ selectedToCity || '全部目的地' }}</span>
+                  <span class="chev">▾</span>
+                </ListboxButton>
+                <transition
+                  enter-active-class="transition duration-100 ease-out"
+                  enter-from-class="transform scale-95 opacity-0"
+                  enter-to-class="transform scale-100 opacity-100"
+                  leave-active-class="transition duration-75 ease-in"
+                  leave-from-class="transform scale-100 opacity-100"
+                  leave-to-class="transform scale-95 opacity-0"
+                >
+                  <ListboxOptions class="filter-options-dropdown">
+                    <ListboxOption
+                      v-slot="{ active, selected }"
+                      value=""
+                      as="template"
+                    >
+                      <li :class="['filter-option', { active, selected }]">
+                        全部目的地
+                      </li>
+                    </ListboxOption>
+                    <ListboxOption
+                      v-for="city in toCities"
+                      :key="city"
+                      :value="city"
+                      v-slot="{ active, selected }"
+                      as="template"
+                    >
+                      <li :class="['filter-option', { active, selected }]">
+                        {{ city }}
+                      </li>
+                    </ListboxOption>
+                  </ListboxOptions>
+                </transition>
+              </div>
+            </Listbox>
           </div>
 
           <div class="filter-group">
@@ -344,6 +443,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
+import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import * as echarts from 'echarts'
 import 'echarts-gl'
 import tradeDataRaw from '@/assets/data/lushang_trades.json'
@@ -1956,5 +2056,83 @@ onUnmounted(() => {
     top: auto;
     bottom: 1rem;
   }
+}
+
+/* Custom Dropdown Styles */
+.relative {
+  position: relative;
+}
+
+.filter-select-btn {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #333333;
+  color: #e5e5e5;
+  padding: 0.75rem; /* Larger touch target */
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.filter-select-btn:hover {
+  border-color: #e2c792;
+  background: #1a1a1a;
+}
+
+.filter-options-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  max-height: 300px; /* Taller for easier scrolling */
+  overflow-y: auto;
+  background: #1a1a1a;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  margin-top: 4px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  padding: 4px 0;
+}
+
+/* Scrollbar styling for the dropdown */
+.filter-options-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+.filter-options-dropdown::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+.filter-options-dropdown::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+.filter-option {
+  padding: 12px 16px; /* Larger click area */
+  cursor: pointer;
+  color: #a3a3a3;
+  transition: all 0.1s;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.filter-option:last-child {
+  border-bottom: none;
+}
+
+.filter-option:hover,
+.filter-option.active {
+  background: #2a2a2a;
+  color: #e2c792;
+}
+
+.filter-option.selected {
+  color: #e2c792;
+  font-weight: bold;
+  background: #2a2a2a;
 }
 </style>

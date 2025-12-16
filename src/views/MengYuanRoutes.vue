@@ -59,23 +59,6 @@
       <div v-if="routeError" class="route-error">路线加载失败：{{ routeError }}</div>
     </div>
 
-    <!-- 手势控制 UI（复用） -->
-    <div class="gesture-controls">
-      <button class="gesture-btn" :class="{ active: isCameraOpen }" @click="toggleCamera">
-        <span class="icon">📷</span>
-        {{ isCameraOpen ? '关闭手势' : '开启手势' }}
-      </button>
-
-      <div v-show="isCameraOpen" class="camera-wrapper">
-        <video ref="videoRef" class="input_video" autoplay playsinline></video>
-        <canvas ref="canvasRef" class="output_canvas"></canvas>
-        <div class="gesture-status">
-          <p>状态: {{ gestureStatus }}</p>
-          <p class="hint">单手捏合: 移动 | 单手张开: 旋转/倾斜 | 双手开合: 缩放</p>
-        </div>
-      </div>
-    </div>
-
     <!-- WASD 键盘漫游提示（与其他页面一致） -->
     <div class="wasd-controls">
       <div class="control-section">
@@ -115,7 +98,6 @@
 import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import mapboxgl from 'mapbox-gl'
 import MapControls from '@/components/MapControls.vue'
-import { useGestureControl } from '@/composables/useGestureControl'
 import { open as openShapefile } from 'shapefile'
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string) || ''
@@ -143,10 +125,6 @@ const MAP_STYLES = [
 
 const selectedMode = ref<string>('flat')
 const selectedStyle = ref<string>(MAP_STYLES[0]?.id || '')
-
-// 手势控制（复用）
-const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallbacks } =
-  useGestureControl()
 
 // 路线选择数据
 const routes = ref<Array<{ id: string; base: string; label?: string }>>([])
@@ -782,35 +760,6 @@ watch(selectedRouteId, async newId => {
   }
 })
 
-// 手势回调实现——与现有页面相同的行为：pan/zoom/rotate
-setCallbacks(
-  (deltaX, deltaY) => {
-    if (map) {
-      const sensitivity = 1000
-      map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
-    }
-  },
-  zoomFactor => {
-    if (map) {
-      const currentZoom = map.getZoom()
-      const sensitivity = 0.3
-      const deltaZoom = (zoomFactor - 1) * sensitivity * 10
-      map.setZoom(currentZoom + deltaZoom)
-    }
-  },
-  (deltaX, deltaY) => {
-    if (map) {
-      const rotateSensitivity = 50
-      const pitchSensitivity = 50
-      const currentBearing = map.getBearing()
-      const currentPitch = map.getPitch()
-      const newBearing = currentBearing - deltaX * rotateSensitivity
-      const newPitch = currentPitch - deltaY * pitchSensitivity
-      map.jumpTo({ bearing: newBearing, pitch: Math.max(0, Math.min(85, newPitch)) })
-    }
-  }
-)
-
 // 键盘控制
 const keysPressed = reactive({
   w: false,
@@ -1095,7 +1044,7 @@ onUnmounted(() => {
 }
 .wasd-controls {
   position: absolute;
-  right: 16px;
+  right: 280px; /* 避开右下角的手势摄像头 */
   bottom: 16px;
   z-index: 1000; /* 提高优先级，保持在底部 UI 之上 */
   display: flex;

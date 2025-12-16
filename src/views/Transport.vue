@@ -121,23 +121,6 @@
       </div>
     </transition>
 
-    <!-- 手势控制 UI -->
-    <div class="gesture-controls">
-      <button class="gesture-btn" :class="{ active: isCameraOpen }" @click="toggleCamera">
-        <span class="icon">📷</span>
-        {{ isCameraOpen ? '关闭手势' : '开启手势' }}
-      </button>
-
-      <div v-show="isCameraOpen" class="camera-wrapper">
-        <video ref="videoRef" class="input_video" autoplay playsinline></video>
-        <canvas ref="canvasRef" class="output_canvas"></canvas>
-        <div class="gesture-status">
-          <p>状态: {{ gestureStatus }}</p>
-          <p class="hint">单手捏合: 移动 | 单手张开: 旋转/倾斜 | 双手开合: 缩放</p>
-        </div>
-      </div>
-    </div>
-
     <!-- WASD 漫游提示 -->
     <div class="wasd-controls">
       <!-- 移动 -->
@@ -180,7 +163,6 @@
 import { unzipSync } from 'fflate'
 import { open as openShapefile } from 'shapefile'
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useGestureControl } from '@/composables/useGestureControl'
 
 interface TangPointProperties {
   Name_CH: string
@@ -238,53 +220,6 @@ let lastFeatureKey = ''
 let popupTimer: any = null
 let pendingFeatureKey = ''
 let activeHoverSource: 'point' | 'line' | null = null
-
-// --- 手势控制逻辑 ---
-const { isCameraOpen, videoRef, canvasRef, gestureStatus, toggleCamera, setCallbacks } =
-  useGestureControl()
-
-setCallbacks(
-  (deltaX, deltaY) => {
-    if (map) {
-      // 摄像头是镜像的，且 delta 是归一化坐标
-      // 移动灵敏度
-      const sensitivity = 1000
-      // 反转 X 轴以匹配镜像，反转 Y 轴以匹配屏幕坐标系
-      map.panBy([-deltaX * sensitivity, -deltaY * sensitivity], { animate: false })
-    }
-  },
-  zoomFactor => {
-    if (map) {
-      const currentZoom = map.getZoom()
-      // 缩放灵敏度
-      const sensitivity = 0.3
-      const deltaZoom = (zoomFactor - 1) * sensitivity * 10 // 放大系数
-      map.setZoom(currentZoom + deltaZoom)
-    }
-  },
-  (deltaX, deltaY) => {
-    if (map) {
-      // 旋转灵敏度
-      const rotateSensitivity = 50
-      const pitchSensitivity = 50
-
-      const currentBearing = map.getBearing()
-      const currentPitch = map.getPitch()
-
-      // deltaX > 0 (向右) -> 逆时针旋转 -> bearing 减小 (修复左右反向)
-      const newBearing = currentBearing - deltaX * rotateSensitivity
-
-      // deltaY > 0 (向下) -> 视角变低 -> pitch 减少
-      // deltaY < 0 (向上) -> 视角变高 -> pitch 增加
-      const newPitch = currentPitch - deltaY * pitchSensitivity
-
-      map.jumpTo({
-        bearing: newBearing,
-        pitch: Math.max(0, Math.min(85, newPitch)),
-      })
-    }
-  }
-)
 
 // 键盘控制状态
 const keysPressed = reactive({
@@ -1789,7 +1724,7 @@ function onTypeSelectAll(event: Event) {
 .wasd-controls {
   position: absolute;
   bottom: 24px; /* 固定到最右下角，和底部居中时间轴错开 */
-  right: 24px;
+  right: 280px; /* 避开右下角的手势摄像头 (240px + 20px + 20px) */
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1860,7 +1795,7 @@ function onTypeSelectAll(event: Event) {
 .gesture-controls {
   position: absolute;
   bottom: 140px; /* 位于 WASD 上方 */
-  right: 24px;
+  right: 280px; /* 跟随 WASD 左移 */
   z-index: 100;
   display: flex;
   flex-direction: column;
