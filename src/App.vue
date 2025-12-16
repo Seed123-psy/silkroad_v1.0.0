@@ -5,13 +5,18 @@
       <router-view />
     </main>
     <GlobalGestureCursor />
+    <HelpModal :is-open="appStore.showHelp" @close="appStore.toggleHelp" />
   </div>
 </template>
 
 <script setup lang="ts">
 import ToolSidebar from '@/components/layout/ToolSidebar.vue'
 import GlobalGestureCursor from '@/components/GlobalGestureCursor.vue'
+import HelpModal from '@/components/HelpModal.vue'
 import { useGlobalGesture } from '@/composables/useGlobalGesture'
+import { useAppStore } from '@/stores/app'
+
+const appStore = useAppStore()
 
 // 初始化全局手势控制
 useGlobalGesture()

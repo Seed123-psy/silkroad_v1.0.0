@@ -8,8 +8,8 @@
       v-model:model-style="selectedStyle"
       :modes="MAP_MODES"
       :styles="MAP_STYLES"
-      mode-placeholder="选择显示模式"
-      style-placeholder="选择地图样式"
+      :mode-placeholder="t.map.controls.modePlaceholder"
+      :style-placeholder="t.map.controls.stylePlaceholder"
     />
 
     <!-- 时间轴组件：居中底部，毛玻璃半透明效果 -->
@@ -32,18 +32,18 @@
           aria-label="播放/暂停唐代交通时间轴"
           @click="togglePlay"
         >
-          <span v-if="!isPlaying">▶ 播放</span>
-          <span v-else>❚❚ 暂停</span>
+          <span v-if="!isPlaying">▶ {{ t.common.play }}</span>
+          <span v-else>❚❚ {{ t.common.pause }}</span>
         </button>
       </div>
       <div class="timeline-selected">
-        当前年份：<span class="highlight">{{ selectedYear }}</span>
+        {{ t.common.currentYear }}：<span class="highlight">{{ selectedYear }}</span>
       </div>
     </div>
 
     <transition name="legend">
       <div v-if="showLegend" class="legend-panel" @mouseleave="showLegend = false">
-        <h4>节点类型</h4>
+        <h4>{{ t.transport.nodeType }}</h4>
         <div class="legend-select-all">
           <label class="legend-item">
             <input
@@ -53,8 +53,8 @@
               @change="onTypeSelectAll($event)"
             />
             <div class="legend-text">
-              <strong>全选类型</strong>
-              <span>切换全部节点显示</span>
+              <strong>{{ t.transport.selectAll }}</strong>
+              <span>{{ t.transport.toggleAll }}</span>
             </div>
           </label>
         </div>
@@ -75,7 +75,7 @@
             </label>
           </li>
         </ul>
-        <p class="legend-note">数据来源：唐代交通点位。</p>
+        <p class="legend-note">{{ t.common.source }}：{{ t.transport.sourceTang }}。</p>
       </div>
     </transition>
     <button
@@ -85,7 +85,7 @@
       @mouseenter="showLegend = true"
       @focus="showLegend = true"
     >
-      类型
+      {{ t.transport.legendToggle }}
     </button>
 
     <transition name="slide">
@@ -121,41 +121,7 @@
       </div>
     </transition>
 
-    <!-- WASD 漫游提示 -->
-    <div class="wasd-controls">
-      <!-- 移动 -->
-      <div class="control-section">
-        <div class="key w" :class="{ active: keysPressed.w }">W</div>
-        <div class="keys-row">
-          <div class="key a" :class="{ active: keysPressed.a }">A</div>
-          <div class="key s" :class="{ active: keysPressed.s }">S</div>
-          <div class="key d" :class="{ active: keysPressed.d }">D</div>
-        </div>
-        <div class="label">移动</div>
-      </div>
 
-      <div class="divider"></div>
-
-      <!-- 升降 -->
-      <div class="control-section">
-        <div class="key q" :class="{ active: keysPressed.q }">Q</div>
-        <div class="key e" :class="{ active: keysPressed.e }">E</div>
-        <div class="label">升降</div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- 旋转 -->
-      <div class="control-section">
-        <div class="key up" :class="{ active: keysPressed.arrowup }">↑</div>
-        <div class="keys-row">
-          <div class="key left" :class="{ active: keysPressed.arrowleft }">←</div>
-          <div class="key down" :class="{ active: keysPressed.arrowdown }">↓</div>
-          <div class="key right" :class="{ active: keysPressed.arrowright }">→</div>
-        </div>
-        <div class="label">旋转</div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -163,6 +129,9 @@
 import { unzipSync } from 'fflate'
 import { open as openShapefile } from 'shapefile'
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 interface TangPointProperties {
   Name_CH: string
@@ -236,20 +205,26 @@ const keysPressed = reactive({
 })
 let animationFrameId: number | null = null
 
-const TYPE_CATEGORIES = [
-  { key: '古城', label: '古城', description: '早期大型城址', color: '#f1c40f' },
-  { key: '县城', label: '县城', description: '县级行政中心', color: '#ff9f43' },
-  { key: '桥梁', label: '桥梁', description: '跨越河谷的交通节点', color: '#4dabf7' },
-  { key: '驿站', label: '驿站', description: '官方传递节点', color: '#ff6b6b' },
-  { key: '地名', label: '地名', description: '地理位置或区域称谓', color: '#a29bfe' },
-  { key: '关隘', label: '关隘', description: '战略要地或山口', color: '#c27ba0' },
-  { key: '城堡', label: '城堡', description: '军事驻守据点', color: '#9b59b6' },
-  { key: '镇城', label: '镇城', description: '镇级或更小城镇', color: '#e67e22' },
-  { key: '湖泊', label: '湖泊', description: '水域交通节点', color: '#1abc9c' },
-  { key: '堡寨', label: '堡寨', description: '小型防御聚落', color: '#d35400' },
-  { key: '军城', label: '军城', description: '军队驻扎城池', color: '#e84393' },
-  { key: '都城', label: '都城', description: '朝廷或区域首府', color: '#2ecc71' },
+const TYPE_CATEGORIES_RAW = [
+  { key: '古城', i18nKey: 'gucheng', color: '#f1c40f' },
+  { key: '县城', i18nKey: 'xiancheng', color: '#ff9f43' },
+  { key: '桥梁', i18nKey: 'qiaoliang', color: '#4dabf7' },
+  { key: '驿站', i18nKey: 'yizhan', color: '#ff6b6b' },
+  { key: '地名', i18nKey: 'diming', color: '#a29bfe' },
+  { key: '关隘', i18nKey: 'guanai', color: '#c27ba0' },
+  { key: '城堡', i18nKey: 'chengbao', color: '#9b59b6' },
+  { key: '镇城', i18nKey: 'zhencheng', color: '#e67e22' },
+  { key: '湖泊', i18nKey: 'hubo', color: '#1abc9c' },
+  { key: '堡寨', i18nKey: 'baozhai', color: '#d35400' },
+  { key: '军城', i18nKey: 'juncheng', color: '#e84393' },
+  { key: '都城', i18nKey: 'ducheng', color: '#2ecc71' },
 ]
+
+const TYPE_CATEGORIES = computed(() => TYPE_CATEGORIES_RAW.map(item => ({
+  ...item,
+  label: t.value.transport.types[item.i18nKey as keyof typeof t.value.transport.types] || item.key,
+  description: t.value.transport.types[(item.i18nKey + 'Desc') as keyof typeof t.value.transport.types] || ''
+})))
 
 const TYPE_SYNONYM_MAP: Record<string, string> = {
   station: '驿站',
@@ -280,13 +255,13 @@ const TYPE_SYNONYM_MAP: Record<string, string> = {
 
 const DEFAULT_TYPE_KEY = '地名'
 
-const TYPE_COLOR_MAP = TYPE_CATEGORIES.reduce<Record<string, string>>((acc, type) => {
+const TYPE_COLOR_MAP = TYPE_CATEGORIES_RAW.reduce<Record<string, string>>((acc, type) => {
   acc[type.key] = type.color
   return acc
 }, {})
 
 const TYPE_COLOR_EXPRESSION: any[] = ['match', ['coalesce', ['get', '__typeKey'], DEFAULT_TYPE_KEY]]
-TYPE_CATEGORIES.forEach(cat => {
+TYPE_CATEGORIES_RAW.forEach(cat => {
   TYPE_COLOR_EXPRESSION.push(cat.key)
   TYPE_COLOR_EXPRESSION.push(cat.color)
 })
@@ -315,7 +290,7 @@ function getRouteColorExpression(): any[] {
 }
 
 const typeFilters = reactive<Record<string, boolean>>(
-  TYPE_CATEGORIES.reduce(
+  TYPE_CATEGORIES_RAW.reduce(
     (acc, type) => {
       acc[type.key] = true
       return acc
@@ -325,34 +300,34 @@ const typeFilters = reactive<Record<string, boolean>>(
 )
 
 const allTypesSelected = computed({
-  get: () => TYPE_CATEGORIES.every(cat => typeFilters[cat.key]),
+  get: () => TYPE_CATEGORIES_RAW.every(cat => typeFilters[cat.key]),
   set: (value: boolean) => {
-    TYPE_CATEGORIES.forEach(cat => {
+    TYPE_CATEGORIES_RAW.forEach(cat => {
       typeFilters[cat.key] = value
     })
   },
 })
 
 // 地图显示模式
-const MAP_MODES = [
-  { id: 'flat', name: '平面' },
-  { id: 'globe', name: '球形' },
-  { id: 'terrain', name: '立体' },
-]
+const MAP_MODES = computed(() => [
+  { id: 'flat', name: t.value.map.modes.flat },
+  { id: 'globe', name: t.value.map.modes.globe },
+  { id: 'terrain', name: t.value.map.modes.terrain },
+])
 // 将暗色样式放在首位，便于将唐代交通默认初始化为暗色主题
-const MAP_STYLES: { id: string; name: string }[] = [
-  { id: 'mapbox://styles/mapbox/dark-v10', name: '暗色' },
-  { id: 'mapbox://styles/mapbox/streets-v11', name: '街道' },
-  { id: 'mapbox://styles/mapbox/light-v10', name: '明亮' },
-  { id: 'mapbox://styles/mapbox/satellite-v9', name: '卫星' },
-  { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: '卫星街道' },
-  { id: 'mapbox://styles/mapbox/outdoors-v11', name: '户外' },
-  { id: 'mapbox://styles/mapbox/navigation-day-v1', name: '导航（日）' },
-  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: '导航（夜）' },
-]
+const MAP_STYLES = computed(() => [
+  { id: 'mapbox://styles/mapbox/dark-v10', name: t.value.map.styles.dark },
+  { id: 'mapbox://styles/mapbox/streets-v11', name: t.value.map.styles.streets },
+  { id: 'mapbox://styles/mapbox/light-v10', name: t.value.map.styles.light },
+  { id: 'mapbox://styles/mapbox/satellite-v9', name: t.value.map.styles.satellite },
+  { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: t.value.map.styles.satelliteStreets },
+  { id: 'mapbox://styles/mapbox/outdoors-v11', name: t.value.map.styles.outdoors },
+  { id: 'mapbox://styles/mapbox/navigation-day-v1', name: t.value.map.styles.navigationDay },
+  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: t.value.map.styles.navigationNight },
+])
 const selectedMode = ref<string>('flat')
 // 默认使用数组第一项（已将暗色置为第一项），保证初始化为暗色地图
-const selectedStyle = ref<string>(MAP_STYLES[0]?.id || 'mapbox://styles/mapbox/dark-v10')
+const selectedStyle = ref<string>(MAP_STYLES.value[0]?.id || 'mapbox://styles/mapbox/dark-v10')
 
 // 交通点和交通线数据
 const points = ref<TangPointFeature[]>([])
@@ -1140,7 +1115,7 @@ function buildPointPanel(properties: TangPointProperties): HoverPanelContent {
     ? String((properties as any).__typeKey)
     : normalizeType(properties?.Type)
   const readableType =
-    TYPE_CATEGORIES.find(item => item.key === typeKey)?.label || typeKey || '未知类型'
+    TYPE_CATEGORIES.value.find(item => item.key === typeKey)?.label || typeKey || '未知类型'
   const location =
     [properties?.PL_City, properties?.County, properties?.Town].filter(Boolean).join(' / ') ||
     '未知'
@@ -1237,7 +1212,7 @@ function normalizeType(type?: string): string {
   if (!type) return DEFAULT_TYPE_KEY
   const raw = String(type).trim()
   if (!raw) return DEFAULT_TYPE_KEY
-  const direct = TYPE_CATEGORIES.find(cat => cat.key === raw)
+  const direct = TYPE_CATEGORIES_RAW.find(cat => cat.key === raw)
   if (direct) return direct.key
   const synonym = TYPE_SYNONYM_MAP[raw.toLowerCase()]
   if (synonym) return synonym
@@ -1342,7 +1317,7 @@ function rgbToHex(r: number, g: number, b: number): string {
 
 function isTypeEnabled(typeKey?: string | null): boolean {
   const key =
-    typeKey && TYPE_CATEGORIES.some(item => item.key === typeKey) ? typeKey : DEFAULT_TYPE_KEY
+    typeKey && TYPE_CATEGORIES_RAW.some(item => item.key === typeKey) ? typeKey : DEFAULT_TYPE_KEY
   return typeFilters[key] !== false
 }
 
@@ -1723,8 +1698,8 @@ function onTypeSelectAll(event: Event) {
 
 .wasd-controls {
   position: absolute;
-  bottom: 24px; /* 固定到最右下角，和底部居中时间轴错开 */
-  right: 280px; /* 避开右下角的手势摄像头 (240px + 20px + 20px) */
+  bottom: 220px; /* 位于摄像头上方 */
+  right: 20px;   /* 靠右对齐 */
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -1794,8 +1769,8 @@ function onTypeSelectAll(event: Event) {
 
 .gesture-controls {
   position: absolute;
-  bottom: 140px; /* 位于 WASD 上方 */
-  right: 280px; /* 跟随 WASD 左移 */
+  bottom: 340px; /* 位于 WASD 上方 */
+  right: 20px;   /* 靠右对齐 */
   z-index: 100;
   display: flex;
   flex-direction: column;

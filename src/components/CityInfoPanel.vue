@@ -6,7 +6,7 @@
           <span class="name-zh">{{ city.name }}</span>
           <span class="name-en">{{ city.nameEn }}</span>
         </h2>
-        <button class="close-btn" aria-label="关闭" @click="handleClose">
+        <button class="close-btn" :aria-label="t.cityPanel.close" @click="handleClose">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -27,18 +27,18 @@
       <div class="panel-content">
         <!-- 基本信息 -->
         <section class="info-section">
-          <h3 class="section-title">基本信息</h3>
+          <h3 class="section-title">{{ t.cityPanel.basicInfo }}</h3>
           <div class="info-grid">
             <div class="info-item">
-              <span class="info-label">经度</span>
+              <span class="info-label">{{ t.cityPanel.longitude }}</span>
               <span class="info-value">{{ city.lng.toFixed(4) }}°</span>
             </div>
             <div class="info-item">
-              <span class="info-label">纬度</span>
+              <span class="info-label">{{ t.cityPanel.latitude }}</span>
               <span class="info-value">{{ city.lat.toFixed(4) }}°</span>
             </div>
             <div class="info-item">
-              <span class="info-label">重要性</span>
+              <span class="info-label">{{ t.cityPanel.importance }}</span>
               <span class="info-value">
                 <span class="importance-stars">
                   <span
@@ -52,7 +52,7 @@
               </span>
             </div>
             <div v-if="city.population" class="info-item">
-              <span class="info-label">人口</span>
+              <span class="info-label">{{ t.cityPanel.population }}</span>
               <span class="info-value">{{ formatPopulation(city.population) }}</span>
             </div>
           </div>
@@ -60,13 +60,13 @@
 
         <!-- 描述 -->
         <section class="info-section">
-          <h3 class="section-title">城市简介</h3>
+          <h3 class="section-title">{{ t.cityPanel.description }}</h3>
           <p class="description">{{ city.description }}</p>
         </section>
 
         <!-- 历史时期 -->
         <section class="info-section">
-          <h3 class="section-title">历史时期</h3>
+          <h3 class="section-title">{{ t.cityPanel.period }}</h3>
           <div class="tag-group">
             <span v-for="period in city.period" :key="period" class="tag period-tag">
               {{ getPeriodName(period) }}
@@ -76,7 +76,7 @@
 
         <!-- 贸易商品 -->
         <section v-if="city.tradeItems && city.tradeItems.length > 0" class="info-section">
-          <h3 class="section-title">主要贸易商品</h3>
+          <h3 class="section-title">{{ t.cityPanel.tradeItems }}</h3>
           <div class="tag-group">
             <span v-for="trade in city.tradeItems" :key="trade" class="tag trade-tag">
               {{ trade }}
@@ -86,19 +86,20 @@
 
         <!-- 文化交流 -->
         <section v-if="city.culturalExchange" class="info-section">
-          <h3 class="section-title">文化交流</h3>
+          <h3 class="section-title">{{ t.cityPanel.culturalExchange }}</h3>
           <p class="description">{{ city.culturalExchange }}</p>
         </section>
 
         <!-- 地理位置 -->
         <section v-if="city.geography" class="info-section">
-          <h3 class="section-title">地理位置</h3>
+          <h3 class="section-title">{{ t.cityPanel.geography }}</h3>
           <p class="description">{{ city.geography }}</p>
         </section>
 
         <!-- 历史事件 -->
         <section v-if="city.events && city.events.length > 0" class="info-section">
-          <h3 class="section-title">历史事件</h3>
+          <h3 class="section-title">{{ t.cityPanel.events }}</h3>
+
           <ul class="event-list">
             <li v-for="(event, index) in city.events" :key="index" class="event-item">
               {{ event }}
@@ -122,6 +123,7 @@
 
 <script setup lang="ts">
 import type { City } from '@/types/city'
+import { useI18n } from '@/composables/useI18n'
 
 interface Props {
   city: City | null
@@ -133,12 +135,25 @@ interface Emits {
 
 defineProps<Props>()
 const emit = defineEmits<Emits>()
+const { t } = useI18n()
 
 const handleClose = () => {
   emit('close')
 }
 
 const formatPopulation = (population: number): string => {
+  // Simple localization for now
+  // In a real app, we might want to use Intl.NumberFormat
+  if (t.value.cityPanel.population === 'Population') {
+     if (population >= 1000000) {
+        return `${(population / 1000000).toFixed(1)}M`
+     }
+     if (population >= 1000) {
+        return `${(population / 1000).toFixed(1)}K`
+     }
+     return population.toLocaleString()
+  }
+
   if (population >= 10000) {
     return `${(population / 10000).toFixed(1)}万`
   }

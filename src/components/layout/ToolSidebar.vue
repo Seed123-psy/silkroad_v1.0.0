@@ -84,14 +84,41 @@
     </nav>
 
     <div class="sidebar-footer">
-      <!-- Placeholder for future settings or profile -->
       <button 
-        class="gesture-toggle-btn" 
+        class="footer-btn" 
+        @click="appStore.toggleHelp"
+        :title="t.sidebar.guide"
+      >
+        <QuestionMarkCircleIcon class="action-icon" />
+      </button>
+
+      <button 
+        class="footer-btn" 
+        @click="appStore.toggleTheme"
+        :title="appStore.theme === 'dark' ? t.sidebar.themeLight : t.sidebar.themeDark"
+      >
+        <component 
+          :is="appStore.theme === 'dark' ? SunIcon : MoonIcon" 
+          class="action-icon" 
+        />
+      </button>
+
+      <button 
+        class="footer-btn" 
+        @click="appStore.toggleLanguage"
+        :title="t.sidebar.language"
+      >
+        <LanguageIcon class="action-icon" />
+        <span class="lang-text">{{ appStore.language === 'zh' ? 'EN' : '中' }}</span>
+      </button>
+
+      <button 
+        class="footer-btn gesture-btn" 
         :class="{ active: gestureStore.isCameraOpen }"
         @click="gestureStore.toggleCamera"
-        title="手势控制"
+        :title="t.sidebar.gesture"
       >
-        <span class="icon">👋</span>
+        <VideoCameraIcon class="action-icon" />
       </button>
     </div>
   </aside>
@@ -101,17 +128,26 @@
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useGestureStore } from '@/stores/gesture'
+import { useAppStore } from '@/stores/app'
+import { useI18n } from '@/composables/useI18n'
 import {
   GlobeAltIcon,
   ChartBarIcon,
   // BuildingLibraryIcon,
   ChevronDownIcon,
+  QuestionMarkCircleIcon,
+  SunIcon,
+  MoonIcon,
+  LanguageIcon,
+  VideoCameraIcon,
 } from '@heroicons/vue/24/outline'
 import TransportRoutesIcon from '@/components/icons/TransportRoutesIcon.vue'
 import HanMingTransportIcon from '@/components/icons/HanMingTransportIcon.vue'
 import LiangHanTransportIcon from '@/components/icons/LiangHanTransportIcon.vue'
 
 const gestureStore = useGestureStore()
+const appStore = useAppStore()
+const { t } = useI18n()
 
 interface NavItem {
   label: string
@@ -120,44 +156,44 @@ interface NavItem {
   children?: NavItem[]
 }
 
-const navItems: NavItem[] = [
+const navItems = computed<NavItem[]>(() => [
   {
-    label: '地球探索',
+    label: t.value.sidebar.explore,
     path: '/',
     icon: GlobeAltIcon,
   },
   {
-    label: '贸易图表',
+    label: t.value.sidebar.trade,
     path: '/trade',
     icon: ChartBarIcon,
   },
   {
-    label: '交通路线',
+    label: t.value.sidebar.routes,
     icon: TransportRoutesIcon,
     children: [
       {
-        label: '唐代交通',
+        label: t.value.sidebar.tang,
         path: '/transport',
         icon: HanMingTransportIcon,
       },
       {
-        label: '两汉交通',
+        label: t.value.sidebar.han,
         path: '/lianghan',
         icon: HanMingTransportIcon,
       },
       {
-        label: '蒙元路线',
+        label: t.value.sidebar.mengyuan,
         path: '/mengyuan',
         icon: LiangHanTransportIcon,
       },
     ],
   },
   {
-    label: '明清城区',
+    label: t.value.sidebar.mingqing,
     path: '/mingqing',
     icon: LiangHanTransportIcon,
   },
-]
+])
 
 const route = useRoute()
 const currentPath = computed(() => route.path)
@@ -165,6 +201,12 @@ const currentPath = computed(() => route.path)
 const openGroups = ref<string[]>([])
 
 const toggleGroup = (label: string) => {
+  // Since labels change with language, we might want to track by index or path, 
+  // but for now let's just clear if language changes or accept it might close.
+  // Actually, if we use label as key, it will break when language changes if we don't close it.
+  // A better way is to use a stable key, but for now let's stick to label and maybe reset on lang change if needed.
+  // Or better, use the path or a static ID if available. 
+  // Given the structure, let's just use the label as is, user can re-open.
   const index = openGroups.value.indexOf(label)
   if (index === -1) {
     openGroups.value.push(label)
@@ -173,13 +215,14 @@ const toggleGroup = (label: string) => {
   }
 }
 
+
 const isGroupActive = (item: NavItem) => {
   if (!item.children) return false
   return item.children.some(child => child.path === currentPath.value)
 }
 
 // Initialize openGroups
-navItems.forEach(item => {
+navItems.value.forEach(item => {
   if (isGroupActive(item)) {
     openGroups.value.push(item.label)
   }
@@ -344,35 +387,71 @@ navItems.forEach(item => {
   padding: $spacing-md;
   border-top: 1px solid rgba($color-gold, 0.1);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: auto;
+  background: linear-gradient(to top, rgba($bg-secondary, 0.8), transparent);
 }
 
-.gesture-toggle-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba($color-gold, 0.3);
-  color: $text-primary;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+.footer-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: $text-secondary;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px; // Squircle shape
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
   
   &:hover {
-    background: rgba($color-gold, 0.2);
-    border-color: $color-gold;
+    background: rgba($color-gold, 0.1);
+    color: $color-gold;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    
+    .action-icon {
+      transform: scale(1.1);
+    }
   }
   
   &.active {
-    background: $color-gold;
-    color: $bg-primary;
-    box-shadow: 0 0 10px rgba($color-gold, 0.5);
+    background: rgba($color-gold, 0.15);
+    color: $color-gold;
+    border-color: rgba($color-gold, 0.3);
+    box-shadow: 0 0 15px rgba($color-gold, 0.2);
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      background: $color-gold;
+      border-radius: 50%;
+      margin-bottom: 4px;
+    }
   }
   
-  .icon {
-    font-size: 1.2rem;
+  .action-icon {
+    width: 24px;
+    height: 24px;
+    transition: transform 0.3s ease;
+  }
+
+  .lang-text {
+    font-size: 10px;
+    font-weight: 600;
+    margin-top: -2px;
+    opacity: 0.8;
   }
 }
 

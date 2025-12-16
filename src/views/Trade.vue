@@ -3,16 +3,16 @@
     <header class="page-header">
       <div class="header-content">
         <div>
-          <h1>丝绸之路贸易记录档案</h1>
-          <div class="subtitle">共收录 {{ totalRecords }} 条历史贸易记录</div>
+          <h1>{{ t.trade.title }}</h1>
+          <div class="subtitle">{{ t.trade.subtitle.replace('{count}', totalRecords.toString()) }}</div>
         </div>
         <div class="header-stats">
           <div class="stat-pill">
-            <span class="label">总贸易额</span>
+            <span class="label">{{ t.trade.totalValue }}</span>
             <span class="value">{{ formatNumber(totalValue) }}</span>
           </div>
           <div class="stat-pill">
-            <span class="label">总交易量</span>
+            <span class="label">{{ t.trade.totalVolume }}</span>
             <span class="value">{{ formatNumber(totalVolume) }}</span>
           </div>
         </div>
@@ -24,10 +24,10 @@
       <div class="panel left-panel">
         <!-- 筛选器 -->
         <div class="control-box">
-          <h3 class="panel-title">筛选条件</h3>
+          <h3 class="panel-title">{{ t.trade.filters }}</h3>
 
           <div class="filter-group">
-            <label>历史时期</label>
+            <label>{{ t.trade.period }}</label>
             <div class="filter-options">
               <button
                 v-for="p in periods"
@@ -41,11 +41,11 @@
           </div>
 
           <div class="filter-group">
-            <label>商品类别</label>
+            <label>{{ t.trade.category }}</label>
             <Listbox v-model="selectedCategory">
               <div class="relative">
                 <ListboxButton class="filter-select-btn">
-                  <span>{{ categories.find(c => c.value === selectedCategory)?.label || '全部类别' }}</span>
+                  <span>{{ categories.find(c => c.value === selectedCategory)?.label || t.trade.allCategories }}</span>
                   <span class="chev">▾</span>
                 </ListboxButton>
                 <transition
@@ -63,7 +63,7 @@
                       as="template"
                     >
                       <li :class="['filter-option', { active, selected }]">
-                        全部类别
+                        {{ t.trade.allCategories }}
                       </li>
                     </ListboxOption>
                     <ListboxOption
@@ -84,11 +84,11 @@
           </div>
 
           <div class="filter-group">
-            <label>出发城市</label>
+            <label>{{ t.trade.fromCity }}</label>
             <Listbox v-model="selectedFromCity">
               <div class="relative">
                 <ListboxButton class="filter-select-btn">
-                  <span>{{ selectedFromCity || '全部出发地' }}</span>
+                  <span>{{ selectedFromCity || t.trade.allDepartures }}</span>
                   <span class="chev">▾</span>
                 </ListboxButton>
                 <transition
@@ -106,7 +106,7 @@
                       as="template"
                     >
                       <li :class="['filter-option', { active, selected }]">
-                        全部出发地
+                        {{ t.trade.allDepartures }}
                       </li>
                     </ListboxOption>
                     <ListboxOption
@@ -127,11 +127,11 @@
           </div>
 
           <div class="filter-group">
-            <label>目的城市</label>
+            <label>{{ t.trade.toCity }}</label>
             <Listbox v-model="selectedToCity">
               <div class="relative">
                 <ListboxButton class="filter-select-btn">
-                  <span>{{ selectedToCity || '全部目的地' }}</span>
+                  <span>{{ selectedToCity || t.trade.allDestinations }}</span>
                   <span class="chev">▾</span>
                 </ListboxButton>
                 <transition
@@ -149,7 +149,7 @@
                       as="template"
                     >
                       <li :class="['filter-option', { active, selected }]">
-                        全部目的地
+                        {{ t.trade.allDestinations }}
                       </li>
                     </ListboxOption>
                     <ListboxOption
@@ -170,7 +170,7 @@
           </div>
 
           <div class="filter-group">
-            <label>贸易额范围 ({{ formatNumber(minVal) }} - {{ formatNumber(maxVal) }})</label>
+            <label>{{ t.trade.valueRange }} ({{ formatNumber(minVal) }} - {{ formatNumber(maxVal) }})</label>
             <div class="range-inputs">
               <input v-model.number="minVal" type="number" placeholder="Min" class="range-input" />
               <span class="range-sep">-</span>
@@ -179,11 +179,11 @@
           </div>
 
           <div class="filter-group">
-            <label>搜索城市/商品</label>
+            <label>{{ t.trade.searchLabel }}</label>
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="输入城市或商品名称..."
+              :placeholder="t.trade.searchPlaceholder"
               class="search-input"
             />
           </div>
@@ -191,7 +191,7 @@
 
         <!-- 图表：类别占比 -->
         <div class="chart-box">
-          <h3 class="chart-title">当前筛选类别占比</h3>
+          <h3 class="chart-title">{{ t.trade.categoryDistribution }}</h3>
           <div ref="categoryChartRef" class="chart-container"></div>
         </div>
       </div>
@@ -203,36 +203,36 @@
             :class="['tab-btn', { active: currentView === 'list' }]"
             @click="currentView = 'list'"
           >
-            数据列表
+            {{ t.trade.tabs.list }}
           </button>
           <button
             :class="['tab-btn', { active: currentView === 'map' }]"
             @click="currentView = 'map'"
           >
-            3D 贸易流向
+            {{ t.trade.tabs.map }}
           </button>
           <button
             :class="['tab-btn', { active: currentView === 'network' }]"
             @click="currentView = 'network'"
           >
-            贸易网络关系
+            {{ t.trade.tabs.network }}
           </button>
           <button
             :class="['tab-btn', { active: currentView === 'goods-network' }]"
             @click="currentView = 'goods-network'"
           >
-            商品产地网络
+            {{ t.trade.tabs.goodsNetwork }}
           </button>
         </div>
 
         <div v-if="currentView === 'list'" class="data-list-container">
           <div class="list-header">
-            <div class="col col-id">ID</div>
-            <div class="col col-period">时期</div>
-            <div class="col col-route">路线</div>
-            <div class="col col-goods">商品</div>
+            <div class="col col-id">{{ t.trade.table.id }}</div>
+            <div class="col col-period">{{ t.trade.table.period }}</div>
+            <div class="col col-route">{{ t.trade.table.route }}</div>
+            <div class="col col-goods">{{ t.trade.table.goods }}</div>
             <div class="col col-amount sortable" @click="toggleSort('volume')">
-              <span>数量</span>
+              <span>{{ t.trade.table.volume }}</span>
               <span
                 class="sort-icon"
                 :class="{
@@ -242,7 +242,7 @@
               ></span>
             </div>
             <div class="col col-value sortable" @click="toggleSort('value')">
-              <span>价值</span>
+              <span>{{ t.trade.table.value }}</span>
               <span
                 class="sort-icon"
                 :class="{
@@ -319,15 +319,15 @@
                   </svg>
                 </div>
                 <div class="empty-texts">
-                  <h3 class="empty-title">未找到匹配的记录</h3>
+                  <h3 class="empty-title">{{ t.trade.noData }}</h3>
                   <p class="empty-desc">
-                    尝试调整筛选条件或清除关键词以显示更多结果。你也可以查看所有记录或导出样例以便离线分析。
+                    {{ t.trade.noDataDesc }}
                   </p>
 
                   <div class="empty-actions">
-                    <button class="btn btn-secondary" @click="resetFilters">重置筛选</button>
-                    <button class="btn btn-primary" @click="showAllRecords">查看所有记录</button>
-                    <button class="btn btn-ghost" @click="exportSample">导出样例 (JSON)</button>
+                    <button class="btn btn-secondary" @click="resetFilters">{{ t.trade.resetFilters }}</button>
+                    <button class="btn btn-primary" @click="showAllRecords">{{ t.trade.viewAll }}</button>
+                    <button class="btn btn-ghost" @click="exportSample">{{ t.trade.exportSample }}</button>
                   </div>
                 </div>
               </div>
@@ -335,29 +335,29 @@
           </div>
 
           <div class="pagination-bar">
-            <button :disabled="currentPage === 1" @click="currentPage--">上一页</button>
+            <button :disabled="currentPage === 1" @click="currentPage--">{{ t.trade.prevPage }}</button>
             <span
-              >第 {{ currentPage }} / {{ totalPages }} 页 (共 {{ filteredRecords.length }} 条)</span
+              >{{ t.trade.pageInfo.replace('{current}', currentPage.toString()).replace('{total}', totalPages.toString()).replace('{count}', filteredRecords.length.toString()) }}</span
             >
-            <button :disabled="currentPage === totalPages" @click="currentPage++">下一页</button>
+            <button :disabled="currentPage === totalPages" @click="currentPage++">{{ t.trade.nextPage }}</button>
           </div>
         </div>
 
         <div v-show="currentView === 'map'" class="chart-view-container">
           <div v-if="mapLoading" class="loading-overlay">
             <div class="spinner"></div>
-            <span>正在加载 3D 地图数据...</span>
+            <span>{{ t.trade.loadingMap }}</span>
           </div>
           <div v-if="mapError" class="error-overlay">
-            <span>地图加载失败，请检查网络连接</span>
-            <button @click="retryLoadMap">重试</button>
+            <span>{{ t.trade.mapError }}</span>
+            <button @click="retryLoadMap">{{ t.trade.retry }}</button>
           </div>
           <div v-if="!mapLoading && !mapError" class="map-control-panel">
-            <div class="control-title">视角控制</div>
+            <div class="control-title">{{ t.trade.viewControl }}</div>
             <!-- 缩放滑块已移除，保留鼠标缩放操作 -->
             <div class="control-row">
               <div class="row-label">
-                <span>俯仰</span>
+                <span>{{ t.trade.pitch }}</span>
                 <span class="value">{{ globeAlpha }}°</span>
               </div>
               <input
@@ -386,7 +386,7 @@
       <div class="panel right-panel">
         <!-- 选中记录详情 -->
         <div v-if="currentRecord" class="detail-box">
-          <h3 class="panel-title">交易详情</h3>
+          <h3 class="panel-title">{{ t.trade.tradeDetails }}</h3>
           <div class="detail-card">
             <div class="detail-header">
               <span class="detail-id">{{ currentRecord.id }}</span>
@@ -398,42 +398,42 @@
             <div class="detail-route">
               <div class="city-node from">
                 <div class="city-name">{{ currentRecord.fromCity }}</div>
-                <div class="city-label">出发地</div>
+                <div class="city-label">{{ t.trade.fromCity }}</div>
               </div>
               <div class="route-line"></div>
               <div class="city-node to">
                 <div class="city-name">{{ currentRecord.toCity }}</div>
-                <div class="city-label">目的地</div>
+                <div class="city-label">{{ t.trade.toCity }}</div>
               </div>
             </div>
 
             <div class="detail-grid">
               <div class="detail-item">
-                <label>商品</label>
+                <label>{{ t.trade.table.goods }}</label>
                 <div class="value highlight">{{ getGoodsName(currentRecord.goods) }}</div>
               </div>
               <div class="detail-item">
-                <label>类别</label>
+                <label>{{ t.trade.category }}</label>
                 <div class="value">{{ getGoodsCategoryLabel(currentRecord.goods) }}</div>
               </div>
               <div class="detail-item">
-                <label>交易量</label>
+                <label>{{ t.trade.table.volume }}</label>
                 <div class="value">{{ currentRecord.volume }}</div>
               </div>
               <div class="detail-item">
-                <label>总价值</label>
+                <label>{{ t.trade.totalValue }}</label>
                 <div class="value money">{{ formatMoney(currentRecord.value) }}</div>
               </div>
             </div>
           </div>
         </div>
         <div v-else class="detail-box empty">
-          <p>点击列表查看详情</p>
+          <p>{{ t.trade.selectRecordHint }}</p>
         </div>
 
         <!-- 热门商品排行 -->
         <div class="chart-box">
-          <h3 class="chart-title">热门交易商品 TOP 10</h3>
+          <h3 class="chart-title">{{ t.trade.topGoods }}</h3>
           <div ref="topGoodsChartRef" class="chart-container"></div>
         </div>
       </div>
@@ -446,9 +446,13 @@ import { ref, onMounted, onUnmounted, computed, watch, nextTick } from 'vue'
 import { Listbox, ListboxButton, ListboxOptions, ListboxOption } from '@headlessui/vue'
 import * as echarts from 'echarts'
 import 'echarts-gl'
+import { useI18n } from '@/composables/useI18n'
 import tradeDataRaw from '@/assets/data/lushang_trades.json'
 import citiesDataRaw from '@/assets/data/cities.json'
 import exportService from '@/services/exportService'
+import { PALETTE, STATIC_CATEGORY_COLORS } from '@/constants/colors'
+
+const { t } = useI18n()
 
 // --- 类型定义 ---
 interface TradeGood {
@@ -486,20 +490,20 @@ const cities = ref<City[]>(citiesDataRaw.cities as City[])
 
 // 映射表
 const goodsMap = new Map(tradeGoods.value.map(g => [g.id, g]))
-const categoryMap: Record<string, string> = {
-  textile: '纺织品',
-  ceramic: '陶瓷',
-  food: '食品/香料',
-  metal: '金属制品',
-  craft: '工艺品',
-  gem: '宝石/玉石',
-  cultural: '文化用品',
-  art: '艺术品',
-  material: '原材料',
-  livestock: '牲畜',
-  luxury: '奢侈品',
-  military: '军需品',
-}
+const categoryMap = computed<Record<string, string>>(() => ({
+  textile: t.value.trade.categories.textile,
+  ceramic: t.value.trade.categories.ceramic,
+  food: t.value.trade.categories.food,
+  metal: t.value.trade.categories.metal,
+  craft: t.value.trade.categories.craft,
+  gem: t.value.trade.categories.gem,
+  cultural: t.value.trade.categories.cultural,
+  art: t.value.trade.categories.art,
+  material: t.value.trade.categories.material,
+  livestock: t.value.trade.categories.livestock,
+  luxury: t.value.trade.categories.luxury,
+  military: t.value.trade.categories.military,
+}))
 
 // 城市坐标映射
 const cityCoords: Record<string, [number, number]> = {}
@@ -542,17 +546,15 @@ const getCityCoord = (name: string): [number, number] | null => {
   return cityCoords[realName] || null
 }
 
-const periods = [
-  { label: '全部', value: '' },
-  { label: '汉', value: 'han' },
-  { label: '唐', value: 'tang' },
-  { label: '宋', value: 'song' },
-  { label: '元', value: 'yuan' },
-  { label: '明', value: 'ming' },
-  { label: '清', value: 'qing' },
-]
-
-import { PALETTE, STATIC_CATEGORY_COLORS } from '@/constants/colors'
+const periods = computed(() => [
+  { label: t.value.trade.periods.all, value: '' },
+  { label: t.value.trade.periods.han, value: 'han' },
+  { label: t.value.trade.periods.tang, value: 'tang' },
+  { label: t.value.trade.periods.song, value: 'song' },
+  { label: t.value.trade.periods.yuan, value: 'yuan' },
+  { label: t.value.trade.periods.ming, value: 'ming' },
+  { label: t.value.trade.periods.qing, value: 'qing' },
+])
 
 const periodColors: Record<string, string> = {
   han: PALETTE[1],
@@ -563,7 +565,7 @@ const periodColors: Record<string, string> = {
   qing: PALETTE[5],
 }
 
-const categories = Object.entries(categoryMap).map(([k, v]) => ({ value: k, label: v }))
+const categories = computed(() => Object.entries(categoryMap.value).map(([k, v]) => ({ value: k, label: v })))
 
 // --- 排序状态 ---
 type SortKey = 'volume' | 'value' | null
@@ -694,9 +696,9 @@ const totalVolume = computed(() => filteredRecords.value.reduce((sum, r) => sum 
 const getGoodsName = (id: string) => goodsMap.get(id)?.name || id
 const getGoodsCategoryLabel = (id: string) => {
   const cat = goodsMap.get(id)?.category
-  return cat ? categoryMap[cat] || cat : '未知'
+  return cat ? categoryMap.value[cat] || cat : '未知'
 }
-const getPeriodLabel = (val: string) => periods.find(p => p.value === val)?.label || val
+const getPeriodLabel = (val: string) => periods.value.find(p => p.value === val)?.label || val
 const formatNumber = (num: number | null) => {
   if (num === null) return '-'
   return new Intl.NumberFormat('zh-CN').format(num)
@@ -748,7 +750,7 @@ const updateCharts = () => {
   filteredRecords.value.forEach(r => {
     const good = goodsMap.get(r.goods)
     if (good) {
-      const catName = categoryMap[good.category] || good.category
+      const catName = categoryMap.value[good.category] || good.category
       catCounts[catName] = (catCounts[catName] || 0) + r.value // 按价值统计
     }
   })
@@ -761,7 +763,7 @@ const updateCharts = () => {
 
   // 反向映射：中文类别名 -> 类别 code（用于把饼图中的中文名映射到静态颜色）
   const labelToCode: Record<string, string> = {}
-  Object.entries(categoryMap).forEach(([code, label]) => {
+  Object.entries(categoryMap.value).forEach(([code, label]) => {
     labelToCode[label] = code
   })
 
@@ -808,7 +810,7 @@ const updateCharts = () => {
   })
 
   tempMap.forEach((v, k) => {
-    const label = categoryMap[v.categoryCode] || v.categoryCode
+    const label = categoryMap.value[v.categoryCode] || v.categoryCode
     goodAgg.push({ name: k, value: v.value, category: label })
   })
 

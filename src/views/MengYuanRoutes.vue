@@ -8,8 +8,8 @@
       v-model:model-style="selectedStyle"
       :modes="MAP_MODES"
       :styles="MAP_STYLES"
-      mode-placeholder="选择显示模式"
-      style-placeholder="选择地图样式"
+      :mode-placeholder="t.map.controls.modePlaceholder"
+      :style-placeholder="t.map.controls.stylePlaceholder"
     />
 
     <transition name="slide">
@@ -47,58 +47,30 @@
 
     <!-- 路线选择下拉（浮动在地图上） -->
     <div class="route-select" role="region" aria-label="路线选择">
-      <label for="routeSelect">选择路线编号：</label>
+      <label for="routeSelect">{{ t.mengyuan.selectRoute }}：</label>
       <select id="routeSelect" v-model="selectedRouteId" :disabled="manifestLoading">
-        <option value="">-- 请选择 --</option>
+        <option value="">{{ t.mengyuan.placeholder }}</option>
         <option v-for="r in routes" :key="r.id" :value="r.id">{{ r.label || r.id }}</option>
       </select>
-      <div v-if="manifestLoading" class="route-hint">清单加载中…</div>
-      <div v-else class="route-hint">共 {{ routes.length }} 条路线</div>
-      <div v-if="loadingRoute" class="route-hint">路线加载中…</div>
-      <div v-if="manifestError" class="route-error">清单加载失败：{{ manifestError }}</div>
-      <div v-if="routeError" class="route-error">路线加载失败：{{ routeError }}</div>
+      <div v-if="manifestLoading" class="route-hint">{{ t.mengyuan.loadingList }}</div>
+      <div v-else class="route-hint">{{ t.mengyuan.totalRoutes.replace('{count}', routes.length.toString()) }}</div>
+      <div v-if="loadingRoute" class="route-hint">{{ t.mengyuan.loadingRoute }}</div>
+      <div v-if="manifestError" class="route-error">{{ t.mengyuan.loadListError }}：{{ manifestError }}</div>
+      <div v-if="routeError" class="route-error">{{ t.mengyuan.loadRouteError }}：{{ routeError }}</div>
     </div>
 
-    <!-- WASD 键盘漫游提示（与其他页面一致） -->
-    <div class="wasd-controls">
-      <div class="control-section">
-        <div class="key w" :class="{ active: keysPressed.w }">W</div>
-        <div class="keys-row">
-          <div class="key a" :class="{ active: keysPressed.a }">A</div>
-          <div class="key s" :class="{ active: keysPressed.s }">S</div>
-          <div class="key d" :class="{ active: keysPressed.d }">D</div>
-        </div>
-        <div class="label">移动</div>
-      </div>
 
-      <div class="divider"></div>
-
-      <div class="control-section">
-        <div class="key q" :class="{ active: keysPressed.q }">Q</div>
-        <div class="key e" :class="{ active: keysPressed.e }">E</div>
-        <div class="label">升降</div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="control-section">
-        <div class="key up" :class="{ active: keysPressed.arrowup }">↑</div>
-        <div class="keys-row">
-          <div class="key left" :class="{ active: keysPressed.arrowleft }">←</div>
-          <div class="key down" :class="{ active: keysPressed.arrowdown }">↓</div>
-          <div class="key right" :class="{ active: keysPressed.arrowright }">→</div>
-        </div>
-        <div class="label">旋转</div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch, computed } from 'vue'
 import mapboxgl from 'mapbox-gl'
 import MapControls from '@/components/MapControls.vue'
 import { open as openShapefile } from 'shapefile'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string) || ''
 if (!MAPBOX_TOKEN) console.warn('VITE_MAPBOX_TOKEN 未配置，地图可能无法正常加载')
@@ -107,24 +79,24 @@ const mapContainer = ref<HTMLDivElement | null>(null)
 let map: any = null
 
 // 3x8 模式与样式（与其他页面一致）
-const MAP_MODES = [
-  { id: 'flat', name: '平面' },
-  { id: 'globe', name: '球形' },
-  { id: 'terrain', name: '立体' },
-]
-const MAP_STYLES = [
-  { id: 'mapbox://styles/mapbox/dark-v10', name: '暗色' },
-  { id: 'mapbox://styles/mapbox/streets-v11', name: '街道' },
-  { id: 'mapbox://styles/mapbox/light-v10', name: '明亮' },
-  { id: 'mapbox://styles/mapbox/satellite-v9', name: '卫星' },
-  { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: '卫星街道' },
-  { id: 'mapbox://styles/mapbox/outdoors-v11', name: '户外' },
-  { id: 'mapbox://styles/mapbox/navigation-day-v1', name: '导航（日）' },
-  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: '导航（夜）' },
-]
+const MAP_MODES = computed(() => [
+  { id: 'flat', name: t.value.map.modes.flat },
+  { id: 'globe', name: t.value.map.modes.globe },
+  { id: 'terrain', name: t.value.map.modes.terrain },
+])
+const MAP_STYLES = computed(() => [
+  { id: 'mapbox://styles/mapbox/dark-v10', name: t.value.map.styles.dark },
+  { id: 'mapbox://styles/mapbox/streets-v11', name: t.value.map.styles.streets },
+  { id: 'mapbox://styles/mapbox/light-v10', name: t.value.map.styles.light },
+  { id: 'mapbox://styles/mapbox/satellite-v9', name: t.value.map.styles.satellite },
+  { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: t.value.map.styles.satelliteStreets },
+  { id: 'mapbox://styles/mapbox/outdoors-v11', name: t.value.map.styles.outdoors },
+  { id: 'mapbox://styles/mapbox/navigation-day-v1', name: t.value.map.styles.navigationDay },
+  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: t.value.map.styles.navigationNight },
+])
 
 const selectedMode = ref<string>('flat')
-const selectedStyle = ref<string>(MAP_STYLES[0]?.id || '')
+const selectedStyle = ref<string>(MAP_STYLES.value[0]?.id || '')
 
 // 路线选择数据
 const routes = ref<Array<{ id: string; base: string; label?: string }>>([])
@@ -1044,8 +1016,8 @@ onUnmounted(() => {
 }
 .wasd-controls {
   position: absolute;
-  right: 280px; /* 避开右下角的手势摄像头 */
-  bottom: 16px;
+  right: 20px;   /* 靠右对齐 */
+  bottom: 220px; /* 位于摄像头上方 */
   z-index: 1000; /* 提高优先级，保持在底部 UI 之上 */
   display: flex;
   gap: 8px;
@@ -1114,8 +1086,8 @@ onUnmounted(() => {
 
 .gesture-controls {
   position: absolute;
-  bottom: 140px; /* 位于 WASD 上方 */
-  right: 24px;
+  bottom: 340px; /* 位于 WASD 上方 */
+  right: 20px;
   z-index: 100;
   display: flex;
   flex-direction: column;

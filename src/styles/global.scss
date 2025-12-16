@@ -108,3 +108,26 @@ button {
   width: 100%;
   height: 100%;
 }
+
+// Light Mode Support (Experimental Filter Method)
+html.light {
+  filter: invert(1) hue-rotate(180deg);
+  
+  // Revert inversion for media and maps to keep them looking natural
+  img, 
+  video, 
+  canvas,
+  .mapboxgl-map,
+  .map-container {
+    filter: invert(1) hue-rotate(180deg);
+  }
+  
+  // Special handling for the gesture camera view to ensure it stays correct
+  .gesture-camera-view {
+    filter: invert(1) hue-rotate(180deg);
+    
+    video, canvas {
+      filter: none; // Already reverted by parent
+    }
+  }
+}

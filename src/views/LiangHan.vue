@@ -8,8 +8,8 @@
       v-model:model-style="selectedStyle"
       :modes="MAP_MODES"
       :styles="MAP_STYLES"
-      mode-placeholder="选择显示模式"
-      style-placeholder="选择地图样式"
+      :mode-placeholder="t.map.controls.modePlaceholder"
+      :style-placeholder="t.map.controls.stylePlaceholder"
     />
 
     <!-- 时间轴组件：居中底部，毛玻璃半透明效果 -->
@@ -34,18 +34,18 @@
           aria-label="播放/暂停两汉交通时间轴"
           @click="togglePlay"
         >
-          <span v-if="!isPlaying">▶ 播放</span>
-          <span v-else>❚❚ 暂停</span>
+          <span v-if="!isPlaying">▶ {{ t.common.play }}</span>
+          <span v-else>❚❚ {{ t.common.pause }}</span>
         </button>
       </div>
       <div class="timeline-selected">
-        当前年份：<span class="highlight">{{ formatYearLabel(selectedYear) }}</span>
+        {{ t.common.currentYear }}：<span class="highlight">{{ formatYearLabel(selectedYear) }}</span>
       </div>
     </div>
 
     <transition name="legend">
       <div v-if="showLegend" class="legend-panel" @mouseleave="showLegend = false">
-        <h4>节点类型</h4>
+        <h4>{{ t.transport.nodeType }}</h4>
         <div class="legend-select-all">
           <label class="legend-item">
             <input
@@ -55,8 +55,8 @@
               @change="onTypeSelectAll($event)"
             />
             <div class="legend-text">
-              <strong>全选类型</strong>
-              <span>快速切换全部类别</span>
+              <strong>{{ t.transport.selectAll }}</strong>
+              <span>{{ t.transport.toggleAll }}</span>
             </div>
           </label>
         </div>
@@ -77,7 +77,7 @@
             </label>
           </li>
         </ul>
-        <p class="legend-note">数据来源：两汉交通节点。</p>
+        <p class="legend-note">{{ t.common.source }}：{{ t.transport.sourceHan }}。</p>
       </div>
     </transition>
     <button
@@ -87,7 +87,7 @@
       @mouseenter="showLegend = true"
       @focus="showLegend = true"
     >
-      类型
+      {{ t.transport.legendToggle }}
     </button>
 
     <transition name="slide">
@@ -123,52 +123,20 @@
       </div>
     </transition>
 
-    <!-- WASD 漫游提示 -->
-    <div class="wasd-controls">
-      <!-- 移动 -->
-      <div class="control-section">
-        <div class="key w" :class="{ active: keysPressed.w }">W</div>
-        <div class="keys-row">
-          <div class="key a" :class="{ active: keysPressed.a }">A</div>
-          <div class="key s" :class="{ active: keysPressed.s }">S</div>
-          <div class="key d" :class="{ active: keysPressed.d }">D</div>
-        </div>
-        <div class="label">移动</div>
-      </div>
 
-      <div class="divider"></div>
-
-      <!-- 升降 -->
-      <div class="control-section">
-        <div class="key q" :class="{ active: keysPressed.q }">Q</div>
-        <div class="key e" :class="{ active: keysPressed.e }">E</div>
-        <div class="label">升降</div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- 旋转 -->
-      <div class="control-section">
-        <div class="key up" :class="{ active: keysPressed.arrowup }">↑</div>
-        <div class="keys-row">
-          <div class="key left" :class="{ active: keysPressed.arrowleft }">←</div>
-          <div class="key down" :class="{ active: keysPressed.arrowdown }">↓</div>
-          <div class="key right" :class="{ active: keysPressed.arrowright }">→</div>
-        </div>
-        <div class="label">旋转</div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { unzipSync } from 'fflate'
 import { open as openShapefile } from 'shapefile'
 import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import { useI18n } from '@/composables/useI18n'
 import {
   liangHanRouteNarratives,
   type RouteNarrativeBlock,
 } from '@/assets/data/liangHan/routeNarratives'
+
+const { t } = useI18n()
 
 // 导入 Mapbox GL（需先安装 `mapbox-gl`）
 import mapboxgl from 'mapbox-gl'
@@ -181,6 +149,23 @@ import type {
   HanPointProperties,
   HanPointRecord,
 } from '@/types/lianghan'
+
+const ROUTE_COLOR_MAP: Record<string, string> = {}
+
+const ROUTE_COLOR_PALETTE = [
+  '#ff5e57',
+  '#ff884e',
+  '#ffa94d',
+  '#ffcd3c',
+  '#10ac84',
+  '#9B6B4A',
+  '#48dbfb',
+  '#2e86de',
+  '#5f27cd',
+  '#f368e0',
+  '#ff6b6b',
+  '#1dd1a1',
+]
 
 // 从环境变量读取 token（Vite 要求以 VITE_ 前缀暴露给客户端）
 const MAPBOX_TOKEN = (import.meta.env.VITE_MAPBOX_TOKEN as string) || ''
@@ -215,25 +200,25 @@ const keysPressed = reactive({
 let animationFrameId: number | null = null
 
 // 地图显示模式
-const MAP_MODES = [
-  { id: 'flat', name: '平面' },
-  { id: 'globe', name: '球形' },
-  { id: 'terrain', name: '立体' },
-]
+const MAP_MODES = computed(() => [
+  { id: 'flat', name: t.value.map.modes.flat },
+  { id: 'globe', name: t.value.map.modes.globe },
+  { id: 'terrain', name: t.value.map.modes.terrain },
+])
 // 将暗色样式放在首位，便于将两汉交通默认初始化为暗色主题
-const MAP_STYLES: { id: string; name: string }[] = [
-  { id: 'mapbox://styles/mapbox/dark-v10', name: '暗色' },
-  { id: 'mapbox://styles/mapbox/streets-v11', name: '街道' },
-  { id: 'mapbox://styles/mapbox/light-v10', name: '明亮' },
-  { id: 'mapbox://styles/mapbox/satellite-v9', name: '卫星' },
-  { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: '卫星街道' },
-  { id: 'mapbox://styles/mapbox/outdoors-v11', name: '户外' },
-  { id: 'mapbox://styles/mapbox/navigation-day-v1', name: '导航（日）' },
-  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: '导航（夜）' },
-]
+const MAP_STYLES = computed(() => [
+  { id: 'mapbox://styles/mapbox/dark-v10', name: t.value.map.styles.dark },
+  { id: 'mapbox://styles/mapbox/streets-v11', name: t.value.map.styles.streets },
+  { id: 'mapbox://styles/mapbox/light-v10', name: t.value.map.styles.light },
+  { id: 'mapbox://styles/mapbox/satellite-v9', name: t.value.map.styles.satellite },
+  { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: t.value.map.styles.satelliteStreets },
+  { id: 'mapbox://styles/mapbox/outdoors-v11', name: t.value.map.styles.outdoors },
+  { id: 'mapbox://styles/mapbox/navigation-day-v1', name: t.value.map.styles.navigationDay },
+  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: t.value.map.styles.navigationNight },
+])
 const selectedMode = ref<string>('flat')
 // 默认使用数组第一项（已将暗色置为第一项），保证初始化为暗色地图
-const selectedStyle = ref<string>(MAP_STYLES[0]?.id || 'mapbox://styles/mapbox/dark-v10')
+const selectedStyle = ref<string>(MAP_STYLES.value[0]?.id || 'mapbox://styles/mapbox/dark-v10')
 
 // 交通点和交通线数据
 const westernPoints = ref<HanPointFeature[]>([])
@@ -281,9 +266,9 @@ let lastFrameTime = 0
 // 地形夸张值（设为 2.5，用于增强立体感；globe 模式将不启用地形）
 const terrainExaggeration = ref<number>(2.5)
 
-const WESTERN_POINTS_ZIP_URL = '/data/lianghan/western_han_points.zip'
-const EASTERN_POINTS_ZIP_URL = '/data/lianghan/eastern_han_points.zip'
-const HAN_ROUTES_ZIP_URL = '/data/lianghan/han_silk_road.zip'
+const WESTERN_POINTS_BASE_URL = '/data/lianghan/western_han_points'
+const EASTERN_POINTS_BASE_URL = '/data/lianghan/eastern_han_points'
+const HAN_ROUTES_BASE_URL = '/data/lianghan/han_silk_road'
 
 const DATASET_COLOR_MAP: Record<HanPointProperties['dataset'], string> = {
   western: '#f3a712',
@@ -312,59 +297,37 @@ const POINT_TYPE_COLOR_MAP: Record<string, string> = {
   其他节点: '#f6c177',
 }
 
+const POINT_COLOR_EXPRESSION: any[] = [
+  'match',
+  ['get', 'type'],
+  ...Object.entries(POINT_TYPE_COLOR_MAP).flat(),
+  '#888888', // default color
+]
+
 const DEFAULT_POINT_TYPE_KEY = '其他节点'
 
-const POINT_TYPE_CATEGORIES = [
-  {
-    key: '都城',
-    label: '都城',
-    description: '帝国首府或行在',
-    color: POINT_TYPE_COLOR_MAP['都城'],
-  },
-  {
-    key: '都尉治所',
-    label: '都尉治所',
-    description: '边防军政指挥机构',
-    color: POINT_TYPE_COLOR_MAP['都尉治所'],
-  },
-  {
-    key: '郡级驻所',
-    label: '郡级驻所',
-    description: '郡国/属国治所',
-    color: POINT_TYPE_COLOR_MAP['郡级驻所'],
-  },
-  {
-    key: '县级驻所',
-    label: '县级驻所',
-    description: '县城与行政节点',
-    color: POINT_TYPE_COLOR_MAP['县级驻所'],
-  },
-  {
-    key: '城市',
-    label: '城市',
-    description: '区域内重要城市',
-    color: POINT_TYPE_COLOR_MAP['城市'],
-  },
-  { key: '聚邑', label: '聚邑', description: '聚落与市镇', color: POINT_TYPE_COLOR_MAP['聚邑'] },
-  { key: '驿站', label: '驿站', description: '官方传递网络', color: POINT_TYPE_COLOR_MAP['驿站'] },
-  {
-    key: '关隘',
-    label: '关隘',
-    description: '山口与防线门户',
-    color: POINT_TYPE_COLOR_MAP['关隘'],
-  },
-  { key: '城门', label: '城门', description: '城池出入口', color: POINT_TYPE_COLOR_MAP['城门'] },
-  { key: '桥梁', label: '桥梁', description: '跨河交通节点', color: POINT_TYPE_COLOR_MAP['桥梁'] },
-  { key: '渡口', label: '渡口', description: '河流/水网渡点', color: POINT_TYPE_COLOR_MAP['渡口'] },
-  { key: '湖泊', label: '湖泊', description: '水域交通据点', color: POINT_TYPE_COLOR_MAP['湖泊'] },
-  { key: '沙漠', label: '沙漠', description: '荒漠行经节点', color: POINT_TYPE_COLOR_MAP['沙漠'] },
-  {
-    key: '其他节点',
-    label: '其他节点',
-    description: '未注明或杂项节点',
-    color: POINT_TYPE_COLOR_MAP['其他节点'],
-  },
+const POINT_TYPE_CATEGORIES_RAW = [
+  { key: '都城', i18nKey: 'ducheng', color: POINT_TYPE_COLOR_MAP['都城'] },
+  { key: '都尉治所', i18nKey: 'duwei', color: POINT_TYPE_COLOR_MAP['都尉治所'] },
+  { key: '郡级驻所', i18nKey: 'jun', color: POINT_TYPE_COLOR_MAP['郡级驻所'] },
+  { key: '县级驻所', i18nKey: 'xian', color: POINT_TYPE_COLOR_MAP['县级驻所'] },
+  { key: '城市', i18nKey: 'chengshi', color: POINT_TYPE_COLOR_MAP['城市'] },
+  { key: '聚邑', i18nKey: 'juyi', color: POINT_TYPE_COLOR_MAP['聚邑'] },
+  { key: '驿站', i18nKey: 'yizhan', color: POINT_TYPE_COLOR_MAP['驿站'] },
+  { key: '关隘', i18nKey: 'guanai', color: POINT_TYPE_COLOR_MAP['关隘'] },
+  { key: '城门', i18nKey: 'chengmen', color: POINT_TYPE_COLOR_MAP['城门'] },
+  { key: '桥梁', i18nKey: 'qiaoliang', color: POINT_TYPE_COLOR_MAP['桥梁'] },
+  { key: '渡口', i18nKey: 'dukou', color: POINT_TYPE_COLOR_MAP['渡口'] },
+  { key: '湖泊', i18nKey: 'hubo', color: POINT_TYPE_COLOR_MAP['湖泊'] },
+  { key: '沙漠', i18nKey: 'shamo', color: POINT_TYPE_COLOR_MAP['沙漠'] },
+  { key: '其他节点', i18nKey: 'other', color: POINT_TYPE_COLOR_MAP['其他节点'] },
 ]
+
+const POINT_TYPE_CATEGORIES = computed(() => POINT_TYPE_CATEGORIES_RAW.map(item => ({
+  ...item,
+  label: t.value.lianghan.types[item.i18nKey as keyof typeof t.value.lianghan.types] || item.key,
+  description: t.value.lianghan.types[(item.i18nKey + 'Desc') as keyof typeof t.value.lianghan.types] || ''
+})))
 
 const POINT_TYPE_SYNONYM_MAP: Record<string, string> = {
   pass: '关隘',
@@ -414,7 +377,7 @@ const POINT_TYPE_SYNONYM_MAP: Record<string, string> = {
 }
 
 const typeFilters = reactive<Record<string, boolean>>(
-  POINT_TYPE_CATEGORIES.reduce(
+  POINT_TYPE_CATEGORIES_RAW.reduce(
     (acc, type) => {
       acc[type.key] = true
       return acc
@@ -426,9 +389,9 @@ const typeFilters = reactive<Record<string, boolean>>(
 const showLegend = ref(true)
 
 const allTypesSelected = computed({
-  get: () => POINT_TYPE_CATEGORIES.every(cat => typeFilters[cat.key]),
+  get: () => POINT_TYPE_CATEGORIES_RAW.every(cat => typeFilters[cat.key]),
   set: (value: boolean) => {
-    POINT_TYPE_CATEGORIES.forEach(cat => {
+    POINT_TYPE_CATEGORIES_RAW.forEach(cat => {
       typeFilters[cat.key] = value
     })
   },
@@ -441,40 +404,6 @@ watch(
   },
   { deep: true }
 )
-
-const POINT_COLOR_EXPRESSION = buildPointColorExpression()
-
-const ROUTE_COLOR_MAP: Record<string, string> = {
-  长安萧关道: '#ff5e57',
-  长安汧县道: '#ff884e',
-  凤翔灵台道: '#ffa94d',
-  西域南道: '#10ac84',
-  丝路中段新北道: '#2e86de',
-  西域北道: '#5f27cd',
-  婼羌道: '#ff6b6b',
-  陇关道: '#ff9f43',
-  河西走廊道: '#54a0ff',
-  丝路西段: '#f368e0',
-  略阳道: '#1dd1a1',
-  回中道: '#ffcd3c',
-  萧关道: '#48dbfb',
-  河湟道: '#9B6B4A',
-}
-
-const ROUTE_COLOR_PALETTE = [
-  '#ff5e57',
-  '#ff884e',
-  '#ffa94d',
-  '#ffcd3c',
-  '#10ac84',
-  '#9B6B4A',
-  '#48dbfb',
-  '#2e86de',
-  '#5f27cd',
-  '#f368e0',
-  '#ff6b6b',
-  '#1dd1a1',
-]
 
 const HAN_LAYER_IDS = {
   west: { source: 'han-west-points', layer: 'han-west-points-circle' },
@@ -1042,9 +971,9 @@ async function loadLiangHanDataset() {
     }
 
     const [westernRaw, easternRaw, routeRaw] = await Promise.all([
-      loadShapefileZip(WESTERN_POINTS_ZIP_URL),
-      loadShapefileZip(EASTERN_POINTS_ZIP_URL),
-      loadShapefileZip(HAN_ROUTES_ZIP_URL),
+      loadShapefileFromUrl(WESTERN_POINTS_BASE_URL),
+      loadShapefileFromUrl(EASTERN_POINTS_BASE_URL),
+      loadShapefileFromUrl(HAN_ROUTES_BASE_URL),
     ])
 
     westernPoints.value = buildPointFeatures(
@@ -1070,77 +999,46 @@ async function loadLiangHanDataset() {
   }
 }
 
-async function loadShapefileZip(zipUrl: string): Promise<GeoJSON.Feature[]> {
-  const response = await fetch(zipUrl)
-  if (!response.ok) {
-    throw new Error(`获取数据失败：${zipUrl} (${response.status})`)
+async function loadShapefileFromUrl(baseUrl: string): Promise<GeoJSON.Feature[]> {
+  // 1. 尝试获取 CPG 文件以确定编码
+  let encoding = 'utf-8'
+  try {
+    const cpgResponse = await fetch(`${baseUrl}.cpg`)
+    if (cpgResponse.ok) {
+      const text = await cpgResponse.text()
+      const trimmed = text.trim().toLowerCase()
+      const NORMALIZED: Record<string, string> = {
+        'utf-8': 'utf-8',
+        utf8: 'utf-8',
+        'utf-16': 'utf-16le',
+        utf16: 'utf-16le',
+        gbk: 'gbk',
+        gb2312: 'gb2312',
+        gb18030: 'gb18030',
+      }
+      encoding = NORMALIZED[trimmed] || trimmed
+    }
+  } catch (e) {
+    console.warn('无法加载 .cpg 文件，将默认使用 utf-8', e)
   }
 
-  const archive = unzipSync(new Uint8Array(await response.arrayBuffer()))
-  const entries = Object.keys(archive)
-  const shpName = entries.find(name => name.toLowerCase().endsWith('.shp'))
-  const dbfName = entries.find(name => name.toLowerCase().endsWith('.dbf'))
-
-  if (!shpName || !dbfName) {
-    throw new Error('数据包缺少 shp/dbf 文件，无法解析。')
-  }
-
-  const shpEntry = archive[shpName]
-  const dbfEntry = archive[dbfName]
-  if (!shpEntry || !dbfEntry) {
-    throw new Error('无法读取 shp/dbf 二进制内容')
-  }
-
-  const encoding = detectEncodingFromArchive(entries, archive)
-
-  const source: any = await openShapefile(sliceEntryBuffer(shpEntry), sliceEntryBuffer(dbfEntry), {
-    encoding,
-  })
+  // 2. 打开 shapefile
+  // shapefile.open 支持传入 URL 字符串
+  const source = await openShapefile(`${baseUrl}.shp`, `${baseUrl}.dbf`, { encoding })
 
   const features: GeoJSON.Feature[] = []
   try {
     while (true) {
       const result = await source.read()
-      if (!result || result.done) break
-      if (result.value) features.push(result.value as GeoJSON.Feature)
+      if (result.done) break
+      features.push(result.value)
     }
-  } finally {
-    if (source && typeof source.cancel === 'function') {
-      try {
-        source.cancel()
-      } catch (_) {}
-    }
+  } catch (e) {
+    console.error(`读取 Shapefile 失败 (${baseUrl})`, e)
+    throw e
   }
 
   return features
-}
-
-function sliceEntryBuffer(entry: Uint8Array): ArrayBuffer {
-  return entry.buffer.slice(entry.byteOffset, entry.byteOffset + entry.byteLength) as ArrayBuffer
-}
-
-function detectEncodingFromArchive(entries: string[], archive: Record<string, Uint8Array>): string {
-  const cpgName = entries.find(name => name.toLowerCase().endsWith('.cpg'))
-  if (!cpgName) return 'utf-8'
-  const cpgEntry = archive[cpgName]
-  if (!cpgEntry) return 'utf-8'
-  try {
-    const text = new TextDecoder('utf-8').decode(cpgEntry).trim().toLowerCase()
-    if (!text) return 'utf-8'
-    const NORMALIZED: Record<string, string> = {
-      'utf-8': 'utf-8',
-      utf8: 'utf-8',
-      'utf-16': 'utf-16le',
-      utf16: 'utf-16le',
-      gbk: 'gbk',
-      gb2312: 'gb2312',
-      gb18030: 'gb18030',
-    }
-    return NORMALIZED[text] || text
-  } catch (error) {
-    console.warn('[LiangHan] 无法解析 cpg 文件编码，退回 UTF-8', error)
-    return 'utf-8'
-  }
 }
 
 function buildPointFeatures(
@@ -2115,8 +2013,8 @@ function buildPointColorExpression(): any[] {
 
 .wasd-controls {
   position: absolute;
-  bottom: 24px; /* 固定到最右下角，和底部居中时间轴错开 */
-  right: 280px; /* 避开右下角的手势摄像头 */
+  bottom: 220px; /* 位于摄像头上方 */
+  right: 20px;   /* 靠右对齐 */
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -2186,8 +2084,8 @@ function buildPointColorExpression(): any[] {
 
 .gesture-controls {
   position: absolute;
-  bottom: 140px; /* 位于 WASD 上方 */
-  right: 24px;
+  bottom: 340px; /* 位于 WASD 上方 */
+  right: 20px;
   z-index: 100;
   display: flex;
   flex-direction: column;

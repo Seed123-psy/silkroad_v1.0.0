@@ -7,8 +7,8 @@
       v-model:model-style="selectedStyle"
       :modes="MAP_MODES"
       :styles="MAP_STYLES"
-      mode-placeholder="选择显示模式"
-      style-placeholder="选择地图样式"
+      :mode-placeholder="t.map.controls.modePlaceholder"
+      :style-placeholder="t.map.controls.stylePlaceholder"
     />
 
     <div class="timeline-glass">
@@ -46,7 +46,7 @@
         :class="{ collapsed: !showLegend }"
         @mouseleave="showLegend = false"
       >
-        <h4>精准度</h4>
+        <h4>{{ t.mingqing.accuracy }}</h4>
         <div class="legend-select-all">
           <label class="legend-item">
             <input
@@ -56,8 +56,8 @@
               @change="onAccuracySelectAll($event)"
             />
             <div class="legend-text">
-              <strong>全选</strong>
-              <span>切换全部准确度等级</span>
+              <strong>{{ t.mingqing.selectAll }}</strong>
+              <span>{{ t.mingqing.selectAllDesc }}</span>
             </div>
           </label>
         </div>
@@ -78,7 +78,7 @@
             </label>
           </li>
         </ul>
-        <p class="legend-note">数据来源：丝绸之路城市数据库（明清城区复原）。</p>
+        <p class="legend-note">{{ t.mingqing.source }}</p>
       </div>
     </transition>
 
@@ -89,7 +89,7 @@
       @mouseenter="showLegend = true"
       @focus="showLegend = true"
     >
-      准确度
+      {{ t.mingqing.legendToggle }}
     </button>
 
     <transition name="slide">
@@ -134,41 +134,7 @@
       </div>
     </transition>
 
-    <!-- WASD 漫游提示 -->
-    <div class="wasd-controls">
-      <!-- 移动 -->
-      <div class="control-section">
-        <div class="key w" :class="{ active: keysPressed.w }">W</div>
-        <div class="keys-row">
-          <div class="key a" :class="{ active: keysPressed.a }">A</div>
-          <div class="key s" :class="{ active: keysPressed.s }">S</div>
-          <div class="key d" :class="{ active: keysPressed.d }">D</div>
-        </div>
-        <div class="label">移动</div>
-      </div>
 
-      <div class="divider"></div>
-
-      <!-- 升降 -->
-      <div class="control-section">
-        <div class="key q" :class="{ active: keysPressed.q }">Q</div>
-        <div class="key e" :class="{ active: keysPressed.e }">E</div>
-        <div class="label">升降</div>
-      </div>
-
-      <div class="divider"></div>
-
-      <!-- 旋转 -->
-      <div class="control-section">
-        <div class="key up" :class="{ active: keysPressed.arrowup }">↑</div>
-        <div class="keys-row">
-          <div class="key left" :class="{ active: keysPressed.arrowleft }">←</div>
-          <div class="key down" :class="{ active: keysPressed.arrowdown }">↓</div>
-          <div class="key right" :class="{ active: keysPressed.arrowright }">→</div>
-        </div>
-        <div class="label">旋转</div>
-      </div>
-    </div>
   </div>
 </template>
 
@@ -179,6 +145,9 @@ import shp from 'shpjs'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import MapControls from '@/components/MapControls.vue'
+import { useI18n } from '@/composables/useI18n'
+
+const { t } = useI18n()
 
 type MapMode = 'flat' | 'globe' | 'terrain'
 
@@ -204,34 +173,40 @@ type MingQingRegionFeature = GeoJSON.Feature<
 
 // accuracy: 1 = most certain (green), 4 = least certain (red)
 // Titles adjusted per design: 档位 1：精准, 档位 2：较准, 档位 3：推知, 档位 4：替代
-const ACCURACY_LEVELS = [
-  { level: 1, color: '#2ecc71', title: '精准', description: '城墙痕迹清晰，复原结果最准确' },
-  { level: 2, color: '#90be6d', title: '较准', description: '部分城墙/遗迹保留，可较准确复原' },
-  { level: 3, color: '#f9c74f', title: '推知', description: '遗迹稀少，辅助地标推断' },
-  { level: 4, color: '#ef476f', title: '替代', description: '资料缺乏或以规则方格替代' },
+const ACCURACY_LEVELS_RAW = [
+  { level: 1, color: '#2ecc71', i18nKey: '1' },
+  { level: 2, color: '#90be6d', i18nKey: '2' },
+  { level: 3, color: '#f9c74f', i18nKey: '3' },
+  { level: 4, color: '#ef476f', i18nKey: '4' },
 ]
 
-const ACCURACY_COLOR_MAP = ACCURACY_LEVELS.reduce<Record<number, string>>((acc, level) => {
+const ACCURACY_LEVELS = computed(() => ACCURACY_LEVELS_RAW.map(item => ({
+  ...item,
+  title: t.value.mingqing.levels[item.i18nKey as keyof typeof t.value.mingqing.levels] || '',
+  description: t.value.mingqing.levels[(item.i18nKey + 'Desc') as keyof typeof t.value.mingqing.levels] || ''
+})))
+
+const ACCURACY_COLOR_MAP = ACCURACY_LEVELS_RAW.reduce<Record<number, string>>((acc, level) => {
   acc[level.level] = level.color
   return acc
 }, {})
 
-const MAP_MODES = [
-  { id: 'flat', name: '平面' },
-  { id: 'globe', name: '球形' },
-  { id: 'terrain', name: '立体' },
-]
+const MAP_MODES = computed(() => [
+  { id: 'flat', name: t.value.map.modes.flat },
+  { id: 'globe', name: t.value.map.modes.globe },
+  { id: 'terrain', name: t.value.map.modes.terrain },
+])
 
-const MAP_STYLES = [
-  { id: 'mapbox://styles/mapbox/dark-v10', name: '暗色' },
-  { id: 'mapbox://styles/mapbox/streets-v11', name: '街道' },
-  { id: 'mapbox://styles/mapbox/light-v10', name: '明亮' },
-  { id: 'mapbox://styles/mapbox/satellite-v9', name: '卫星' },
-  { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: '卫星街道' },
-  { id: 'mapbox://styles/mapbox/outdoors-v11', name: '户外' },
-  { id: 'mapbox://styles/mapbox/navigation-day-v1', name: '导航（日）' },
-  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: '导航（夜）' },
-]
+const MAP_STYLES = computed(() => [
+  { id: 'mapbox://styles/mapbox/dark-v10', name: t.value.map.styles.dark },
+  { id: 'mapbox://styles/mapbox/streets-v11', name: t.value.map.styles.streets },
+  { id: 'mapbox://styles/mapbox/light-v10', name: t.value.map.styles.light },
+  { id: 'mapbox://styles/mapbox/satellite-v9', name: t.value.map.styles.satellite },
+  { id: 'mapbox://styles/mapbox/satellite-streets-v11', name: t.value.map.styles.satelliteStreets },
+  { id: 'mapbox://styles/mapbox/outdoors-v11', name: t.value.map.styles.outdoors },
+  { id: 'mapbox://styles/mapbox/navigation-day-v1', name: t.value.map.styles.navigationDay },
+  { id: 'mapbox://styles/mapbox/navigation-night-v1', name: t.value.map.styles.navigationNight },
+])
 
 // detail zoom used when flying to a marker (set between 14-16 per request)
 // increased for closer-to-ground view
@@ -257,7 +232,7 @@ let isOverRegion = false
 const hoverPanel = ref<{ show: boolean; props?: MingQingRegionProperties }>({ show: false })
 const showLegend = ref(true)
 const accuracyFilters = reactive<Record<number, boolean>>(
-  ACCURACY_LEVELS.reduce(
+  ACCURACY_LEVELS_RAW.reduce(
     (acc, level) => {
       acc[level.level] = true
       return acc
@@ -267,9 +242,9 @@ const accuracyFilters = reactive<Record<number, boolean>>(
 )
 
 const allAccuracySelected = computed({
-  get: () => ACCURACY_LEVELS.every(level => accuracyFilters[level.level]),
+  get: () => ACCURACY_LEVELS_RAW.every(level => accuracyFilters[level.level]),
   set: (value: boolean) => {
-    ACCURACY_LEVELS.forEach(level => {
+    ACCURACY_LEVELS_RAW.forEach(level => {
       accuracyFilters[level.level] = value
     })
   },
@@ -924,7 +899,7 @@ function getAccuracyColor(level: number) {
 }
 
 function getAccuracyLabel(level: number) {
-  const match = ACCURACY_LEVELS.find(item => item.level === level)
+  const match = ACCURACY_LEVELS.value.find(item => item.level === level)
   return match ? match.title : '未明'
 }
 
@@ -1756,8 +1731,8 @@ function onAccuracySelectAll(event: Event) {
 
 .gesture-controls {
   position: absolute;
-  bottom: 140px;
-  right: 24px;
+  bottom: 340px;
+  right: 20px;
   z-index: 100;
   display: flex;
   flex-direction: column;
@@ -1846,8 +1821,8 @@ function onAccuracySelectAll(event: Event) {
 
 .wasd-controls {
   position: absolute;
-  bottom: 24px; /* 固定到最右下角，和底部居中时间轴错开 */
-  right: 280px; /* 避开右下角的手势摄像头 */
+  bottom: 220px; /* 位于摄像头上方 */
+  right: 20px;   /* 靠右对齐 */
   display: flex;
   flex-direction: row;
   align-items: center;
