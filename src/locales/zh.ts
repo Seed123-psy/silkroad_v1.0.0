@@ -15,6 +15,7 @@ export default {
     han: '两汉交通',
     mengyuan: '蒙元路线',
     mingqing: '明清城区',
+    architecture: '建筑展示',
     chat: '智能助手',
     guide: '操作指南',
     themeLight: '切换亮色模式',

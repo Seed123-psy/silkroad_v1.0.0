@@ -15,6 +15,7 @@ export default {
     han: 'Han Dynasty',
     mengyuan: 'Meng-Yuan Routes',
     mingqing: 'Ming-Qing Cities',
+    architecture: 'Architecture',
     chat: 'AI Assistant',
     guide: 'Guide',
     themeLight: 'Switch to Light Mode',

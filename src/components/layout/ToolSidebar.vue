@@ -133,7 +133,7 @@ import { useI18n } from '@/composables/useI18n'
 import {
   GlobeAltIcon,
   ChartBarIcon,
-  // BuildingLibraryIcon,
+  BuildingLibraryIcon,
   ChevronDownIcon,
   QuestionMarkCircleIcon,
   SunIcon,
@@ -193,6 +193,11 @@ const navItems = computed<NavItem[]>(() => [
     label: t.value.sidebar.mingqing,
     path: '/mingqing',
     icon: LiangHanTransportIcon,
+  },
+  {
+    label: t.value.sidebar.architecture,
+    path: '/architecture',
+    icon: BuildingLibraryIcon,
   },
   {
     label: t.value.sidebar.chat,
