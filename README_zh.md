@@ -74,6 +74,51 @@ npm ci
 npm run dev
 ```
 
+前后端运行说明
+
+- **前端（开发）**: 在仓库根目录执行：
+
+```bash
+npm ci
+npm run dev
+```
+
+这会启动基于 Vite 的开发服务器（默认绑定本地端口，浏览器会热重载）。
+
+- **前端（构建与预览）**:
+
+```bash
+npm run build
+npm run preview
+```
+
+- **后端（本地启动）**: 后端在 `server/` 目录，提供一个简单的 Express 服务用于 AI 请求代理与示例接口。启动方法：
+
+```bash
+cd server
+npm ci
+npm start
+```
+
+也可在项目根使用 `--prefix`：
+
+```bash
+npm --prefix server ci
+npm --prefix server start
+```
+
+- **后端配置（可选）**: 在 `server/` 下创建 `.env` 文件以配置环境变量：
+
+```env
+# server/.env 示例
+PORT=3000
+SILICONFLOW_API_KEY=your_api_key_here
+SILICONFLOW_API_URL=https://api.siliconflow.cn/v1
+MODEL_ID=moonshotai/Kimi-K2-Instruct
+```
+
+`SILICONFLOW_API_KEY` 用于向上游模型服务授权请求；若不提供，后端会在无法转发时返回兜底文本。更多实现细节在 `server/index.js` 中。
+
 ## 文档导航
 
 

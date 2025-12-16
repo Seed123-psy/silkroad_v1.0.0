@@ -31,6 +31,11 @@ const routes: RouteRecordRaw[] = [
     name: 'MingQing',
     component: () => import('@/views/MingQing.vue'),
   },
+  {
+    path: '/chat',
+    name: 'Chat',
+    component: () => import('@/views/Chat.vue'),
+  },
 ]
 
 const router = createRouter({

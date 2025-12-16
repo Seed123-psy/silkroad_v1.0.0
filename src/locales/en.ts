@@ -11,6 +11,7 @@ export default {
     han: 'Han Dynasty',
     mengyuan: 'Meng-Yuan Routes',
     mingqing: 'Ming-Qing Cities',
+    chat: 'AI Assistant',
     guide: 'Guide',
     themeLight: 'Switch to Light Mode',
     themeDark: 'Switch to Dark Mode',
@@ -250,6 +251,22 @@ export default {
         { label: 'Interaction', desc: 'Click city nodes for detailed history.' },
         { label: 'Layers', desc: 'Use top-right panel to switch map styles.' }
       ]
+    }
+  },
+  chat: {
+    title: 'Silk Road AI Assistant',
+    subtitle: 'Explore the history, culture, and trade of the Silk Road',
+    placeholder: 'Ask a question, e.g., "Where did the Silk Road start?"',
+    send: 'Send',
+    welcome: 'Hello! I am the Silk Road AI Assistant. I can answer your questions about the history, geography, culture, and trade of the Silk Road. How can I help you today?',
+    thinking: 'Thinking...',
+    error: 'Sorry, I encountered an issue. Please try again later.',
+    suggested: {
+      title: 'You can ask me:',
+      q1: 'Where were the starting and ending points of the Silk Road?',
+      q2: 'What was the historical significance of Zhang Qian\'s mission to the Western Regions?',
+      q3: 'What were the main commodities traded on the Silk Road?',
+      q4: 'Which countries did Xuanzang pass through on his journey to the West?'
     }
   }
 }

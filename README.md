@@ -15,6 +15,51 @@ npm ci
 npm run dev
 ```
 
+前后端运行说明
+
+- **前端（开发）**: 在根目录执行以下命令以启动 Vite 开发服务器：
+
+```bash
+npm ci
+npm run dev
+```
+
+- **前端（构建）**: 生成生产构建并本地预览：
+
+```bash
+npm run build
+npm run preview
+```
+
+- **后端（开发 / 代理）**: 后端服务位于 `server/` 目录，使用 Express 提供简单的代理与 AI 转发接口。可以按如下步骤启动：
+
+```bash
+cd server
+npm ci
+npm start
+```
+
+或者从项目根目录使用 `--prefix`（在 CI 或脚本中常用）：
+
+```bash
+npm --prefix server ci
+npm --prefix server start
+```
+
+- **后端环境变量**: 后端使用 `dotenv`，可在 `server/` 下创建一个 `.env` 文件设置可选与必需的变量：
+
+```env
+# server/.env 示例
+PORT=3000
+SILICONFLOW_API_KEY=your_api_key_here
+SILICONFLOW_API_URL=https://api.siliconflow.cn/v1
+MODEL_ID=moonshotai/Kimi-K2-Instruct
+```
+
+`SILICONFLOW_API_KEY` 可选但建议配置以启用代理向上游模型服务的请求；不设置时服务会返回兜底文本。
+
+更多细节请参考 `server/index.js` 中的注释与逻辑。
+
 ## Documentation Navigation
 
 
