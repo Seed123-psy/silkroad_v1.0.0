@@ -5,10 +5,15 @@
       :cities="cities"
       :routes="routes"
       :auto-rotate="autoRotate"
+      :paused="showLanding"
       class="globe-container"
       @city-hover="handleCityHover"
     />
     <CityInfoPanel :city="hoveredCity" @close="handleClosePanel" />
+    
+    <Transition name="fade">
+      <Landing v-if="showLanding" @start="handleStart" />
+    </Transition>
   </div>
 </template>
 
@@ -16,6 +21,7 @@
 import { ref, onMounted, watch } from 'vue'
 import Globe3D from '@/components/Globe3D.vue'
 import CityInfoPanel from '@/components/CityInfoPanel.vue'
+import Landing from '@/views/Landing.vue'
 import { dataService } from '@/services/dataService'
 import type { City, Route } from '@/types'
 import { useGestureStore } from '@/stores/gesture'
@@ -26,12 +32,17 @@ const hoveredCity = ref<City | null>(null)
 const globeRef = ref<any>(null)
 const autoRotate = ref(true)
 const isNodeHovered = ref(false)
+const showLanding = ref(true)
 let hoverResetTimer: number | null = null
 
 const gestureStore = useGestureStore()
 
+const handleStart = () => {
+  showLanding.value = false
+}
+
 const updateAutoRotate = () => {
-  autoRotate.value = !gestureStore.isCameraOpen && !isNodeHovered.value
+  autoRotate.value = !gestureStore.isCameraOpen && !isNodeHovered.value && !showLanding.value
 }
 
 watch(() => gestureStore.isCameraOpen, () => {
@@ -39,6 +50,10 @@ watch(() => gestureStore.isCameraOpen, () => {
 })
 
 watch(isNodeHovered, () => {
+  updateAutoRotate()
+})
+
+watch(showLanding, () => {
   updateAutoRotate()
 })
 
@@ -98,6 +113,16 @@ updateAutoRotate()
 .globe-container {
   width: 100%;
   height: 100%;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.8s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .gesture-controls {

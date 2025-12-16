@@ -3,6 +3,10 @@ export default {
     title: 'Silk Road',
     loading: 'Loading...',
   },
+  landing: {
+    title: 'A Thousand Years of Camel Bells',
+    subtitle: 'A visualization of trade and cultural exchange between East and West along the Silk Road',
+  },
   sidebar: {
     explore: 'Earth Exploration',
     trade: 'Trade Charts',

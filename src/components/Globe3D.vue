@@ -27,6 +27,7 @@ interface Globe3DProps {
   routes?: Route[]
   selectedPeriod?: string
   autoRotate?: boolean
+  paused?: boolean
 }
 
 /**
@@ -43,6 +44,7 @@ const props = withDefaults(defineProps<Globe3DProps>(), {
   routes: () => [],
   selectedPeriod: undefined,
   autoRotate: false,
+  paused: false,
 })
 
 const emit = defineEmits<Globe3DEmits>()
@@ -464,6 +466,14 @@ function updateFrustumCulling() {
  */
 function animate() {
   animationFrameId = requestAnimationFrame(animate)
+
+  if (props.paused) {
+    if (needsRender && renderer && scene && camera) {
+      renderer.render(scene, camera)
+      needsRender = false
+    }
+    return
+  }
 
   // 更新 OrbitControls（包括自动旋转）
   if (controls) {

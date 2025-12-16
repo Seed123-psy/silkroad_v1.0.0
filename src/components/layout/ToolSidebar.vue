@@ -1,6 +1,6 @@
 <template>
   <aside class="tool-sidebar">
-    <div class="sidebar-header">
+    <RouterLink to="/" class="sidebar-header">
       <div class="logo-icon">
         <svg
           width="24"
@@ -33,7 +33,7 @@
         </svg>
       </div>
       <span class="logo-text">SilkRoad</span>
-    </div>
+    </RouterLink>
 
     <nav class="sidebar-nav">
       <template v-for="item in navItems" :key="item.label">

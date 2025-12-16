@@ -3,6 +3,10 @@ export default {
     title: '丝绸之路',
     loading: '加载中...',
   },
+  landing: {
+    title: '驼铃回荡的千年',
+    subtitle: '东西方商品流通和文化交融的丝路可视化',
+  },
   sidebar: {
     explore: '地球探索',
     trade: '贸易图表',

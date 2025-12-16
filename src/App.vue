@@ -1,6 +1,6 @@
 <template>
   <div class="app-shell">
-    <ToolSidebar class="app-sidebar" />
+    <ToolSidebar v-if="!route.meta.hideSidebar" class="app-sidebar" />
     <main class="app-content">
       <router-view />
     </main>
@@ -10,12 +10,14 @@
 </template>
 
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
 import ToolSidebar from '@/components/layout/ToolSidebar.vue'
 import GlobalGestureCursor from '@/components/GlobalGestureCursor.vue'
 import HelpModal from '@/components/HelpModal.vue'
 import { useGlobalGesture } from '@/composables/useGlobalGesture'
 import { useAppStore } from '@/stores/app'
 
+const route = useRoute()
 const appStore = useAppStore()
 
 // 初始化全局手势控制
