@@ -50,17 +50,6 @@ function randomPointInBox(w: number, h: number, d: number, cx: number, cy: numbe
   };
 }
 
-// 辅助函数：生成随机点在圆柱体内/表面
-function randomPointInCylinder(r: number, h: number, cx: number, cy: number, cz: number, hollow = false) {
-  const theta = Math.random() * Math.PI * 2;
-  const radius = hollow ? r : Math.sqrt(Math.random()) * r;
-  return {
-    x: radius * Math.cos(theta) + cx,
-    y: (Math.random() - 0.5) * h + cy,
-    z: radius * Math.sin(theta) + cz
-  };
-}
-
 // 生成大雁塔 (Big Wild Goose Pagoda) - 深度优化版
 function generateBigWildGoosePagoda(): ArchitectureData {
   const positions = new Float32Array(PARTICLE_COUNT * 3);
@@ -452,7 +441,6 @@ function generateMogaoCaves(): ArchitectureData {
   const totalH = 13;
   const baseY = -6.5;
   const baseW = 9;
-  const topW = 4;
   const depth = 4;
 
   for (let i = 0; i < PARTICLE_COUNT; i++) {
@@ -498,7 +486,7 @@ function generateMogaoCaves(): ArchitectureData {
          // --- 柱子与墙体 (Structure) ---
          // 主要是前面的柱廊
          const w = currentW;
-         const d = currentD;
+         // const d = currentD; // 已移除：未使用，避免 TS6133
          
          // 随机点
          const lx = (Math.random() - 0.5) * w;
@@ -849,8 +837,14 @@ function initThree() {
 
   // 初始几何体
   geometry = new THREE.BufferGeometry();
-  const initialData = architectures[0];
-  
+  // 保证 initialData 在编译期对 TS 为非 undefined（提供安全回退）
+  const initialData = architectures[0] ?? {
+    name: '',
+    positions: new Float32Array(PARTICLE_COUNT * 3),
+    colors: new Float32Array(PARTICLE_COUNT * 3),
+    baseColor: new THREE.Color(0xffffff)
+  };
+
   geometry.setAttribute('position', new THREE.BufferAttribute(Float32Array.from(initialData.positions), 3));
   geometry.setAttribute('color', new THREE.BufferAttribute(Float32Array.from(initialData.colors), 3));
 
@@ -898,20 +892,32 @@ function transitionTo(index: number) {
   isTransitioning = true;
   currentIndex.value = index;
   const targetData = architectures[index];
+  if (!targetData) {
+    isTransitioning = false;
+    return;
+  }
+
+  // geometry.getAttribute 更明确地取属性并进行空值检查
+  const positionAttribute = geometry.getAttribute('position') as THREE.BufferAttribute | undefined;
+  const colorAttribute = geometry.getAttribute('color') as THREE.BufferAttribute | undefined;
+  if (!positionAttribute || !colorAttribute) {
+    isTransitioning = false;
+    return;
+  }
+
   currentArchitectureName.value = targetData.name;
 
-  const positionAttribute = geometry.attributes.position;
-  const colorAttribute = geometry.attributes.color;
-  
+   // 明确初始化，确保类型为 Float32Array（非 undefined）
+   // 注：这些数组在 onUpdate 回调中通过闭包访问
+   const startPositions = Float32Array.from(positionAttribute.array as Float32Array);
+   const startColors = Float32Array.from(colorAttribute.array as Float32Array);
+
+   const endPositions = targetData.positions;
+   const endColors = targetData.colors;
+
   const duration = 2.0;
-  
+
   const progress = { t: 0 };
-  
-  const startPositions = Float32Array.from(positionAttribute.array as Float32Array);
-  const startColors = Float32Array.from(colorAttribute.array as Float32Array);
-  
-  const endPositions = targetData.positions;
-  const endColors = targetData.colors;
 
   // 使用更复杂的缓动
   gsap.to(progress, {
@@ -920,29 +926,38 @@ function transitionTo(index: number) {
     ease: "power3.inOut",
     onUpdate: () => {
       const t = progress.t;
-      
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const i3 = i * 3;
-        
-        // 加入一点随机扰动，让变换过程像流沙/星尘
-        const noise = Math.sin(t * Math.PI) * (Math.random() - 0.5) * 5;
-        
-        positionAttribute.array[i3] = startPositions[i3] + (endPositions[i3] - startPositions[i3]) * t + noise;
-        positionAttribute.array[i3+1] = startPositions[i3+1] + (endPositions[i3+1] - startPositions[i3+1]) * t + noise;
-        positionAttribute.array[i3+2] = startPositions[i3+2] + (endPositions[i3+2] - startPositions[i3+2]) * t + noise;
-        
-        colorAttribute.array[i3] = startColors[i3] + (endColors[i3] - startColors[i3]) * t;
-        colorAttribute.array[i3+1] = startColors[i3+1] + (endColors[i3+1] - startColors[i3+1]) * t;
-        colorAttribute.array[i3+2] = startColors[i3+2] + (endColors[i3+2] - startColors[i3+2]) * t;
-      }
-      
-      positionAttribute.needsUpdate = true;
-      colorAttribute.needsUpdate = true;
-    },
-    onComplete: () => {
+      // 使用外部闭包中的数组，确保类型安全
+      const posArr: Float32Array = positionAttribute.array as Float32Array;
+      const colArr: Float32Array = colorAttribute.array as Float32Array;
+
+          // 将起止数据提升为局部常量，避免 TS 对索引访问产生“可能为 undefined”的推断
+          const sp = startPositions;
+          const ep = endPositions;
+          const sc = startColors;
+          const ec = endColors;
+
+       for (let i = 0; i < PARTICLE_COUNT; i++) {
+         const i3 = i * 3;
+
+         // 加入一点随机扰动，让变换过程像流沙/星尘
+         const noise = Math.sin(t * Math.PI) * (Math.random() - 0.5) * 5;
+
+             posArr[i3]   = sp[i3]!   + (ep[i3]!   - sp[i3]!)   * t + noise;
+             posArr[i3+1] = sp[i3+1]! + (ep[i3+1]! - sp[i3+1]!) * t + noise;
+             posArr[i3+2] = sp[i3+2]! + (ep[i3+2]! - sp[i3+2]!) * t + noise;
+
+             colArr[i3]   = sc[i3]!   + (ec[i3]!   - sc[i3]!)   * t;
+             colArr[i3+1] = sc[i3+1]! + (ec[i3+1]! - sc[i3+1]!) * t;
+             colArr[i3+2] = sc[i3+2]! + (ec[i3+2]! - sc[i3+2]!) * t;
+       }
+
+       positionAttribute.needsUpdate = true;
+       colorAttribute.needsUpdate = true;
+     },
+     onComplete: () => {
       isTransitioning = false;
-    }
-  });
+     }
+   });
 }
 
 onMounted(() => {
@@ -1000,6 +1015,7 @@ onBeforeUnmount(() => {
   letter-spacing: 4px;
   font-family: "STKaiti", "KaiTi", serif;
   background: linear-gradient(to bottom, #fff, #ffd700);
+   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
