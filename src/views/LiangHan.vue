@@ -1632,17 +1632,7 @@ function getPointTypeColor(
   return '#e67e22'
 }
 
-function buildPointColorExpression(): any[] {
-  const expr: any[] = [
-    'match',
-    ['coalesce', ['get', 'typeKey'], ['get', 'type'], ['get', 'classification']],
-  ]
-  Object.entries(POINT_TYPE_COLOR_MAP).forEach(([typeKey, color]) => {
-    expr.push(typeKey, color)
-  })
-  expr.push(['coalesce', ['get', 'color'], '#f6c177'])
-  return expr
-}
+// buildPointColorExpression was removed because it was unused; color expressions are handled inline when needed.
 </script>
 
 <style scoped>

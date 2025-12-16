@@ -37,7 +37,6 @@ const skeletonCanvas = ref<HTMLCanvasElement | null>(null)
 
 // 模拟鼠标事件状态
 let isMouseDown = false
-let lastZoomFactor = 1.0
 
 // 监听光标位置变化 -> 模拟 mousemove
 watch([() => store.cursorX, () => store.cursorY], ([x, y]) => {
@@ -96,11 +95,7 @@ watch(() => store.isClicking, (clicking) => {
 })
 
 // 监听缩放状态变化，重置基准值
-watch(() => store.isZooming, (isZooming) => {
-  if (isZooming) {
-    lastZoomFactor = store.zoomFactor
-  }
-})
+// NOTE: we don't need to track a separate lastZoomFactor here — zoomAction drives zoom events
 
 // 监听缩放动作 -> 持续触发 wheel
 let zoomInterval: number | null = null
@@ -185,7 +180,10 @@ const drawLandmarks = (ctx: CanvasRenderingContext2D, landmarks: any[], w: numbe
 }
 
 const drawConnectors = (ctx: CanvasRenderingContext2D, landmarks: any[], w: number, h: number) => {
-  const connections = [
+  // 运行时守护：确保传入的是数组
+  if (!landmarks || !landmarks.length) return
+
+  const connections: [number, number][] = [
     [0, 1], [1, 2], [2, 3], [3, 4], // 拇指
     [0, 5], [5, 6], [6, 7], [7, 8], // 食指
     [5, 9], [9, 10], [10, 11], [11, 12], // 中指

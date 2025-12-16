@@ -6,7 +6,7 @@ export function useGlobalGesture() {
   const store = useGestureStore()
 
   let handLandmarker: HandLandmarker | undefined
-  let animationFrameId: number
+  let animationFrameId: number | null = null
   let lastVideoTime = -1
 
   // 平滑处理
@@ -85,11 +85,16 @@ export function useGlobalGesture() {
     if (landmarks && landmarks.length > 0) {
       // 双手检测：缩放
       if (landmarks.length === 2) {
-        const hand1 = landmarks[0]
-        const hand2 = landmarks[1]
-        
-        const getPinchDist = (hand: any[]) => Math.hypot(hand[4].x - hand[8].x, hand[4].y - hand[8].y)
-        
+        const hand1 = landmarks[0] as any[] | undefined
+        const hand2 = landmarks[1] as any[] | undefined
+
+        const getPinchDist = (hand?: any[]) => {
+          if (!hand || hand.length <= 8) return Infinity
+          const a = hand[4]
+          const b = hand[8]
+          return Math.hypot((a.x ?? 0) - (b.x ?? 0), (a.y ?? 0) - (b.y ?? 0))
+        }
+
         const dist1 = getPinchDist(hand1)
         const dist2 = getPinchDist(hand2)
         
@@ -115,10 +120,10 @@ export function useGlobalGesture() {
       }
 
       // 单手检测：光标移动与点击
-      const hand = landmarks[0]
-      const indexTip = hand[8]
-      const thumbTip = hand[4]
-      
+      const hand = landmarks[0] as any[] | undefined
+      const indexTip = hand?.[8]
+      const thumbTip = hand?.[4]
+
       if (indexTip && thumbTip) {
         // 坐标转换: MediaPipe 返回 0-1 的归一化坐标
         // x 轴镜像翻转

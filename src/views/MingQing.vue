@@ -251,7 +251,7 @@ const allAccuracySelected = computed({
 })
 
 const selectedMode = ref<MapMode>('flat')
-const selectedStyle = ref<string>(MAP_STYLES[0]?.id ?? 'mapbox://styles/mapbox/dark-v10')
+const selectedStyle = ref<string>(MAP_STYLES.value[0]?.id ?? 'mapbox://styles/mapbox/dark-v10')
 
 const DEFAULT_START_YEAR = 1367
 const startYear = ref(DEFAULT_START_YEAR)

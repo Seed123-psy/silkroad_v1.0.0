@@ -68,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+// no direct Vue imports needed here
 import { useI18n } from '@/composables/useI18n'
 
 defineProps<{
