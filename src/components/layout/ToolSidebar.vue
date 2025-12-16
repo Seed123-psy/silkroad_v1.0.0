@@ -282,6 +282,27 @@ navItems.value.forEach(item => {
   width: 100%;
   padding: 0 $spacing-sm;
   box-sizing: border-box;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($color-gold, 0.2);
+    border-radius: 2px;
+
+    &:hover {
+      background: rgba($color-gold, 0.4);
+    }
+  }
 }
 
 .nav-item {
@@ -484,6 +505,12 @@ navItems.value.forEach(item => {
     flex-direction: row;
     justify-content: space-around;
     padding: 0;
+    overflow-y: hidden;
+    overflow-x: auto;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   .nav-item {
