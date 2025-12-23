@@ -23,6 +23,7 @@ export default {
     language: '切换语言',
     gesture: '手势控制',
   },
+  glbViewer: '模型查看',
   common: {
     play: '播放',
     pause: '暂停',

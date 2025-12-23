@@ -2,37 +2,12 @@
   <aside class="tool-sidebar">
     <RouterLink to="/" class="sidebar-header">
       <div class="logo-icon">
-        <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M12 2L2 7L12 12L22 7L12 2Z"
-            stroke="#D4AF37"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M2 17L12 22L22 17"
-            stroke="#D4AF37"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-          <path
-            d="M2 12L12 17L22 12"
-            stroke="#D4AF37"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
+        <img
+          src="@/assets/logo_transparent.png"
+          alt="SilkRoad"
+          class="logo-img"
+        />
       </div>
-      <span class="logo-text">SilkRoad</span>
     </RouterLink>
 
     <nav class="sidebar-nav">
@@ -200,6 +175,11 @@ const navItems = computed<NavItem[]>(() => [
     icon: BuildingLibraryIcon,
   },
   {
+    label: t.value.sidebar.glbViewer,
+    path: '/glb-viewer',
+    icon: BuildingLibraryIcon,
+  },
+  {
     label: t.value.sidebar.chat,
     path: '/chat',
     icon: ChatBubbleLeftRightIcon,
@@ -245,7 +225,7 @@ navItems.value.forEach(item => {
 @use '@/assets/styles/mixins.scss' as *;
 
 .tool-sidebar {
-  width: $sidebar-width;
+  width: 136px; // slightly wider sidebar
   height: 100vh;
   background: rgba(5, 8, 15, 0.85);
   border-right: 1px solid $border-color-light;
@@ -269,6 +249,13 @@ navItems.value.forEach(item => {
 
 .logo-icon {
   filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.3));
+}
+
+.logo-icon .logo-img {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  display: block;
 }
 
 .logo-text {
@@ -317,7 +304,7 @@ navItems.value.forEach(item => {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 64px;
+  height: 88px;
   border-radius: $border-radius-lg;
   color: $text-secondary;
   transition: all $transition-duration-fast;
@@ -342,14 +329,14 @@ navItems.value.forEach(item => {
 }
 
 .nav-icon {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   margin-bottom: 4px;
   transition: transform $transition-duration-fast;
 }
 
 .nav-label {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: $font-weight-medium;
 }
 

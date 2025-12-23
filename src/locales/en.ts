@@ -23,6 +23,7 @@ export default {
     language: 'Switch Language',
     gesture: 'Gesture Control',
   },
+  glbViewer: 'Model Viewer',
   common: {
     play: 'Play',
     pause: 'Pause',

@@ -41,6 +41,11 @@ const routes: RouteRecordRaw[] = [
     name: 'Architecture',
     component: () => import('@/views/ArchitectureParticles.vue'),
   },
+  {
+    path: '/glb-viewer',
+    name: 'GlbViewer',
+    component: () => import('@/views/GlbViewer.vue'),
+  },
 ]
 
 const router = createRouter({
