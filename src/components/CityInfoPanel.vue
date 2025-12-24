@@ -190,6 +190,10 @@ const getPeriodName = (period: string): string => {
   z-index: 50;
   display: flex;
   flex-direction: column;
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-lg;
+  border: 1px solid $border-color-medium;
+  box-shadow: $box-shadow-xl, $box-shadow-gold-soft;
 
   @include mobile {
     top: auto;
@@ -208,17 +212,35 @@ const getPeriodName = (period: string): string => {
   justify-content: space-between;
   align-items: flex-start;
   padding: $spacing-lg $spacing-xl;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
-  border-bottom: 1px solid $border-color-light;
+  background: linear-gradient(to bottom, rgba($text-primary, 0.05), transparent);
+  border-bottom: 1px solid $border-color-medium;
+
+  // 金线装饰
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: $spacing-lg;
+    right: $spacing-lg;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.5) 50%,
+      transparent 100%
+    );
+  }
 }
 
 .city-name {
   .name-zh {
     display: block;
+    font-family: $font-family-serif;
     font-size: $font-size-2xl;
     color: $color-gold;
     margin-bottom: $spacing-xs;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 2px 8px rgba($color-gold, 0.3);
+    letter-spacing: $letter-spacing-wide;
   }
 
   .name-en {
@@ -226,17 +248,19 @@ const getPeriodName = (period: string): string => {
     font-size: $font-size-sm;
     color: $text-secondary;
     font-weight: $font-weight-normal;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
   }
 }
 
 .close-btn {
   padding: $spacing-xs;
   color: $text-tertiary;
-  transition: color $transition-duration-fast;
+  transition: all $transition-duration-base $ease-ancient;
+  border-radius: $border-radius-base;
 
   &:hover {
-    color: $text-primary;
+    color: $color-gold;
+    background: rgba(212, 175, 55, 0.1);
   }
 }
 
@@ -245,12 +269,24 @@ const getPeriodName = (period: string): string => {
   overflow-y: auto;
   padding: $spacing-lg $spacing-xl;
 
-  // Hide scrollbar for cleaner look but keep functionality
   &::-webkit-scrollbar {
     width: 4px;
   }
   &::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: linear-gradient(
+      180deg,
+      rgba(212, 175, 55, 0.3) 0%,
+      rgba(212, 175, 55, 0.15) 100%
+    );
+    border-radius: 2px;
+
+    &:hover {
+      background: linear-gradient(
+        180deg,
+        rgba(212, 175, 55, 0.5) 0%,
+        rgba(212, 175, 55, 0.3) 100%
+      );
+    }
   }
 }
 
@@ -264,12 +300,26 @@ const getPeriodName = (period: string): string => {
 
 .section-title {
   font-size: $font-size-sm;
-  color: $color-sand;
+  font-family: $font-family-serif;
+  color: $text-secondary;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   margin-bottom: $spacing-md;
   padding-bottom: $spacing-xs;
   border-bottom: 1px solid $border-color-light;
+  position: relative;
+
+  // 金色装饰点
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 30px;
+    height: 2px;
+    background: $color-gold;
+    border-radius: 1px;
+  }
 }
 
 .info-grid {
@@ -287,6 +337,8 @@ const getPeriodName = (period: string): string => {
 .info-label {
   font-size: $font-size-xs;
   color: $text-tertiary;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .info-value {
@@ -300,9 +352,11 @@ const getPeriodName = (period: string): string => {
     color: $border-color-light;
     font-size: $font-size-base;
     margin-right: 2px;
+    transition: color $transition-duration-fast;
 
     &.active {
       color: $color-gold;
+      filter: drop-shadow(0 0 4px rgba(212, 175, 55, 0.4));
     }
   }
 }
@@ -321,40 +375,44 @@ const getPeriodName = (period: string): string => {
 }
 
 .tag {
-  padding: 4px 12px;
+  padding: $spacing-xs $spacing-md;
   border-radius: $border-radius-full;
   font-size: $font-size-xs;
-  border: 1px solid $border-color-light;
-  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid $border-color;
+  background: rgba($text-primary, 0.03);
   color: $text-secondary;
-  transition: all $transition-duration-fast;
+  transition: all $transition-duration-base $ease-ancient;
+  cursor: pointer;
 
   &:hover {
-    border-color: $color-gold;
+    border-color: $border-color-medium;
     color: $color-gold;
-    background: rgba(226, 199, 146, 0.1);
+    background: rgba($color-gold, 0.12);
+    box-shadow: $box-shadow-gold-subtle;
   }
 }
 
 .period-tag {
-  // Specific styles if needed
+  // 继承 .tag 样式
 }
 
 .trade-tag {
-  border-color: rgba($color-terra, 0.3);
+  border-color: rgba($color-cinnabar, 0.3);
+
   &:hover {
-    border-color: $color-terra;
-    color: $color-terra;
-    background: rgba($color-terra, 0.1);
+    border-color: $color-cinnabar;
+    color: $color-cinnabar;
+    background: rgba($color-cinnabar, 0.12);
   }
 }
 
 .site-tag {
   border-color: rgba($color-jade, 0.3);
+
   &:hover {
     border-color: $color-jade;
     color: $color-jade;
-    background: rgba($color-jade, 0.1);
+    background: rgba($color-jade, 0.12);
   }
 }
 
@@ -381,14 +439,14 @@ const getPeriodName = (period: string): string => {
     height: 6px;
     border-radius: 50%;
     background: $color-gold;
-    box-shadow: 0 0 4px $color-gold;
+    box-shadow: 0 0 6px rgba(212, 175, 55, 0.6);
   }
 }
 
-// Transitions
+// Transitions - 古典缓动
 .slide-fade-enter-active,
 .slide-fade-leave-active {
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all $transition-duration-slow $ease-ancient-out;
 }
 
 .slide-fade-enter-from,

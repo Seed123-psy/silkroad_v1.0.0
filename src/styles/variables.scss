@@ -79,6 +79,7 @@ $spacing-2xl: 48px;
 $font-family-base: 'Inter', 'Noto Sans SC', system-ui, -apple-system, sans-serif;
 $font-family-serif: 'Noto Serif SC', 'Source Han Serif SC', serif;  // 标题用衬线体
 $font-family-ancient: 'Kaiti SC', 'STKaiti', 'KaiTi', serif;        // 楷体（特殊场景）
+$font-family-code: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, 'Courier New', monospace; // 代码字体
 
 // 字号层级 - 优化可读性
 $font-size-xs: 12px;       // 辅助信息
@@ -246,10 +247,10 @@ $z-index-popover: 1060;
 $z-index-tooltip: 1070;
 
 // ============================================
-// 断点 - Breakpoints
+// 断点 - Breakpoints (优化移动端体验)
 // ============================================
-$breakpoint-mobile: 375px;
-$breakpoint-tablet: 768px;
-$breakpoint-desktop: 1024px;
-$breakpoint-wide: 1440px;
-$breakpoint-ultra: 2560px;
+$breakpoint-mobile: 375px;    // iPhone SE+
+$breakpoint-tablet: 768px;    // iPad
+$breakpoint-desktop: 1024px;  // 小型桌面
+$breakpoint-wide: 1440px;     // 宽屏
+$breakpoint-ultra: 2560px;    // 超宽屏

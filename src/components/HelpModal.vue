@@ -84,14 +84,16 @@ const close = () => {
 </script>
 
 <style scoped lang="scss">
+@use '@/styles/variables.scss' as *;
+
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
+  background: rgba($color-ink, 0.75);
+  backdrop-filter: $backdrop-blur-md;
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -99,76 +101,110 @@ const close = () => {
 }
 
 .modal-content {
-  background: #1a1d24;
-  border: 1px solid rgba(226, 199, 146, 0.3);
-  border-radius: 16px;
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-xl;
+  border: 1px solid $border-color-medium;
+  border-radius: $border-radius-xl;
   width: 90%;
   max-width: 600px;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-  color: #f0f6fc;
+  box-shadow: $box-shadow-xl, $box-shadow-gold-soft;
+  color: $text-primary;
+
+  // 顶部金线装饰
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      $color-gold 50%,
+      transparent 100%
+    );
+    border-radius: 0 0 2px 2px;
+  }
 }
 
 .modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: $spacing-lg $spacing-xl;
+  border-bottom: 1px solid $border-color-medium;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
+
   h2 {
     margin: 0;
-    font-size: 1.5rem;
-    color: #e2c792;
+    font-family: $font-family-serif;
+    font-size: $font-size-2xl;
+    font-weight: $font-weight-semibold;
+    color: $color-gold;
+    letter-spacing: $letter-spacing-wide;
   }
-  
+
   .close-btn {
     background: none;
     border: none;
-    color: #8b949e;
-    font-size: 2rem;
+    color: $text-tertiary;
+    font-size: $font-size-2xl;
     cursor: pointer;
     line-height: 1;
     padding: 0;
-    
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $border-radius-base;
+    transition: all $transition-duration-base $ease-ancient;
+
     &:hover {
-      color: #fff;
+      color: $color-gold;
+      background: rgba(212, 175, 55, 0.1);
+      transform: rotate(90deg);
     }
   }
 }
 
 .modal-body {
-  padding: 24px;
+  padding: $spacing-xl;
 }
 
 .guide-section {
-  margin-bottom: 32px;
-  
+  margin-bottom: $spacing-2xl;
+
   &:last-child {
     margin-bottom: 0;
   }
-  
+
   h3 {
-    font-size: 1.1rem;
-    color: #58a6ff;
-    margin-bottom: 16px;
-    border-left: 3px solid #58a6ff;
-    padding-left: 10px;
+    font-family: $font-family-serif;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $info-color;
+    margin-bottom: $spacing-md;
+    border-left: 3px solid $info-color;
+    padding-left: $spacing-md;
   }
 }
 
 .key-groups {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: $spacing-md;
   justify-content: center;
 }
 
 .key-group {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 16px;
-  border-radius: 12px;
+  background: $gradient-card-subtle;
+  border: 1px solid $border-color;
+  padding: $spacing-md;
+  border-radius: $border-radius-lg;
   text-align: center;
   flex: 1 0 auto;
   min-width: 100px;
@@ -176,36 +212,41 @@ const close = () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: background 0.3s ease;
+  transition: all $transition-duration-base $ease-ancient;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(212, 175, 55, 0.08);
+    border-color: $border-color-medium;
+    transform: translateY(-2px);
+    box-shadow: $box-shadow-gold-subtle;
   }
-  
+
   .key-row {
     display: flex;
     justify-content: center;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-sm;
   }
-  
+
   .key {
     display: inline-block;
     min-width: 24px;
     height: 24px;
     padding: 0 6px;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
-    font-family: monospace;
-    font-weight: bold;
+    border: 1px solid $border-color-medium;
+    border-radius: $border-radius-sm;
+    font-family: $font-family-code;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-xs;
     line-height: 22px;
-    background: rgba(0, 0, 0, 0.3);
-    color: #e2c792;
+    background: $bg-tertiary;
+    color: $color-gold;
+    box-shadow: $box-shadow-inset-subtle;
   }
-  
+
   .desc {
-    font-size: 0.85rem;
-    color: #8b949e;
+    font-size: $font-size-sm;
+    color: $text-tertiary;
   }
 }
 
@@ -213,42 +254,45 @@ const close = () => {
   list-style: none;
   padding: 0;
   margin: 0;
-  
+
   li {
-    margin-bottom: 12px;
-    padding-left: 20px;
+    margin-bottom: $spacing-md;
+    padding-left: $spacing-lg;
     position: relative;
-    color: #d0d7de;
-    
+    color: $text-secondary;
+    line-height: $line-height-relaxed;
+
     &::before {
-      content: "•";
-      color: #e2c792;
+      content: "◆";
+      color: $color-gold;
       position: absolute;
       left: 0;
-      font-weight: bold;
+      font-size: $font-size-xs;
+      top: 2px;
     }
-    
+
     strong {
-      color: #e2c792;
+      color: $color-gold;
+      font-weight: $font-weight-medium;
     }
   }
 }
 
 .modal-fade-enter-active,
 .modal-fade-leave-active {
-  transition: opacity 0.3s ease;
-  
+  transition: opacity $transition-duration-slow $ease-ancient-out;
+
   .modal-content {
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform $transition-duration-base $ease-elastic;
   }
 }
 
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
-  
+
   .modal-content {
-    transform: scale(0.9) translateY(20px);
+    transform: scale(0.95) translateY(20px);
   }
 }
 </style>
