@@ -686,7 +686,7 @@ const formatStat = (value: number, prefix = '') => {
 </script>
 
 <style scoped lang="scss">
-@use '@/assets/styles/variables.scss' as *;
+@use '@/styles/variables.scss' as *;
 @use '@/assets/styles/mixins.scss' as *;
 
 .trade-analytics {
@@ -694,7 +694,7 @@ const formatStat = (value: number, prefix = '') => {
   flex-direction: column;
   gap: $spacing-lg;
   width: 100%;
-  color: #e5e5e5;
+  color: $text-primary;
 }
 
 .panel-header {
@@ -718,20 +718,26 @@ const formatStat = (value: number, prefix = '') => {
 }
 
 .control-btn {
-  border: none;
+  border: 1px solid $border-color-light;
   background: transparent;
-  color: #a3a3a3;
+  color: $text-tertiary;
   padding: 6px 10px;
-  font-size: 13px;
+  font-size: $font-size-sm;
   border-radius: $border-radius-lg;
   cursor: pointer;
-  transition: all $transition-duration-fast $transition-timing-function;
+  transition: all $transition-duration-base $ease-ancient;
+
+  &:hover:not(.active) {
+    background: rgba(212, 175, 55, 0.06);
+    border-color: $border-color;
+  }
 }
 
 .control-btn.active {
-  background: rgba(212, 175, 55, 0.2);
-  color: #d4af37;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.3);
+  color: $color-gold;
+  box-shadow: $box-shadow-gold-subtle;
 }
 
 .panel-titles {
@@ -742,43 +748,44 @@ const formatStat = (value: number, prefix = '') => {
 
 .panel-title {
   margin: 0;
-  font-size: 24px;
-  letter-spacing: 0.04em;
-  color: #d4af37;
+  font-family: $font-family-serif;
+  font-size: $font-size-2xl;
+  letter-spacing: $letter-spacing-wide;
+  color: $color-gold;
 }
 
 .panel-subtitle {
   margin: 0;
-  color: #737373;
-  font-size: 14px;
+  color: $text-tertiary;
+  font-size: $font-size-sm;
 }
 
 .metric-toggle {
   display: inline-flex;
-  background: #141414;
+  background: $bg-elevated;
   border-radius: $border-radius-xl;
   padding: 4px;
-  border: 1px solid #333;
+  border: 1px solid $border-color;
 }
 
 .metric-btn {
   border: none;
   background: transparent;
-  color: #a3a3a3;
+  color: $text-tertiary;
   padding: 6px 14px;
-  font-size: 13px;
+  font-size: $font-size-sm;
   border-radius: $border-radius-lg;
   cursor: pointer;
-  transition: all $transition-duration-fast $transition-timing-function;
+  transition: all $transition-duration-base $ease-ancient;
 
   &.active {
-    background: rgba(212, 175, 55, 0.2);
-    color: #d4af37;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    background: rgba(212, 175, 55, 0.15);
+    color: $color-gold;
+    box-shadow: $box-shadow-gold-subtle;
   }
 
   &:hover:not(.active) {
-    color: #e5e5e5;
+    color: $text-secondary;
   }
 }
 
@@ -789,14 +796,20 @@ const formatStat = (value: number, prefix = '') => {
 }
 
 .metric-card {
-  background: linear-gradient(160deg, #1a1a1a, #0a0a0a);
-  border: 1px solid #333;
+  background: $gradient-ancient;
+  border: 1px solid $border-color;
   border-radius: $border-radius-xl;
   padding: $spacing-md;
   display: flex;
   flex-direction: column;
   gap: $spacing-xs;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+  box-shadow: $box-shadow-card;
+  transition: all $transition-duration-base $ease-ancient;
+
+  &:hover {
+    border-color: $border-color-medium;
+    box-shadow: $box-shadow-card-hover;
+  }
 }
 
 .metric-spark {
@@ -811,20 +824,21 @@ const formatStat = (value: number, prefix = '') => {
 }
 
 .metric-label {
-  font-size: 13px;
-  color: #a3a3a3;
+  font-size: $font-size-sm;
+  color: $text-tertiary;
 }
 
 .metric-value {
-  font-size: 26px;
+  font-family: $font-family-serif;
+  font-size: $font-size-2xl;
   font-weight: $font-weight-bold;
   letter-spacing: 0.02em;
-  color: #d4af37;
+  color: $color-gold;
 }
 
 .metric-hint {
-  font-size: 12px;
-  color: #737373;
+  font-size: $font-size-xs;
+  color: $text-muted;
 }
 
 .chart-grid {
@@ -835,14 +849,19 @@ const formatStat = (value: number, prefix = '') => {
 }
 
 .chart-card {
-  background: rgba(10, 10, 10, 0.9);
-  border: 1px solid #333;
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-md;
+  border: 1px solid $border-color;
   border-radius: $border-radius-xl;
   padding: $spacing-md;
   display: flex;
   flex-direction: column;
   gap: $spacing-sm;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: $box-shadow-lg;
+
+  &:hover {
+    border-color: $border-color-medium;
+  }
 }
 
 .chart-card--wide {
@@ -861,15 +880,16 @@ const formatStat = (value: number, prefix = '') => {
 
   h4 {
     margin: 0;
-    font-size: 16px;
+    font-family: $font-family-serif;
+    font-size: $font-size-lg;
     letter-spacing: 0.02em;
-    color: #e5e5e5;
+    color: $text-primary;
   }
 }
 
 .chart-hint {
-  font-size: 12px;
-  color: #737373;
+  font-size: $font-size-xs;
+  color: $text-tertiary;
 }
 
 .chart {
@@ -901,7 +921,7 @@ const formatStat = (value: number, prefix = '') => {
   }
 
   .panel-title {
-    font-size: 20px;
+    font-size: $font-size-xl;
   }
 
   .metric-toggle {

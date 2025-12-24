@@ -225,17 +225,35 @@ navItems.value.forEach(item => {
 @use '@/assets/styles/mixins.scss' as *;
 
 .tool-sidebar {
-  width: 136px; // slightly wider sidebar
+  width: 136px;
   height: 100vh;
-  background: rgba(5, 8, 15, 0.85);
-  border-right: 1px solid $border-color-light;
+  background: $bg-glass;
+  border-right: 1px solid $border-color;
   backdrop-filter: $backdrop-blur-lg;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: $spacing-lg 0;
   z-index: 100;
-  transition: width $transition-duration-base;
+  transition: all $transition-duration-base $ease-ancient;
+
+  // 金色纹样装饰 - 右边框
+  &::after {
+    content: '';
+    position: absolute;
+    top: 10%;
+    right: 0;
+    width: 1px;
+    height: 80%;
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.3) 20%,
+      rgba(212, 175, 55, 0.5) 50%,
+      rgba(212, 175, 55, 0.3) 80%,
+      transparent 100%
+    );
+  }
 }
 
 .sidebar-header {
@@ -245,10 +263,34 @@ navItems.value.forEach(item => {
   gap: $spacing-xs;
   margin-bottom: $spacing-2xl;
   color: $color-gold;
+  position: relative;
+
+  // 顶部装饰线
+  &::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      $color-gold 50%,
+      transparent 100%
+    );
+    border-radius: 1px;
+  }
 }
 
 .logo-icon {
-  filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.3));
+  filter: drop-shadow(0 0 12px rgba(212, 175, 55, 0.4));
+  transition: filter $transition-duration-base $ease-ancient;
+
+  &:hover {
+    filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.6));
+  }
 }
 
 .logo-icon .logo-img {
@@ -262,9 +304,10 @@ navItems.value.forEach(item => {
   font-family: $font-family-serif;
   font-size: $font-size-xs;
   font-weight: $font-weight-bold;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
   opacity: 0.9;
+  color: $color-gold-light;
 }
 
 .sidebar-nav {
@@ -278,9 +321,8 @@ navItems.value.forEach(item => {
   overflow-y: auto;
   min-height: 0;
 
-  // Custom scrollbar
   &::-webkit-scrollbar {
-    width: 4px;
+    width: 3px;
   }
 
   &::-webkit-scrollbar-track {
@@ -288,11 +330,19 @@ navItems.value.forEach(item => {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba($color-gold, 0.2);
+    background: linear-gradient(
+      180deg,
+      rgba(212, 175, 55, 0.3) 0%,
+      rgba(212, 175, 55, 0.15) 100%
+    );
     border-radius: 2px;
 
     &:hover {
-      background: rgba($color-gold, 0.4);
+      background: linear-gradient(
+        180deg,
+        rgba(212, 175, 55, 0.5) 0%,
+        rgba(212, 175, 55, 0.3) 100%
+      );
     }
   }
 }
@@ -307,23 +357,31 @@ navItems.value.forEach(item => {
   height: 88px;
   border-radius: $border-radius-lg;
   color: $text-secondary;
-  transition: all $transition-duration-fast;
+  transition: all $transition-duration-base $ease-ancient;
+  cursor: pointer;
 
+  // 悬停效果
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(212, 175, 55, 0.06);
     color: $text-primary;
 
     .nav-icon {
-      transform: translateY(-2px);
+      transform: translateY(-3px) scale(1.05);
+      filter: drop-shadow(0 2px 8px rgba(212, 175, 55, 0.25));
     }
   }
 
+  // 激活状态
   &.active {
     color: $color-gold;
-    background: rgba(212, 175, 55, 0.1);
+    background: linear-gradient(
+      135deg,
+      rgba(212, 175, 55, 0.12) 0%,
+      rgba(212, 175, 55, 0.05) 100%
+    );
 
     .nav-icon {
-      filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.4));
+      filter: drop-shadow(0 0 8px rgba(212, 175, 55, 0.5));
     }
   }
 }
@@ -331,25 +389,32 @@ navItems.value.forEach(item => {
 .nav-icon {
   width: 32px;
   height: 32px;
-  margin-bottom: 4px;
-  transition: transform $transition-duration-fast;
+  margin-bottom: 6px;
+  transition: all $transition-duration-base $ease-ancient;
+  stroke-width: 1.5;
 }
 
 .nav-label {
   font-size: 12px;
   font-weight: $font-weight-medium;
+  letter-spacing: 0.05em;
 }
 
 .active-indicator {
   position: absolute;
-  left: -8px; // Outside the padding
+  left: -6px;
   top: 50%;
   transform: translateY(-50%);
   width: 3px;
-  height: 24px;
-  background: $color-gold;
+  height: 28px;
+  background: linear-gradient(
+    180deg,
+    rgba(212, 175, 55, 0.4) 0%,
+    $color-gold 50%,
+    rgba(212, 175, 55, 0.4) 100%
+  );
   border-radius: 0 2px 2px 0;
-  box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.6);
 }
 
 .nav-group-container {
@@ -372,18 +437,21 @@ navItems.value.forEach(item => {
 .group-arrow {
   width: 12px;
   height: 12px;
-  transition: transform 0.3s ease;
+  transition: transform $transition-duration-base $ease-ancient;
+  stroke: $text-tertiary;
 }
 
 .rotate-180 {
   transform: rotate(180deg);
+  stroke: $color-gold;
 }
 
 .group-children {
   display: flex;
   flex-direction: column;
   gap: $spacing-xs;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(212, 175, 55, 0.08);
   border-radius: $border-radius-lg;
   padding: $spacing-xs 0;
 }
@@ -398,79 +466,108 @@ navItems.value.forEach(item => {
   }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(212, 175, 55, 0.05);
+  }
+
+  &.active {
+    background: rgba(212, 175, 55, 0.08);
   }
 }
 
 .sidebar-footer {
-  padding: $spacing-md;
-  border-top: 1px solid rgba($color-gold, 0.1);
+  padding: $spacing-md $spacing-sm;
+  border-top: 1px solid rgba(212, 175, 55, 0.12);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   margin-top: auto;
-  background: linear-gradient(to top, rgba($bg-secondary, 0.8), transparent);
+  background: linear-gradient(
+    to top,
+    rgba($bg-secondary, 0.9) 0%,
+    rgba($bg-secondary, 0.3) 50%,
+    transparent 100%
+  );
+
+  // 顶部金线装饰
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.4) 50%,
+      transparent 100%
+    );
+  }
 }
 
 .footer-btn {
-  background: transparent;
-  border: 1px solid transparent;
+  background: rgba(212, 175, 55, 0.03);
+  border: 1px solid rgba(212, 175, 55, 0.1);
   color: $text-secondary;
   width: 44px;
   height: 44px;
-  border-radius: 12px; // Squircle shape
+  border-radius: $border-radius-base;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all $transition-duration-base $ease-ancient;
   position: relative;
   overflow: hidden;
-  
+
   &:hover {
-    background: rgba($color-gold, 0.1);
+    background: rgba(212, 175, 55, 0.12);
+    border-color: rgba(212, 175, 55, 0.25);
     color: $color-gold;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    
+    box-shadow: $box-shadow-gold-subtle;
+
     .action-icon {
       transform: scale(1.1);
     }
   }
-  
+
   &.active {
-    background: rgba($color-gold, 0.15);
+    background: rgba(212, 175, 55, 0.15);
+    border-color: rgba(212, 175, 55, 0.4);
     color: $color-gold;
-    border-color: rgba($color-gold, 0.3);
-    box-shadow: 0 0 15px rgba($color-gold, 0.2);
+    box-shadow: $box-shadow-gold-soft;
 
     &::after {
       content: '';
       position: absolute;
-      bottom: 0;
+      bottom: 4px;
       left: 50%;
       transform: translateX(-50%);
-      width: 4px;
-      height: 4px;
+      width: 5px;
+      height: 5px;
       background: $color-gold;
       border-radius: 50%;
-      margin-bottom: 4px;
+      box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
     }
   }
-  
+
   .action-icon {
-    width: 24px;
-    height: 24px;
-    transition: transform 0.3s ease;
+    width: 22px;
+    height: 22px;
+    transition: all $transition-duration-base $ease-ancient;
+    stroke-width: 1.5;
   }
 
   .lang-text {
     font-size: 10px;
-    font-weight: 600;
-    margin-top: -2px;
-    opacity: 0.8;
+    font-weight: $font-weight-semibold;
+    margin-top: -1px;
+    opacity: 0.9;
+    letter-spacing: 0.05em;
   }
 }
 
@@ -482,10 +579,14 @@ navItems.value.forEach(item => {
     justify-content: space-between;
     padding: 0 $spacing-md;
     border-right: none;
-    border-top: 1px solid $border-color-light;
+    border-top: 1px solid $border-color;
     position: fixed;
     bottom: 0;
     top: auto;
+
+    &::after {
+      display: none;
+    }
   }
 
   .sidebar-header,
@@ -527,14 +628,19 @@ navItems.value.forEach(item => {
     &::after {
       content: '';
       position: absolute;
-      top: -8px; // Top border for mobile
+      top: -8px;
       left: 50%;
       transform: translateX(-50%);
-      width: 24px;
+      width: 28px;
       height: 3px;
-      background: $color-gold;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        $color-gold 50%,
+        transparent 100%
+      );
       border-radius: 0 0 2px 2px;
-      box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.5);
     }
   }
 }

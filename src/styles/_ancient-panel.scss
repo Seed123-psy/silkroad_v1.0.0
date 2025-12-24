@@ -1,0 +1,403 @@
+// ============================================
+// 古典面板组件 - Ancient Panel Components
+// ============================================
+
+@use './variables' as *;
+
+// ============================================
+// 基础面板 - 宣纸质感
+// ============================================
+
+.ancient-panel {
+  position: relative;
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-md;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $box-shadow-md;
+
+  // 宣纸纹理叠加
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: $pattern-rice-paper;
+    opacity: 0.5;
+    pointer-events: none;
+    border-radius: inherit;
+  }
+
+  // 顶部金线装饰
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.5) 20%,
+      rgba(212, 175, 55, 0.7) 50%,
+      rgba(212, 175, 55, 0.5) 80%,
+      transparent 100%
+    );
+    border-radius: 1px;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+// ============================================
+// 卷轴面板 - Scroll Animation Panel
+// ============================================
+
+.scroll-panel {
+  position: relative;
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-lg;
+  border: 1px solid $border-color-medium;
+  border-radius: $border-radius-lg;
+  overflow: hidden;
+
+  // 卷轴顶部装饰
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: linear-gradient(
+      180deg,
+      rgba(212, 175, 55, 0.15) 0%,
+      rgba(212, 175, 55, 0.05) 50%,
+      transparent 100%
+    );
+    border-bottom: 1px solid $border-color-medium;
+  }
+
+  // 卷轴底部装饰
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 24px;
+    background: linear-gradient(
+      0deg,
+      rgba(212, 175, 55, 0.15) 0%,
+      rgba(212, 175, 55, 0.05) 50%,
+      transparent 100%
+    );
+    border-top: 1px solid $border-color-medium;
+  }
+
+  .scroll-content {
+    padding: $spacing-xl $spacing-lg;
+    max-height: 500px;
+    overflow-y: auto;
+
+    // 美化滚动条
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: rgba(212, 175, 55, 0.05);
+      border-radius: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: linear-gradient(
+        180deg,
+        rgba(212, 175, 55, 0.4) 0%,
+        rgba(212, 175, 55, 0.2) 100%
+      );
+      border-radius: 3px;
+
+      &:hover {
+        background: linear-gradient(
+          180deg,
+          rgba(212, 175, 55, 0.6) 0%,
+          rgba(212, 175, 55, 0.4) 100%
+        );
+      }
+    }
+  }
+}
+
+// 卷轴展开动画
+.scroll-unfold {
+  &-enter-active {
+    transition: all $transition-duration-slower $ease-ancient-out;
+  }
+
+  &-leave-active {
+    transition: all $transition-duration-base $ease-ancient-in;
+  }
+
+  &-enter-from {
+    max-height: 0;
+    opacity: 0;
+    transform: scaleY(0.9);
+  }
+
+  &-leave-to {
+    max-height: 0;
+    opacity: 0;
+    transform: scaleY(0.9);
+  }
+}
+
+// ============================================
+// 对话框面板 - Dialog Panel
+// ============================================
+
+.ancient-dialog {
+  position: relative;
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-xl;
+  border: 1px solid $border-color-medium;
+  border-radius: $border-radius-xl;
+  padding: $spacing-xl;
+  box-shadow: $box-shadow-xl, $box-shadow-gold-soft;
+  max-width: 500px;
+  width: 90%;
+
+  // 四角装饰
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 2px solid transparent;
+    border-image: linear-gradient(
+      135deg,
+      $color-gold 0%,
+      transparent 15%,
+      transparent 85%,
+      $color-gold 100%
+    ) 1;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: $spacing-md;
+    border-bottom: 1px solid $border-color-medium;
+    margin-bottom: $spacing-md;
+
+    .dialog-title {
+      font-family: $font-family-serif;
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-semibold;
+      color: $color-gold;
+      margin: 0;
+    }
+
+    .dialog-close {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid $border-color;
+      border-radius: $border-radius-base;
+      color: $text-secondary;
+      cursor: pointer;
+      transition: all $transition-duration-base $ease-ancient;
+
+      &:hover {
+        background: rgba(212, 175, 55, 0.1);
+        border-color: $border-color-medium;
+        color: $color-gold;
+      }
+    }
+  }
+
+  .dialog-body {
+    color: $text-secondary;
+    line-height: $line-height-relaxed;
+  }
+
+  .dialog-footer {
+    display: flex;
+    gap: $spacing-md;
+    justify-content: flex-end;
+    padding-top: $spacing-md;
+    border-top: 1px solid $border-color-light;
+    margin-top: $spacing-md;
+  }
+}
+
+// ============================================
+// 弹出面板 - Popover Panel
+// ============================================
+
+.ancient-popover {
+  position: absolute;
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-lg;
+  border: 1px solid $border-color-medium;
+  border-radius: $border-radius-base;
+  padding: $spacing-md;
+  box-shadow: $box-shadow-lg, $box-shadow-gold-subtle;
+  z-index: $z-index-popover;
+  min-width: 200px;
+
+  // 箭头
+  &.arrow-top::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-bottom-color: $border-color-medium;
+  }
+
+  &.arrow-bottom::before {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: $border-color-medium;
+  }
+
+  &.arrow-left::before {
+    content: '';
+    position: absolute;
+    left: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-right-color: $border-color-medium;
+  }
+
+  &.arrow-right::before {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 6px solid transparent;
+    border-left-color: $border-color-medium;
+  }
+}
+
+// ============================================
+// 抽屉面板 - Drawer Panel
+// ============================================
+
+.ancient-drawer {
+  position: fixed;
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-xl;
+  border: 1px solid $border-color-medium;
+  box-shadow: $box-shadow-xl;
+  z-index: $z-index-modal;
+
+  &.drawer-right {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 400px;
+    border-left: 1px solid $border-color-medium;
+  }
+
+  &.drawer-left {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 400px;
+    border-right: 1px solid $border-color-medium;
+  }
+
+  &.drawer-top {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 300px;
+    border-bottom: 1px solid $border-color-medium;
+  }
+
+  &.drawer-bottom {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 300px;
+    border-top: 1px solid $border-color-medium;
+  }
+
+  .drawer-content {
+    padding: $spacing-xl;
+    height: 100%;
+    overflow-y: auto;
+  }
+}
+
+// 抽屉动画
+.drawer-slide-enter-active,
+.drawer-slide-leave-active {
+  transition: transform $transition-duration-slow $ease-ancient-out;
+}
+
+.drawer-slide-enter-from.drawer-right,
+.drawer-slide-leave-to.drawer-right {
+  transform: translateX(100%);
+}
+
+.drawer-slide-enter-from.drawer-left,
+.drawer-slide-leave-to.drawer-left {
+  transform: translateX(-100%);
+}
+
+.drawer-slide-enter-from.drawer-top,
+.drawer-slide-leave-to.drawer-top {
+  transform: translateY(-100%);
+}
+
+.drawer-slide-enter-from.drawer-bottom,
+.drawer-slide-leave-to.drawer-bottom {
+  transform: translateY(100%);
+}
+
+// ============================================
+// 响应式
+// ============================================
+
+@media (max-width: 768px) {
+  .ancient-dialog {
+    max-width: 90%;
+    padding: $spacing-lg;
+  }
+
+  .ancient-drawer {
+    &.drawer-right,
+    &.drawer-left {
+      width: 100%;
+    }
+
+    &.drawer-top,
+    &.drawer-bottom {
+      height: 50%;
+    }
+  }
+
+  .scroll-panel .scroll-content {
+    max-height: 300px;
+  }
+}

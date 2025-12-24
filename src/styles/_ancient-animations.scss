@@ -1,0 +1,291 @@
+// ============================================
+// 古典微交互动画 - Elegant Micro-interactions
+// ============================================
+
+@use './variables' as *;
+
+// ============================================
+// 悬停效果 - Hover Effects
+// ============================================
+
+// 优雅悬停
+.hover-ancient {
+  transition: all $transition-duration-base $ease-ancient;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $box-shadow-gold-subtle;
+  }
+}
+
+// 金色流光悬停
+.hover-shimmer {
+  position: relative;
+  overflow: hidden;
+  transition: all $transition-duration-base $ease-ancient;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.1) 50%,
+      transparent 100%
+    );
+    transition: left $transition-duration-slow $ease-ancient;
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
+}
+
+// 脉动光晕
+.hover-pulse {
+  transition: all $transition-duration-base $ease-ancient;
+
+  &:hover {
+    animation: ancient-pulse 2s ease-in-out infinite;
+  }
+}
+
+@keyframes ancient-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(212, 175, 55, 0);
+  }
+}
+
+// ============================================
+// 点击反馈 - Click Feedback
+// ============================================
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(212, 175, 55, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width $transition-duration-slow $ease-ancient-out,
+                height $transition-duration-slow $ease-ancient-out,
+                opacity $transition-duration-slow $ease-ancient-out;
+    opacity: 0;
+  }
+
+  &:active::after {
+    width: 300px;
+    height: 300px;
+    opacity: 1;
+    transition: 0s;
+  }
+}
+
+// 按下缩小
+.click-shrink {
+  transition: transform $transition-duration-fast $ease-ancient;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// ============================================
+// 页面过渡 - Page Transitions
+// ============================================
+
+// 渐入渐出
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity $transition-duration-base $ease-ancient;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+// 滑入滑出
+.slide-enter-active,
+.slide-leave-active {
+  transition: all $transition-duration-base $ease-ancient;
+}
+
+.slide-enter-from {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+.slide-leave-to {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+// 卷轴展开
+.scroll-unfold {
+  &-enter-active {
+    transition: all $transition-duration-slow $ease-ancient-out;
+  }
+
+  &-leave-active {
+    transition: all $transition-duration-base $ease-ancient-in;
+  }
+
+  &-enter-from {
+    max-height: 0;
+    opacity: 0;
+    transform: scaleY(0.95);
+    transform-origin: top;
+  }
+
+  &-leave-to {
+    max-height: 0;
+    opacity: 0;
+    transform: scaleY(0.95);
+    transform-origin: top;
+  }
+}
+
+// ============================================
+// 列表动画 - List Animations
+// ============================================
+
+.list-enter-active,
+.list-leave-active {
+  transition: all $transition-duration-base $ease-ancient;
+}
+
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+// 列表项交错动画
+.list-stagger {
+  &-enter-active {
+    transition: all $transition-duration-base $ease-ancient;
+  }
+
+  &-enter-from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+// ============================================
+// 加载动画 - Loading Animations
+// ============================================
+
+// 金色旋转加载
+.loading-spinner {
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(212, 175, 55, 0.1);
+  border-top-color: $color-gold;
+  border-radius: 50%;
+  animation: ancient-spin 1s linear infinite;
+}
+
+@keyframes ancient-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// 脉动加载点
+.loading-dots {
+  display: inline-flex;
+  gap: $spacing-sm;
+
+  span {
+    width: 8px;
+    height: 8px;
+    background: $color-gold;
+    border-radius: 50%;
+    animation: ancient-bounce 1.4s ease-in-out infinite both;
+
+    &:nth-child(1) { animation-delay: -0.32s; }
+    &:nth-child(2) { animation-delay: -0.16s; }
+    &:nth-child(3) { animation-delay: 0s; }
+  }
+}
+
+@keyframes ancient-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+// ============================================
+// 强调动画 - Emphasis Animations
+// ============================================
+
+// 摇晃
+.shake {
+  animation: ancient-shake 0.5s $ease-bounce;
+}
+
+@keyframes ancient-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+// 金色闪烁
+.glow-flash {
+  animation: ancient-glow 0.6s ease-out;
+}
+
+@keyframes ancient-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 0 20px rgba(212, 175, 55, 0);
+  }
+}
+
+// ============================================
+// 工具类 - Utility Classes
+// ============================================
+
+.transition-ancient {
+  transition: all $transition-duration-base $ease-ancient;
+}
+
+.transition-fast {
+  transition: all $transition-duration-fast $ease-ancient;
+}
+
+.transition-slow {
+  transition: all $transition-duration-slow $ease-ancient;
+}
+
+// 金色光晕工具类
+.glow-subtle { box-shadow: $box-shadow-gold-subtle; }
+.glow-soft { box-shadow: $box-shadow-gold-soft; }
+.glow-medium { box-shadow: $box-shadow-gold-medium; }
+.glow-strong { box-shadow: $box-shadow-gold-strong; }

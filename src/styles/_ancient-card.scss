@@ -1,0 +1,270 @@
+// ============================================
+// 古典卡片组件样式 - Classical Card Components
+// ============================================
+
+@use './variables' as *;
+
+// 基础卡片
+.ancient-card {
+  position: relative;
+  background: $gradient-card-subtle;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-base;
+  box-shadow: $box-shadow-card;
+  padding: $spacing-lg;
+  transition: all $transition-duration-base $ease-ancient;
+  overflow: hidden;
+
+  // 金线描边装饰（顶部）
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(212, 175, 55, 0.6) 50%,
+      transparent 100%
+    );
+    opacity: 0;
+    transition: opacity $transition-duration-base $ease-ancient;
+  }
+
+  // 悬停效果
+  &:hover {
+    border-color: $border-color-medium;
+    box-shadow: $box-shadow-card-hover;
+    transform: translateY(-4px);
+
+    &::before {
+      opacity: 1;
+    }
+  }
+
+  // 激活状态
+  &.active {
+    border-color: $border-color-strong;
+    box-shadow: $box-shadow-gold-soft;
+  }
+
+  // 尺寸变体
+  &.card-sm { padding: $spacing-md; }
+  &.card-lg { padding: $spacing-xl; }
+  &.card-xl { padding: $spacing-2xl; }
+
+  // 玉质卡片（绿色主题）
+  &.card-jade {
+    border-color: rgba(124, 179, 66, 0.15);
+
+    &:hover {
+      border-color: rgba(124, 179, 66, 0.3);
+      box-shadow: 0 12px 40px rgba(124, 179, 66, 0.15);
+    }
+  }
+
+  // 朱砂卡片（红色主题）
+  &.card-cinnabar {
+    border-color: rgba(198, 40, 40, 0.15);
+
+    &:hover {
+      border-color: rgba(198, 40, 40, 0.3);
+      box-shadow: 0 12px 40px rgba(198, 40, 40, 0.15);
+    }
+  }
+}
+
+// 带标题的卡片
+.ancient-card-header {
+  padding-bottom: $spacing-md;
+  margin-bottom: $spacing-md;
+  border-bottom: 1px solid $border-color-light;
+
+  .card-title {
+    font-family: $font-family-serif;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $color-gold;
+    margin: 0;
+    letter-spacing: $letter-spacing-wide;
+  }
+
+  .card-subtitle {
+    font-size: $font-size-sm;
+    color: $text-tertiary;
+    margin-top: $spacing-xs;
+  }
+}
+
+.ancient-card-body {
+  color: $text-secondary;
+  line-height: $line-height-relaxed;
+}
+
+.ancient-card-footer {
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+  border-top: 1px solid $border-color-light;
+}
+
+// ============================================
+// 数据卡片（用于图表统计）
+// ============================================
+
+.metric-card {
+  position: relative;
+  background: $gradient-ancient;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $box-shadow-lg;
+  transition: all $transition-duration-base $ease-ancient;
+
+  // 金色角标装饰
+  &::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    border-top: 2px solid rgba(212, 175, 55, 0.3);
+    border-right: 2px solid rgba(212, 175, 55, 0.3);
+    border-radius: 0 $border-radius-sm 0 0;
+  }
+
+  &:hover {
+    border-color: $border-color-medium;
+    box-shadow: $box-shadow-gold-soft;
+    transform: translateY(-2px);
+
+    &::after {
+      border-color: rgba(212, 175, 55, 0.6);
+    }
+  }
+
+  .metric-label {
+    font-size: $font-size-sm;
+    color: $text-tertiary;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: $spacing-sm;
+  }
+
+  .metric-value {
+    font-family: $font-family-serif;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+    color: $color-gold;
+    line-height: 1.2;
+  }
+
+  .metric-change {
+    display: inline-flex;
+    align-items: center;
+    gap: $spacing-xs;
+    margin-top: $spacing-sm;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+
+    &.positive {
+      color: $color-jade;
+    }
+
+    &.negative {
+      color: $color-cinnabar;
+    }
+  }
+}
+
+// ============================================
+// 信息面板卡片
+// ============================================
+
+.info-card {
+  background: $bg-glass;
+  backdrop-filter: $backdrop-blur-md;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $box-shadow-base;
+
+  .info-card-title {
+    font-family: $font-family-serif;
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    margin-bottom: $spacing-md;
+    display: flex;
+    align-items: center;
+    gap: $spacing-sm;
+
+    &::before {
+      content: '';
+      width: 4px;
+      height: 18px;
+      background: linear-gradient(
+        180deg,
+        $color-gold 0%,
+        $color-gold-dark 100%
+      );
+      border-radius: 2px;
+    }
+  }
+
+  .info-card-content {
+    color: $text-secondary;
+    line-height: $line-height-relaxed;
+  }
+
+  // 列表样式
+  .info-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      padding: $spacing-sm 0;
+      border-bottom: 1px solid $border-color-light;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      .label {
+        color: $text-tertiary;
+      }
+
+      .value {
+        color: $text-primary;
+        font-weight: $font-weight-medium;
+      }
+    }
+  }
+}
+
+// ============================================
+// 响应式
+// ============================================
+
+@media (max-width: 768px) {
+  .ancient-card {
+    padding: $spacing-md;
+
+    &.card-lg { padding: $spacing-lg; }
+    &.card-xl { padding: $spacing-lg; }
+  }
+
+  .metric-card {
+    padding: $spacing-md;
+
+    .metric-value {
+      font-size: $font-size-2xl;
+    }
+  }
+}
