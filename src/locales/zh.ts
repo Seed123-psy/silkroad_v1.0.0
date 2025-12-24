@@ -267,6 +267,9 @@ export default {
     welcome: '您好！我是丝路智能助手。我可以为您解答关于丝绸之路的历史、地理、文化和贸易等方面的问题。请问有什么可以帮您？',
     thinking: '正在思考...',
     error: '抱歉，我遇到了一些问题，请稍后再试。',
+    uploadImage: '上传图片',
+    clearChat: '清空对话',
+    inputHint: '按 Enter 发送，Shift + Enter 换行',
     suggested: {
       title: '您可以试着问我：',
       q1: '丝绸之路的起点和终点分别是哪里？',

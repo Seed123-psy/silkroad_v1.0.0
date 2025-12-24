@@ -267,6 +267,9 @@ export default {
     welcome: 'Hello! I am the Silk Road AI Assistant. I can answer your questions about the history, geography, culture, and trade of the Silk Road. How can I help you today?',
     thinking: 'Thinking...',
     error: 'Sorry, I encountered an issue. Please try again later.',
+    uploadImage: 'Upload Image',
+    clearChat: 'Clear Chat',
+    inputHint: 'Press Enter to send, Shift + Enter for new line',
     suggested: {
       title: 'You can ask me:',
       q1: 'Where were the starting and ending points of the Silk Road?',
