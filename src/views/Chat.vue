@@ -25,6 +25,32 @@
           </div>
         </div>
         <div class="header-actions">
+          <!-- 模式切换开关 -->
+          <div class="mode-switch">
+            <button 
+              class="mode-btn" 
+              :class="{ active: chatMode === 'fast' }"
+              @click="chatMode = 'fast'"
+              title="快速回答：直接给出答案"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+              <span>快速</span>
+            </button>
+            <button 
+              class="mode-btn" 
+              :class="{ active: chatMode === 'thinking' }"
+              @click="chatMode = 'thinking'"
+              title="深度思考：展示推理过程"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 16v-4M12 8h.01"/>
+              </svg>
+              <span>思考</span>
+            </button>
+          </div>
           <button class="action-btn" @click="clearChat" :title="t.chat.clearChat">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
@@ -54,12 +80,46 @@
               <div class="message-bubble ai-bubble">
                 <div v-if="msg.type === 'text'" class="bubble-content">
                   <div class="bubble-decoration"></div>
-                  <p class="message-text">{{ msg.content }}</p>
+                  <!-- 思考过程（可折叠） -->
+                  <div v-if="msg.reasoning" class="reasoning-section">
+                    <button 
+                      class="reasoning-toggle" 
+                      @click="reasoningCollapsed[index] = !reasoningCollapsed[index]"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2"
+                        class="toggle-icon"
+                        :class="{ collapsed: reasoningCollapsed[index] }"
+                      >
+                        <polyline points="6 9 12 15 18 9"/>
+                      </svg>
+                      <span class="toggle-text">{{ reasoningCollapsed[index] ? '查看思考过程' : '收起思考过程' }}</span>
+                      <span class="reasoning-badge">💭 已思考</span>
+                    </button>
+                    <div 
+                      class="reasoning-content" 
+                      :class="{ collapsed: reasoningCollapsed[index] }"
+                    >
+                      <div class="reasoning-text" v-html="renderMarkdown(msg.reasoning)"></div>
+                    </div>
+                    <div class="reasoning-actions">
+                      <button class="reasoning-open" @click="openReasoningModal(msg.reasoning)">查看完整</button>
+                    </div>
+                  </div>
+                  <!-- 正式回复（Markdown 渲染） -->
+                  <div class="message-text markdown-body" v-html="renderMarkdown(msg.content)"></div>
                 </div>
                 <div v-else-if="msg.type === 'loading'" class="typing-indicator">
-                  <span class="dot"></span>
-                  <span class="dot"></span>
-                  <span class="dot"></span>
+                  <div class="loading-text">{{ chatMode === 'thinking' ? '正在思考中...' : '正在回复...' }}</div>
+                  <div class="dots">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                  </div>
                 </div>
                 <div v-else-if="msg.type === 'image'" class="image-content">
                   <img :src="msg.content" alt="AI发送的图片" class="chat-image" />
@@ -94,6 +154,16 @@
                 </div>
               </div>
             </template>
+
+              <!-- 模态窗口：完整思考展示 -->
+              <template v-if="reasoningModalVisible">
+                <div class="reasoning-modal" @click.self="closeReasoningModal">
+                  <div class="modal-card">
+                    <button class="modal-close" @click="closeReasoningModal">关闭 ✕</button>
+                    <div class="markdown-body" v-html="renderMarkdown(reasoningModalContent)"></div>
+                  </div>
+                </div>
+              </template>
           </div>
         </div>
       </div>
@@ -202,12 +272,37 @@
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useI18n } from '@/composables/useI18n'
+import MarkdownIt from 'markdown-it'
+import hljs from 'highlight.js'
 
 const { t } = useI18n()
+
+// 配置 Markdown 渲染器
+const md = new MarkdownIt({
+  html: false,
+  linkify: true,
+  typographer: true,
+  breaks: true,
+  highlight: function (str: string, lang: string) {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return `<pre class="hljs"><code>${hljs.highlight(str, { language: lang, ignoreIllegals: true }).value}</code></pre>`
+      } catch (__) {}
+    }
+    return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`
+  }
+})
+
+// 渲染 Markdown 内容
+const renderMarkdown = (content: string): string => {
+  if (!content) return ''
+  return md.render(content)
+}
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  reasoning?: string  // 思考过程（可折叠）
   timestamp: number
   type: 'text' | 'loading' | 'image'
 }
@@ -219,6 +314,24 @@ const messagesContainer = ref<HTMLElement | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const pendingImages = ref<string[]>([])
+
+// 模式切换：'fast' 快速回答 | 'thinking' 深度思考
+const chatMode = ref<'fast' | 'thinking'>('thinking')
+// 思考过程折叠状态（按消息索引）
+const reasoningCollapsed = ref<Record<number, boolean>>({})
+// 模态窗口显示完整思考过程
+const reasoningModalVisible = ref(false)
+const reasoningModalContent = ref('')
+
+const openReasoningModal = (content: string) => {
+  reasoningModalContent.value = content || ''
+  reasoningModalVisible.value = true
+}
+
+const closeReasoningModal = () => {
+  reasoningModalVisible.value = false
+  reasoningModalContent.value = ''
+}
 
 const suggestedQuestions = computed(() => {
   return [
@@ -316,6 +429,71 @@ const removePendingImage = (index: number) => {
   pendingImages.value.splice(index, 1)
 }
 
+// 智能分离思考过程和最终回复
+const parseAndSeparateThinking = (msgIndex: number) => {
+  const msg = messages.value[msgIndex]
+  if (!msg || msg.reasoning) return  // 如果已有 reasoning，说明后端已分离，无需处理
+
+  const content = msg.content
+  if (!content) return
+
+  // 模式1: <|begin_of_box|>...<|end_of_box|> 标签（当前模型使用的格式）
+  const boxTagMatch = content.match(/([\s\S]*?)<\|begin_of_box\|>([\s\S]*?)<\|end_of_box\|>/)
+  if (boxTagMatch) {
+    const thinking = (boxTagMatch[1] || '').trim()
+    const reply = (boxTagMatch[2] || '').trim()
+    if (thinking && reply) {
+      msg.reasoning = thinking
+      msg.content = reply
+      return
+    } else if (reply) {
+      msg.content = reply
+      return
+    }
+  }
+
+  // 模式2: <think>...</think> 标签
+  const thinkTagMatch = content.match(/<think>([\s\S]*?)<\/think>([\s\S]*)/i)
+  if (thinkTagMatch) {
+    msg.reasoning = (thinkTagMatch[1] || '').trim()
+    msg.content = (thinkTagMatch[2] || '').trim()
+    return
+  }
+
+  // 模式3: 【思考】...【回复】... 或 [思考]...[回复]...
+  const chineseTagMatch = content.match(/[【\[]思考[】\]]([\s\S]*?)[【\[]回复[】\]]([\s\S]*)/i)
+  if (chineseTagMatch) {
+    msg.reasoning = (chineseTagMatch[1] || '').trim()
+    msg.content = (chineseTagMatch[2] || '').trim()
+    return
+  }
+
+  // 模式4: 检测末尾重复的完整回复（模型常在思考后给出最终答案）
+  // 查找以 "你好" 或问候语开头、以 "？" "！" "。" 结尾的完整句子
+  const finalReplyPattern = /(你好[！!]?\s*我是丝绸之路智能助手[\s\S]{10,200}[？?！!。])$/
+  const finalMatch = content.match(finalReplyPattern)
+  if (finalMatch) {
+    const reply = (finalMatch[1] || '').trim()
+    const thinkingPart = content.slice(0, content.lastIndexOf(reply)).trim()
+    if (thinkingPart.length > 50) {  // 确保思考部分有足够内容
+      msg.reasoning = thinkingPart
+      msg.content = reply
+      return
+    }
+  }
+
+  // 模式5: 查找最后一段完整的回复（通常是结论）
+  // 匹配模式：找最后一个以常见开头词开始的完整段落
+  const lastParagraphMatch = content.match(/([\s\S]*?)((你好[！!]|您好[！!]|好的|当然|是的|这是|以下是)[\s\S]{20,300}[。！？!?])$/)
+  if (lastParagraphMatch && (lastParagraphMatch[1] || '').length > 100) {
+    msg.reasoning = ((lastParagraphMatch[1] || '')).trim()
+    msg.content = ((lastParagraphMatch[2] || '')).trim()
+    return
+  }
+
+  // 如果没有匹配到任何模式，保持原样（不分离）
+}
+
 const sendMessage = async (text: string) => {
   // 先保存待发送的图片数据
   const imagesToSend = [...pendingImages.value]
@@ -364,7 +542,8 @@ const sendMessage = async (text: string) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: text || '请分析这张图片，并说明其与丝绸之路的关联。',
-        images: imagesToSend
+        images: imagesToSend,
+        mode: chatMode.value  // 传递模式：'fast' 或 'thinking'
       }),
     })
 
@@ -377,9 +556,12 @@ const sendMessage = async (text: string) => {
     messages.value[loadingMsgIndex] = {
       role: 'assistant',
       content: '',
+      reasoning: '',  // 初始化思考过程为空
       timestamp: Date.now(),
       type: 'text'
     }
+    // 默认折叠思考过程
+    reasoningCollapsed.value[loadingMsgIndex] = true
 
     // 处理流式响应
     const reader = response.body?.getReader()
@@ -394,6 +576,12 @@ const sendMessage = async (text: string) => {
       const { done, value } = await reader.read()
       if (done) {
         console.log('Stream done, received content:', receivedContent)
+        // 流式结束后，尝试从 content 中智能分离思考过程和最终回复
+        parseAndSeparateThinking(loadingMsgIndex)
+        // 快速模式下，直接隐藏思考过程，只显示回复
+        if (chatMode.value === 'fast') {
+          messages.value[loadingMsgIndex].reasoning = ''
+        }
         break
       }
 
@@ -412,6 +600,14 @@ const sendMessage = async (text: string) => {
           const data = JSON.parse(dataStr)
           console.log('Frontend received:', data)
 
+          // 处理思考过程（reasoning）
+          if (data.reasoning) {
+            receivedContent = true
+            messages.value[loadingMsgIndex].reasoning = 
+              (messages.value[loadingMsgIndex].reasoning || '') + data.reasoning
+            scrollToBottom()
+          }
+          // 处理正式回复（content）
           if (data.content) {
             receivedContent = true
             messages.value[loadingMsgIndex].content += data.content
@@ -623,6 +819,46 @@ const sendMessage = async (text: string) => {
       background: rgba($color-cinnabar, 0.08);
     }
   }
+
+  // 模式切换开关
+  .mode-switch {
+    display: flex;
+    gap: $spacing-xs;
+    margin-right: $spacing-md;
+    background: $bg-tertiary;
+    border-radius: $border-radius-lg;
+    padding: 3px;
+    border: 1px solid $border-color;
+  }
+
+  .mode-btn {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    padding: $spacing-xs $spacing-sm;
+    border: none;
+    border-radius: $border-radius-base;
+    background: transparent;
+    color: $text-tertiary;
+    font-size: $font-size-xs;
+    cursor: pointer;
+    transition: all $transition-duration-base $ease-ancient;
+
+    svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    &:hover {
+      color: $text-secondary;
+    }
+
+    &.active {
+      background: $gradient-ancient;
+      color: $color-gold;
+      box-shadow: $box-shadow-sm;
+    }
+  }
 }
 
 // 消息区域
@@ -776,6 +1012,122 @@ const sendMessage = async (text: string) => {
     margin: 0;
     line-height: $line-height-relaxed;
   }
+
+  // 思考过程区域
+  .reasoning-section {
+    margin-bottom: $spacing-md;
+    border-bottom: 1px dashed $border-color-medium;
+    padding-bottom: $spacing-md;
+  }
+
+  .reasoning-toggle {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    background: rgba($color-gold, 0.08);
+    border: 1px solid rgba($color-gold, 0.2);
+    border-radius: $border-radius-base;
+    color: $text-tertiary;
+    font-size: $font-size-xs;
+    cursor: pointer;
+    padding: $spacing-xs $spacing-sm;
+    transition: all $transition-duration-base;
+
+    .toggle-icon {
+      width: 14px;
+      height: 14px;
+      transition: transform $transition-duration-base;
+      color: $color-gold;
+
+      &.collapsed {
+        transform: rotate(-90deg);
+      }
+    }
+
+    .toggle-text {
+      color: $color-gold;
+    }
+
+    .reasoning-badge {
+      background: rgba($color-gold, 0.15);
+      color: $color-gold;
+      padding: 2px $spacing-xs;
+      border-radius: $border-radius-sm;
+      font-size: $font-size-xs;
+      margin-left: $spacing-xs;
+    }
+
+    &:hover {
+      background: rgba($color-gold, 0.15);
+      border-color: rgba($color-gold, 0.3);
+
+      .toggle-text {
+        color: $color-gold-light;
+      }
+    }
+  }
+
+  .reasoning-content {
+    /* 展开时可滚动，限制高度以在气泡内部显示滚动条 */
+    overflow: hidden;
+    max-height: 260px;
+    transition: max-height $transition-duration-base $ease-ancient,
+                opacity $transition-duration-base $ease-ancient;
+    opacity: 1;
+
+    &.collapsed {
+      max-height: 0;
+      opacity: 0;
+    }
+
+    /* 当展开时，内部内容可滚动（已在 .reasoning-text 中启用 overflow） */
+
+    .reasoning-text {
+      color: $text-tertiary;
+      font-size: $font-size-sm;
+      line-height: $line-height-relaxed;
+      margin: $spacing-sm 0 0;
+      padding: $spacing-sm;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: $border-radius-sm;
+      border-left: 2px solid $color-gold;
+      white-space: pre-wrap;
+      overflow: auto;
+      max-height: 220px; /* 单独限制滚动区域高度 */
+    }
+
+    /* 自定义滚动条 */
+    .reasoning-text::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .reasoning-text::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .reasoning-text::-webkit-scrollbar-thumb {
+      background: rgba($color-gold, 0.18);
+      border-radius: 6px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+    }
+  }
+
+  .reasoning-actions {
+    margin-top: $spacing-xs;
+    display: flex;
+    gap: $spacing-xs;
+  }
+
+  .reasoning-open {
+    background: transparent;
+    border: 1px solid rgba($color-gold, 0.12);
+    color: $color-gold;
+    padding: 4px 8px;
+    border-radius: $border-radius-sm;
+    font-size: $font-size-xs;
+    cursor: pointer;
+  }
 }
 
 .user-bubble .bubble-content {
@@ -853,8 +1205,21 @@ const sendMessage = async (text: string) => {
 // 加载动画
 .typing-indicator {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $spacing-sm;
   padding: $spacing-md;
+
+  .loading-text {
+    font-size: $font-size-sm;
+    color: $color-gold;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .dots {
+    display: flex;
+    gap: 6px;
+  }
 
   .dot {
     width: 8px;
@@ -867,6 +1232,11 @@ const sendMessage = async (text: string) => {
     &:nth-child(2) { animation-delay: -0.16s; }
     &:nth-child(3) { animation-delay: 0s; }
   }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 
 @keyframes typingBounce {
@@ -1171,6 +1541,184 @@ const sendMessage = async (text: string) => {
   }
 }
 
+// Markdown 渲染样式
+.markdown-body {
+  color: $text-primary;
+  line-height: $line-height-relaxed;
+  word-wrap: break-word;
+
+  // 标题
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: $spacing-md;
+    margin-bottom: $spacing-sm;
+    font-weight: $font-weight-semibold;
+    color: $text-primary;
+    font-family: $font-family-serif;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  h1 { font-size: 1.4em; }
+  h2 { font-size: 1.25em; }
+  h3 { font-size: 1.1em; }
+
+  // 段落
+  p {
+    margin: 0 0 $spacing-sm;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // 列表
+  ul, ol {
+    margin: $spacing-sm 0;
+    padding-left: $spacing-lg;
+  }
+
+  li {
+    margin: $spacing-xs 0;
+  }
+
+  // 粗体和斜体
+  strong {
+    font-weight: $font-weight-semibold;
+    color: $color-gold;
+  }
+
+  em {
+    font-style: italic;
+    color: $text-secondary;
+  }
+
+  // 行内代码
+  code {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: $font-family-code;
+    font-size: 0.9em;
+    color: $color-jade;
+  }
+
+  // 代码块
+  pre {
+    margin: $spacing-md 0;
+    border-radius: $border-radius-base;
+    overflow-x: auto;
+
+    &.hljs {
+      background: rgba(0, 0, 0, 0.3);
+      padding: $spacing-md;
+    }
+
+    code {
+      background: transparent;
+      padding: 0;
+      color: inherit;
+    }
+  }
+
+  // 引用块
+  blockquote {
+    margin: $spacing-md 0;
+    padding: $spacing-sm $spacing-md;
+    border-left: 3px solid $color-gold;
+    background: rgba($color-gold, 0.05);
+    color: $text-secondary;
+
+    p {
+      margin: 0;
+    }
+  }
+
+  // 分割线
+  hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $border-color-medium, transparent);
+    margin: $spacing-lg 0;
+  }
+
+  // 链接
+  a {
+    color: $color-gold;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  // 表格
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: $spacing-md 0;
+
+    th, td {
+      padding: $spacing-sm;
+      border: 1px solid $border-color;
+      text-align: left;
+    }
+
+    th {
+      background: rgba($color-gold, 0.1);
+      font-weight: $font-weight-semibold;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(0, 0, 0, 0.1);
+    }
+  }
+}
+
+// highlight.js 代码高亮主题（古风配色）
+.hljs {
+  color: #c9d1d9;
+
+  .hljs-keyword,
+  .hljs-selector-tag {
+    color: #d4af37;  // 金色
+  }
+
+  .hljs-string,
+  .hljs-attr {
+    color: #7ec699;  // 玉绿
+  }
+
+  .hljs-number,
+  .hljs-literal {
+    color: #f0a45d;  // 琥珀
+  }
+
+  .hljs-comment {
+    color: #6a737d;
+    font-style: italic;
+  }
+
+  .hljs-function .hljs-title,
+  .hljs-title.function_ {
+    color: #dcdcaa;
+  }
+
+  .hljs-built_in {
+    color: #4ec9b0;
+  }
+
+  .hljs-type,
+  .hljs-class .hljs-title {
+    color: #4ec9b0;
+  }
+
+  .hljs-variable {
+    color: #9cdcfe;
+  }
+}
+
 // 响应式设计
 @media (max-width: 768px) {
   .chat-view {
@@ -1190,5 +1738,37 @@ const sendMessage = async (text: string) => {
   .suggestion-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 模态窗口，用于显示完整思考 */
+.reasoning-modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  z-index: 2000;
+}
+
+.reasoning-modal .modal-card {
+  width: min(900px, 95%);
+  max-height: 90vh;
+  background: $bg-glass;
+  border: 1px solid $border-color-medium;
+  padding: $spacing-lg;
+  overflow: auto;
+  border-radius: $border-radius-lg;
+}
+
+.reasoning-modal .modal-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: $color-gold;
+  font-size: $font-size-base;
+  cursor: pointer;
 }
 </style>

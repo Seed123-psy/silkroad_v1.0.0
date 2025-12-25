@@ -53,7 +53,14 @@ npm --prefix server start
 PORT=3000
 SILICONFLOW_API_KEY=your_api_key_here
 SILICONFLOW_API_URL=https://api.siliconflow.cn/v1
-MODEL_ID=moonshotai/Kimi-K2-Instruct
+
+# 思考模式使用的模型（支持深度推理）
+THINKING_MODEL_ID=zai-org/GLM-4.6V
+# 快速模式使用的模型（直接回答）
+FAST_MODEL_ID=Qwen/Qwen3-VL-235B-A22B-Instruct
+
+# 可选：设置请求体大小上限（例如 '10mb'、'50mb'），用于上传大图像或较大 payload
+BODY_PARSER_LIMIT=10mb
 ```
 
 `SILICONFLOW_API_KEY` 可选但建议配置以启用代理向上游模型服务的请求；不设置时服务会返回兜底文本。
