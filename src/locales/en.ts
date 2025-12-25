@@ -296,13 +296,6 @@ export default {
       q2: 'Major towns along the Hexi Corridor in Tang Dynasty',
       q3: 'Trade route from Samarkand to Baghdad',
       q4: 'Xuanzang\'s pilgrimage route waypoints'
-    },
-    routeSuggested: {
-      title: 'Try these historically authentic routes:',
-      q1: 'Silk Road route from Chang\'an to Dunhuang',
-      q2: 'Major towns along the Hexi Corridor in Tang Dynasty',
-      q3: 'Trade route from Samarkand to Baghdad',
-      q4: 'Xuanzang\'s pilgrimage route waypoints'
     }
   },
   aiRoutes: {

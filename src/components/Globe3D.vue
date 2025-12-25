@@ -191,8 +191,8 @@ function createGlobe() {
     }, 200)
   }
 
-  // 开始加载主纹理（根据当前语言选择）
-  currentTexturePath = getTexturePathForLang(appStore.language)
+  // 开始加载主纹理（强制使用默认纹理以保证显示稳定）
+  currentTexturePath = '/textures/earth.jpg'
   textureLoader.load(
     currentTexturePath,
     texture => {
@@ -225,38 +225,7 @@ function createGlobe() {
   )
 }
 
-  // 监听语言变更，尝试替换地球纹理
-  watch(
-    () => appStore.language,
-    (lang) => {
-      try {
-        const textureLoader = new THREE.TextureLoader()
-        const newPath = getTexturePathForLang(lang)
-        if (newPath === currentTexturePath) return
-        currentTexturePath = newPath
-        textureLoader.load(
-          newPath,
-          (texture) => {
-            if (globe && globe.material && texture) {
-              if (globe.material instanceof THREE.MeshPhongMaterial) {
-                globe.material.map = texture
-                globe.material.needsUpdate = true
-                texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
-              }
-              markNeedsRender()
-            }
-          },
-          undefined,
-          () => {
-            // 忽略加载失败，保持当前纹理
-            console.warn('切换纹理失败，保持现有纹理:', newPath)
-          }
-        )
-      } catch (e) {
-        console.warn('语言切换时替换纹理发生异常', e)
-      }
-    }
-  )
+  // 不自动根据语言切换纹理（避免缺失或格式不兼容的纹理导致渲染异常）
 
 /**
  * 添加光照

@@ -203,7 +203,7 @@ const name = ref('')
 const text = ref('')
 const reasoning = ref('') // AI 思考过程
 const reasoningCollapsed = ref(true) // 默认折叠
-const routes = reactive<RouteItem[]>([])
+const routes = aiRouteStore.routes
 const activeId = ref<string | null>(null)
 
 const COLORS = ['#ff5e57', '#ff884e', '#10ac84', '#48dbfb', '#2e86de', '#5f27cd', '#f368e0', '#1dd1a1']
@@ -227,7 +227,7 @@ function addRoute() {
   const color = pickColor(routes.length)
   const feature = buildLineGeoJSON(dense, { Name: name.value || 'AI Route', __routeColor: color })
   addOrUpdateRouteOnMap(map, feature, { id, color, width: 3 })
-  routes.push({ id, name: name.value || `路线 ${routes.length + 1}`, text: text.value, coords: dense as any, visible: true, color })
+  aiRouteStore.addRoute({ id, name: name.value || `路线 ${routes.length + 1}`, text: text.value, coords: dense as any, visible: true, color })
   activeId.value = id
 }
 
@@ -242,10 +242,14 @@ function toggleVisibility(id: string) {
   const r = routes.find(x => x.id === id)
   if (!r || !map) return
   const layerId = `${id}-layer`
+  const pointsLayerId = `${id}-points-layer`
+  const labelsLayerId = `${id}-labels-layer`
   try {
     const vis = r.visible ? 'none' : 'visible'
     if (map.getLayer && map.getLayer(layerId)) map.setLayoutProperty(layerId, 'visibility', vis)
-    r.visible = !r.visible
+    if (map.getLayer && map.getLayer(pointsLayerId)) map.setLayoutProperty(pointsLayerId, 'visibility', vis)
+    if (map.getLayer && map.getLayer(labelsLayerId)) map.setLayoutProperty(labelsLayerId, 'visibility', vis)
+    aiRouteStore.updateRoute(id, { visible: !r.visible })
   } catch (e) {
     console.warn('切换可见性失败', e)
   }
@@ -256,13 +260,25 @@ function removeRoute(id: string) {
   if (idx === -1) return
   const srcId = `${id}-src`
   const layerId = `${id}-layer`
+  const pointsSrcId = `${id}-points-src`
+  const pointsLayerId = `${id}-points-layer`
+  const labelsLayerId = `${id}-labels-layer`
   try {
     if (map.getLayer && map.getLayer(layerId)) map.removeLayer(layerId)
   } catch (e) {}
   try {
     if (map.getSource && map.getSource(srcId)) map.removeSource(srcId)
   } catch (e) {}
-  routes.splice(idx, 1)
+  try {
+    if (map.getLayer && map.getLayer(pointsLayerId)) map.removeLayer(pointsLayerId)
+  } catch (e) {}
+  try {
+    if (map.getLayer && map.getLayer(labelsLayerId)) map.removeLayer(labelsLayerId)
+  } catch (e) {}
+  try {
+    if (map.getSource && map.getSource(pointsSrcId)) map.removeSource(pointsSrcId)
+  } catch (e) {}
+  aiRouteStore.removeRoute(id)
   if (activeId.value === id) activeId.value = routes[0]?.id ?? null
 }
 
