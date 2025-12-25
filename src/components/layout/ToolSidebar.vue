@@ -116,6 +116,7 @@ import {
   LanguageIcon,
   VideoCameraIcon,
   ChatBubbleLeftRightIcon,
+  MapPinIcon,
 } from '@heroicons/vue/24/outline'
 import TransportRoutesIcon from '@/components/icons/TransportRoutesIcon.vue'
 import HanMingTransportIcon from '@/components/icons/HanMingTransportIcon.vue'
@@ -183,6 +184,11 @@ const navItems = computed<NavItem[]>(() => [
     label: t.value.sidebar.chat,
     path: '/chat',
     icon: ChatBubbleLeftRightIcon,
+  },
+  {
+    label: t.value.sidebar.aiRoutes,
+    path: '/ai-routes',
+    icon: MapPinIcon,
   },
 ])
 

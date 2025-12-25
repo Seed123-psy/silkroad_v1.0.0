@@ -13,6 +13,7 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useAppStore } from '@/stores/app'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import gsap from 'gsap'
@@ -84,6 +85,16 @@ let isAutoRotating = false
 let isCameraLocked = false // 相机是否锁定在某个城市
 
 const isLoading = ref(true)
+const appStore = useAppStore()
+// 当前使用的地球纹理路径（便于在语言切换时替换）
+let currentTexturePath = '/textures/earth.jpg'
+
+function getTexturePathForLang(lang: string) {
+  // 期望在 `public/textures` 中提供 `earth-zh.jpg` 和 `earth-en.jpg`，否则回退到默认纹理
+  if (lang === 'zh') return '/textures/earth-zh.jpg'
+  if (lang === 'en') return '/textures/earth-en.jpg'
+  return '/textures/earth.jpg'
+}
 
 // 性能优化相关
 const MAX_VISIBLE_LABELS = 30 // 最大可见标签数量
@@ -180,11 +191,12 @@ function createGlobe() {
     }, 200)
   }
 
-  // 开始加载主纹理
+  // 开始加载主纹理（根据当前语言选择）
+  currentTexturePath = getTexturePathForLang(appStore.language)
   textureLoader.load(
-    '/textures/earth.jpg',
+    currentTexturePath,
     texture => {
-      console.log('地球纹理加载成功，应用到材质')
+      console.log('地球纹理加载成功，应用到材质', currentTexturePath)
       applyTextureAndCreateGlobe(texture)
     },
     progress => {
@@ -204,7 +216,7 @@ function createGlobe() {
         },
         undefined,
         () => {
-          console.error('备用纹理也加载失败，创建无纹理的地球')
+            console.error('备用纹理也加载失败，创建无纹理的地球')
           // 即使纹理加载失败，也创建一个中性材质的地球，随后隐藏加载动画
           applyTextureAndCreateGlobe(undefined)
         }
@@ -212,6 +224,39 @@ function createGlobe() {
     }
   )
 }
+
+  // 监听语言变更，尝试替换地球纹理
+  watch(
+    () => appStore.language,
+    (lang) => {
+      try {
+        const textureLoader = new THREE.TextureLoader()
+        const newPath = getTexturePathForLang(lang)
+        if (newPath === currentTexturePath) return
+        currentTexturePath = newPath
+        textureLoader.load(
+          newPath,
+          (texture) => {
+            if (globe && globe.material && texture) {
+              if (globe.material instanceof THREE.MeshPhongMaterial) {
+                globe.material.map = texture
+                globe.material.needsUpdate = true
+                texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
+              }
+              markNeedsRender()
+            }
+          },
+          undefined,
+          () => {
+            // 忽略加载失败，保持当前纹理
+            console.warn('切换纹理失败，保持现有纹理:', newPath)
+          }
+        )
+      } catch (e) {
+        console.warn('语言切换时替换纹理发生异常', e)
+      }
+    }
+  )
 
 /**
  * 添加光照

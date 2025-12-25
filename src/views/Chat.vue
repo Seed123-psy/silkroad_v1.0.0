@@ -31,24 +31,36 @@
               class="mode-btn" 
               :class="{ active: chatMode === 'fast' }"
               @click="chatMode = 'fast'"
-              title="快速回答：直接给出答案"
+              :title="t.chat.modeFastTitle"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
               </svg>
-              <span>快速</span>
+              <span>{{ t.chat.modeFast }}</span>
             </button>
             <button 
               class="mode-btn" 
               :class="{ active: chatMode === 'thinking' }"
               @click="chatMode = 'thinking'"
-              title="深度思考：展示推理过程"
+              :title="t.chat.modeThinkingTitle"
             >
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <circle cx="12" cy="12" r="10"/>
                 <path d="M12 16v-4M12 8h.01"/>
               </svg>
-              <span>思考</span>
+              <span>{{ t.chat.modeThinking }}</span>
+            </button>
+            <button 
+              class="mode-btn" 
+              :class="{ active: chatMode === 'route' }"
+              @click="chatMode = 'route'"
+              :title="t.chat.modeRouteTitle"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                <circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>{{ t.chat.modeRoute }}</span>
             </button>
           </div>
           <button class="action-btn" @click="clearChat" :title="t.chat.clearChat">
@@ -97,8 +109,8 @@
                       >
                         <polyline points="6 9 12 15 18 9"/>
                       </svg>
-                      <span class="toggle-text">{{ reasoningCollapsed[index] ? '查看思考过程' : '收起思考过程' }}</span>
-                      <span class="reasoning-badge">💭 已思考</span>
+                      <span class="toggle-text">{{ reasoningCollapsed[index] ? t.chat.reasoningView : t.chat.reasoningHide }}</span>
+                      <span class="reasoning-badge">{{ t.chat.reasoningBadge }}</span>
                     </button>
                     <div 
                       class="reasoning-content" 
@@ -176,7 +188,7 @@
             <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
             <line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
-          <h3>{{ t.chat.suggested.title }}</h3>
+          <h3>{{ chatMode === 'route' ? (t.chat.routeSuggested?.title || '试试这些路线问题：') : t.chat.suggested.title }}</h3>
         </div>
         <div class="suggestion-grid">
           <button
@@ -271,11 +283,15 @@
 
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useI18n } from '@/composables/useI18n'
+import { useAiRouteStore } from '@/stores/aiRoute'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
 
 const { t } = useI18n()
+const router = useRouter()
+const aiRouteStore = useAiRouteStore()
 
 // 配置 Markdown 渲染器
 const md = new MarkdownIt({
@@ -315,8 +331,8 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const pendingImages = ref<string[]>([])
 
-// 模式切换：'fast' 快速回答 | 'thinking' 深度思考
-const chatMode = ref<'fast' | 'thinking'>('thinking')
+// 模式切换：'fast' 快速回答 | 'thinking' 深度思考 | 'route' AI路线
+const chatMode = ref<'fast' | 'thinking' | 'route'>('thinking')
 // 思考过程折叠状态（按消息索引）
 const reasoningCollapsed = ref<Record<number, boolean>>({})
 // 模态窗口显示完整思考过程
@@ -334,6 +350,14 @@ const closeReasoningModal = () => {
 }
 
 const suggestedQuestions = computed(() => {
+  if (chatMode.value === 'route') {
+    return [
+      t.value.chat.routeSuggested?.q1 || '从长安到洛阳的丝绸之路路线',
+      t.value.chat.routeSuggested?.q2 || '唐代河西走廊的主要驿站节点',
+      t.value.chat.routeSuggested?.q3 || '汉代丝绸之路东段路线',
+      t.value.chat.routeSuggested?.q4 || '从敦煌到撒马尔罕的路线'
+    ]
+  }
   return [
     t.value.chat.suggested.q1,
     t.value.chat.suggested.q2,
@@ -349,6 +373,31 @@ onMounted(() => {
     timestamp: Date.now(),
     type: 'text'
   })
+})
+
+// 监听模式切换，显示提示消息
+watch(chatMode, (newMode, oldMode) => {
+  if (oldMode && newMode !== oldMode) {
+    if (newMode === 'route') {
+      // 清空之前的消息，只保留路线模式的欢迎语
+      messages.value = [{
+        role: 'assistant',
+        content: t.value.chat.routeWelcome || '已切换到路线模式。请描述您想要的路线，我会为您生成精确的地理坐标，并自动在地图上绘制。例如："从长安到洛阳的丝绸之路路线"',
+        timestamp: Date.now(),
+        type: 'text'
+      }]
+      scrollToBottom()
+    } else if (oldMode === 'route') {
+      // 从路线模式切换回来，显示普通欢迎语
+      messages.value = [{
+        role: 'assistant',
+        content: t.value.chat.normalWelcome || '已切换回普通模式。您可以继续向我提问关于丝绸之路的任何问题。',
+        timestamp: Date.now(),
+        type: 'text'
+      }]
+      scrollToBottom()
+    }
+  }
 })
 
 const formatTime = (timestamp: number) => {
@@ -395,6 +444,8 @@ const removeMessage = (index: number) => {
 const handleSend = () => {
   const text = userInput.value.trim()
   if ((!text && pendingImages.value.length === 0) || isLoading.value) return
+  
+  // 直接发送用户输入，系统提示词由后端根据 mode 参数处理
   sendMessage(text)
 }
 
@@ -497,6 +548,9 @@ const parseAndSeparateThinking = (msgIndex: number) => {
 const sendMessage = async (text: string) => {
   // 先保存待发送的图片数据
   const imagesToSend = [...pendingImages.value]
+  
+  // 保存原始用户输入文本（用于路线命名）
+  const originalText = text
 
   // 发送图片消息（前端显示）
   for (const img of imagesToSend) {
@@ -508,11 +562,11 @@ const sendMessage = async (text: string) => {
     })
   }
 
-  // 发送文本消息
-  if (text) {
+  // 发送文本消息（显示原始文本，不显示系统提示）
+  if (originalText) {
     messages.value.push({
       role: 'user',
-      content: text,
+      content: originalText,
       timestamp: Date.now(),
       type: 'text'
     })
@@ -543,7 +597,7 @@ const sendMessage = async (text: string) => {
       body: JSON.stringify({
         message: text || '请分析这张图片，并说明其与丝绸之路的关联。',
         images: imagesToSend,
-        mode: chatMode.value  // 传递模式：'fast' 或 'thinking'
+        mode: chatMode.value  // 直接传递模式：'fast' | 'thinking' | 'route'
       }),
     })
 
@@ -629,6 +683,21 @@ const sendMessage = async (text: string) => {
     // 如果没有收到任何内容，显示错误
     if (!receivedContent && messages.value[loadingMsgIndex].content === '') {
       messages.value[loadingMsgIndex].content = '未收到回复，请检查后端服务是否正常运行。'
+    }
+
+    // 路线模式：自动跳转到路线页面
+    if (chatMode.value === 'route' && messages.value[loadingMsgIndex].content) {
+      const routeName = originalText.slice(0, 30) || '未命名路线'
+      // 传递内容和思考过程
+      aiRouteStore.setPendingRoute(
+        routeName, 
+        messages.value[loadingMsgIndex].content,
+        messages.value[loadingMsgIndex].reasoning
+      )
+      // 延迟跳转，让用户看到回复
+      setTimeout(() => {
+        router.push('/ai-routes')
+      }, 800)
     }
   } catch (error: any) {
     console.error('Fetch error:', error)

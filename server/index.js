@@ -21,14 +21,16 @@ const FAST_MODEL_ID = process.env.FAST_MODEL_ID || 'Qwen/Qwen3-VL-235B-A22B-Inst
 
 app.post('/api/chat', async (req, res) => {
   const { message, images, mode } = req.body;
-  // mode: 'fast' (快速回答) | 'thinking' (深度思考，默认)
-  const thinkingMode = mode !== 'fast';
+  // mode: 'fast' (快速回答) | 'thinking' (深度思考) | 'route' (路线生成)
+  const isRouteMode = mode === 'route';
+  const thinkingMode = mode !== 'fast' || isRouteMode;
   // 根据模式选择模型
   const selectedModel = thinkingMode ? THINKING_MODEL_ID : FAST_MODEL_ID;
   
   console.log('Received message:', message);
   console.log('Images count:', images?.length || 0);
-  console.log('Mode:', thinkingMode ? 'thinking' : 'fast');
+  console.log('Mode:', mode);
+  console.log('isRouteMode:', isRouteMode);
   console.log('Using model:', selectedModel);
 
   // 设置 SSE 响应头
@@ -69,9 +71,87 @@ app.post('/api/chat', async (req, res) => {
     });
 
     // 根据模式调整系统提示词
-    const systemPrompt = thinkingMode 
-      ? '你是丝绸之路智能助手，精通丝绸之路的历史、地理、文化和贸易。请用中文回答用户问题，回答要清晰、专业且有深度。支持使用 Markdown 格式（如标题、列表、粗体等）来组织回答。当用户上传图片时，请仔细分析图片内容，并说明其与丝绸之路的关联。'
-      : '你是丝绸之路智能助手，精通丝绸之路的历史、地理、文化和贸易。请直接回答用户问题，回答要清晰简洁。可以使用 Markdown 格式。当用户上传图片时，直接说明其与丝绸之路的关联。';
+    let systemPrompt;
+    if (isRouteMode) {
+      // 路线模式：基于真实历史地理数据生成路线
+      systemPrompt = `你是丝绸之路历史地理专家，负责生成真实的历史路线坐标。
+
+## 核心规则
+1. 必须基于真实的历史地理位置生成坐标
+2. 只能选择真实存在的城市、驿站、关隘作为途经点
+3. 路线必须符合历史事实和地理逻辑
+4. 绝对禁止编造虚假坐标
+
+## 输出格式
+仅输出经纬度坐标，每行一个，格式：经度,纬度
+禁止输出任何文字、地名、标题、序号、注释或解释。
+
+## 重要历史地点参考（必须使用真实坐标）
+
+### 主要城市
+- 长安/西安: 108.94, 34.34
+- 洛阳: 112.45, 34.62
+- 敦煌: 94.66, 40.14
+- 撒马尔罕: 66.97, 39.63
+- 喀什: 75.99, 39.47
+- 布哈拉: 64.42, 39.77
+- 梅尔夫: 62.18, 37.66
+- 巴格达: 44.36, 33.31
+- 君士坦丁堡/伊斯坦布尔: 28.98, 41.01
+
+### 河西走廊城镇
+- 武威/凉州: 102.64, 37.93
+- 张掖/甘州: 100.45, 38.93
+- 酒泉/肃州: 98.49, 39.74
+- 嘉峪关: 98.29, 39.77
+
+### 西域重镇
+- 哈密: 93.51, 42.83
+- 吐鲁番/高昌: 89.18, 42.95
+- 库车/龟兹: 82.97, 41.72
+- 和田/于阗: 79.92, 37.11
+
+### 中亚节点
+- 费尔干纳/大宛: 71.77, 40.38
+- 塔什干: 69.24, 41.27
+- 赫拉特: 62.20, 34.35
+
+### 其他重要地点
+- 霍尔木兹: 56.15, 27.18
+- 亚历山大港: 29.92, 31.20
+- 泉州: 118.68, 24.88
+- 广州: 113.26, 23.13
+
+## 生成步骤
+1. 识别用户询问的起点和终点
+2. 查找历史上该路线途经的真实地点
+3. 按地理顺序排列途经点
+4. 根据路线长度，输出5-15个关键节点
+5. 确保每个坐标对应真实地点
+
+## 输出示例
+用户问："从长安到敦煌"
+你的回复（仅坐标）：
+108.94,34.34
+110.47,34.27
+112.45,34.62
+114.30,34.76
+116.00,35.50
+102.64,37.93
+100.45,38.93
+98.49,39.74
+94.66,40.14
+
+严格遵守：绝不编造坐标，绝不输出任何文字！`;
+    }
+    } else if (thinkingMode) {
+      systemPrompt = '你是丝绸之路智能助手，精通丝绸之路的历史、地理、文化和贸易。请用中文回答用户问题，回答要清晰、专业且有深度。支持使用 Markdown 格式（如标题、列表、粗体等）来组织回答。当用户上传图片时，请仔细分析图片内容，并说明其与丝绸之路的关联。';
+    } else {
+      systemPrompt = '你是丝绸之路智能助手，精通丝绸之路的历史、地理、文化和贸易。请直接回答用户问题，回答要清晰简洁。可以使用 Markdown 格式。当用户上传图片时，直接说明其与丝绸之路的关联。';
+    }
+
+    console.log('System prompt preview:', systemPrompt.substring(0, 100) + '...');
+    console.log('Is route mode?', isRouteMode);
 
     const payload = {
       model: selectedModel,

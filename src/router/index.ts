@@ -46,6 +46,11 @@ const routes: RouteRecordRaw[] = [
     name: 'GlbViewer',
     component: () => import('@/views/GlbViewer.vue'),
   },
+  {
+    path: '/ai-routes',
+    name: 'AiRoutes',
+    component: () => import('@/views/AiRoutes.vue'),
+  },
 ]
 
 const router = createRouter({
