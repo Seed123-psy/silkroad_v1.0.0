@@ -111,7 +111,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import mapboxgl from 'mapbox-gl'
 import 'mapbox-gl/dist/mapbox-gl.css'
 import MarkdownIt from 'markdown-it'
@@ -190,14 +190,6 @@ function setMapLanguage(m: any, lang: string) {
   }
 }
 
-interface RouteItem {
-  id: string
-  name: string
-  text: string
-  coords: [number, number][]
-  visible: boolean
-  color: string
-}
 
 const name = ref('')
 const text = ref('')
@@ -208,7 +200,7 @@ const activeId = ref<string | null>(null)
 
 const COLORS = ['#ff5e57', '#ff884e', '#10ac84', '#48dbfb', '#2e86de', '#5f27cd', '#f368e0', '#1dd1a1']
 function pickColor(i: number) {
-  return COLORS[i % COLORS.length]
+  return COLORS[i % COLORS.length] || '#ff0000'
 }
 
 function uid(prefix = 'r') {

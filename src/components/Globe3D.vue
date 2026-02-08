@@ -13,7 +13,6 @@
 </template>
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useAppStore } from '@/stores/app'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import gsap from 'gsap'
@@ -85,16 +84,10 @@ let isAutoRotating = false
 let isCameraLocked = false // 相机是否锁定在某个城市
 
 const isLoading = ref(true)
-const appStore = useAppStore()
+
 // 当前使用的地球纹理路径（便于在语言切换时替换）
 let currentTexturePath = '/textures/earth.jpg'
 
-function getTexturePathForLang(lang: string) {
-  // 期望在 `public/textures` 中提供 `earth-zh.jpg` 和 `earth-en.jpg`，否则回退到默认纹理
-  if (lang === 'zh') return '/textures/earth-zh.jpg'
-  if (lang === 'en') return '/textures/earth-en.jpg'
-  return '/textures/earth.jpg'
-}
 
 // 性能优化相关
 const MAX_VISIBLE_LABELS = 30 // 最大可见标签数量

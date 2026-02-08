@@ -104,12 +104,18 @@ export function densifyRoute(coords: LngLat[], segmentsPerPair = 32): LngLat[] {
   for (let i = 0; i < coords.length - 1; i++) {
     const a = coords[i]
     const b = coords[i + 1]
+    if (!a || !b) continue
+
     const seg = greatCircleInterpolate(a, b, segmentsPerPair)
     // append all except last (下一个段会包含)
-    for (let j = 0; j < seg.length - 1; j++) out.push(seg[j])
+    for (let j = 0; j < seg.length - 1; j++) {
+      const p = seg[j]
+      if (p) out.push(p)
+    }
   }
   // push last point
-  out.push(coords[coords.length - 1])
+  const last = coords[coords.length - 1]
+  if (last) out.push(last)
   return out
 }
 

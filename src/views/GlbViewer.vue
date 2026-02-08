@@ -10,7 +10,9 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import * as THREE from 'three'
+// @ts-ignore
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader'
+// @ts-ignore
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { useI18n } from '@/composables/useI18n'
 
@@ -65,7 +67,7 @@ onMounted(() => {
   renderer = new THREE.WebGLRenderer({ antialias: true })
   renderer.setPixelRatio(window.devicePixelRatio)
   renderer.setSize(width, height)
-  renderer.outputEncoding = THREE.sRGBEncoding
+  renderer.outputColorSpace = THREE.SRGBColorSpace
   container.value.appendChild(renderer.domElement)
 
   // lights
@@ -89,7 +91,7 @@ onMounted(() => {
   const loader = new GLTFLoader()
   loader.load(
     GLB_PATH,
-    (gltf) => {
+    (gltf: any) => {
       const model = gltf.scene
       scene!.add(model)
       try {
@@ -98,11 +100,8 @@ onMounted(() => {
         // ignore
       }
     },
-    (xhr) => {
-      // progress optional
-      // console.log((xhr.loaded / xhr.total) * 100 + '% loaded')
-    },
-    (err) => {
+    undefined,
+    (err: any) => {
       // eslint-disable-next-line no-console
       console.error('GLB load error:', err)
     }
@@ -144,7 +143,7 @@ onMounted(() => {
         if (obj.geometry) obj.geometry.dispose()
         if (obj.material) {
           if (Array.isArray(obj.material)) {
-            obj.material.forEach((m) => m.dispose())
+            obj.material.forEach((m: THREE.Material) => m.dispose())
           } else {
             obj.material.dispose()
           }

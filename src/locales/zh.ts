@@ -24,6 +24,7 @@ export default {
     themeDark: '切换暗色模式',
     language: '切换语言',
     gesture: '手势控制',
+    glbViewer: '模型查看',
   },
   glbViewer: '模型查看',
   common: {

@@ -35,7 +35,6 @@ npm run preview
 
 ```bash
 cd server
-npm ci
 npm start
 ```
 
